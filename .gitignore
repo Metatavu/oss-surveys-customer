@@ -45,3 +45,6 @@ app.*.map.json
 
 # Generated API Client
 /oss-surveys-api
+
+# Environment variables
+.env
