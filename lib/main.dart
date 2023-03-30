@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:openapi_generator_annotations/openapi_generator_annotations.dart';
 
 void main() {
   runApp(const MyApp());
@@ -113,3 +114,11 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 }
+
+/// API Client generator config
+@Openapi(
+    additionalProperties: AdditionalProperties(pubName: "oss_surveys_api"),
+    inputSpecFile: 'oss-surveys-api-spec/swagger.yaml',
+    generatorName: Generator.dio,
+    outputDirectory: 'oss-surveys-api')
+class OssSurveysApi extends OpenapiGeneratorConfig {}
