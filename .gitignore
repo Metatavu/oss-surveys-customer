@@ -44,7 +44,7 @@ app.*.map.json
 /android/app/release
 
 # Generated API Client
-/oss-surveys-api
-
+/oss-surveys-api/*
+!oss-surveys-api/pubspec.yaml
 # Environment variables
 .env

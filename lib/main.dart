@@ -3,7 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:openapi_generator_annotations/openapi_generator_annotations.dart';
 
 void main() async {
-  await dotenv.load();
+  await dotenv.load(fileName: ".env");
   runApp(const MyApp());
 }
 

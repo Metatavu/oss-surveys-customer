@@ -27,11 +27,9 @@ scripts:
   # in the command line: "rps" - that's all!
   run: "flutter run -t lib/app.dart --flavor development"
   generate:
-    client:
-      oss-surveys-api: >
-        flutter pub get oss-surveys-api &&
-        flutter pub get &&
-        flutter pub run build_runner build --delete-conflicting-outputs
+    client: >
+        flutter pub run build_runner build --delete-conflicting-outputs &&
+        flutter pub get oss-surveys-api
         
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -44,6 +42,7 @@ dependencies:
     sdk: flutter
   openapi_generator_annotations: ^4.0.0
   flutter_dotenv: ^5.0.2
+  simple_logger: ^1.9.0+2
   oss_surveys_api:
     path: oss-surveys-api
 
@@ -105,3 +104,6 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
+
+  assets:
+  - .env
