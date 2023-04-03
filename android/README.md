@@ -1,11 +1,6 @@
-# oss-surveys-customer
+# oss_surveys_customer
 
-Consumer display application for displaying surveys.
-
-## Generate API Client
-1. Verify `oss-surveys-api-spec` submodule directory is populated
-  - if not, `git submodule init` and `git submodule update`
-2. `flutter pub run build_runner build --delete-conflicting-outputs`
+A new Flutter project.
 
 ## Getting Started
 
