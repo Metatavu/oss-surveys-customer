@@ -17,7 +17,7 @@ class MqttClient {
   /// Initializes [MqttServerClient]
   MqttClient() {
     var mqttBasePath = dotenv.env["MQTT_URL"];
-    var mqttClientId = dotenv.env["MQTT_PORT"];
+    var mqttClientId = dotenv.env["MQTT_CLIENT_ID"];
     var mqttPort = int.tryParse(dotenv.env["MQTT_PORT"] ?? "");
     _client = MqttServerClient.withPort(mqttBasePath!, mqttClientId!, mqttPort!);
   }
@@ -51,6 +51,9 @@ class MqttClient {
     }
 
     _client.updates?.listen((List<MqttReceivedMessage<MqttMessage>> c) {
+      if (c.isEmpty) {
+        return;
+      }
       final MqttPublishMessage message = c[0].payload as MqttPublishMessage;
       final payload =
       MqttPublishPayload.bytesToStringAsString(message.payload.message);
@@ -91,6 +94,27 @@ class MqttClient {
     _client.disconnect();
   }
   
+  /// Publishes given MQTT [message] to given [topic].
+  /// 
+  /// If client is not connected, attempts to reconnect.
+  void publishMessage(String topic, Uint8Buffer message) async {
+    if (_client.connectionStatus == null) return;
+    if (_getClientConnectionStatus() != MqttConnectionState.connected.name) {
+      await _reconnect();
+    }
+    
+    _client.publishMessage(topic, MqttQos.atLeastOnce, message);
+  }
+  
+  /// Creates MQTT Message payload from [payload]
+  Uint8Buffer createMessagePayload(String payload) {
+    Uint8List data = Uint8List.fromList(payload.codeUnits);
+    Uint8Buffer buffer = Uint8Buffer();
+    buffer.addAll(data);
+    
+    return buffer;
+  }
+  
   /// Reconnects MQTT Client.
   /// 
   /// In case of failing to connect, retries for 3 times.
@@ -108,33 +132,12 @@ class MqttClient {
   }
   
   /// Gets MQTT Client connection status string.
-  String getClientConnectionStatus() {
+  String _getClientConnectionStatus() {
     if (_client.connectionStatus == null) {
       return MqttConnectionState.faulted.name;
     }
     
     return _client.connectionStatus!.state.name;
-  }
-  
-  /// Publishes given MQTT [message] to given [topic].
-  /// 
-  /// If client is not connected, attempts to reconnect.
-  void publishMessage(String topic, Uint8Buffer message) async {
-    if (_client.connectionStatus == null) return;
-    if (getClientConnectionStatus() != MqttConnectionState.connected.name) {
-      await _reconnect();
-    }
-    
-    _client.publishMessage(topic, MqttQos.atLeastOnce, message);
-  }
-  
-  /// Creates MQTT Message payload from [payload]
-  Uint8Buffer createMessagePayload(String payload) {
-    Uint8List data = Uint8List.fromList(payload.codeUnits);
-    Uint8Buffer buffer = Uint8Buffer();
-    buffer.addAll(data);
-    
-    return buffer;
   }
 }
 
