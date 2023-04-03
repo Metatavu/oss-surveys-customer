@@ -43,8 +43,10 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Generated API Client
+# Generated code
 /oss-surveys-api/*
 !oss-surveys-api/pubspec.yaml
+*.g.dart
+
 # Environment variables
 .env
