@@ -7,13 +7,14 @@ class ApiFactory {
   
   ApiFactory._();
   
-  static final ApiFactory instance = ApiFactory._();
+  factory ApiFactory() => _instance;
+  static final ApiFactory _instance = ApiFactory._();
   
   /// Initializes API Client
   Future<OssSurveysApi> _getApi() async {
     // TODO: Add support for planned asymmetric key authentication
     var apiBasePath = dotenv.env["SURVEYS_API_BASE_PATH"];
-
+  
     return OssSurveysApi(basePathOverride: apiBasePath);
   }
   

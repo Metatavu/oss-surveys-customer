@@ -7,6 +7,9 @@ import 'package:oss_surveys_customer/mqtt/model/status_message.dart';
 import 'package:oss_surveys_customer/mqtt/mqtt_client.dart';
 import 'package:simple_logger/simple_logger.dart';
 
+final logger = SimpleLogger();
+final apiFactory = ApiFactory();
+
 void main() async {
   _configureLogger();
   await dotenv.load(fileName: ".env");
@@ -103,7 +106,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
   
   void _getPing() async {
-    SystemApi systemApi = await ApiFactory.instance.getSystemApi();
+    SystemApi systemApi = await apiFactory.getSystemApi();
     SimpleLogger().info(await systemApi.ping());
   }
 
