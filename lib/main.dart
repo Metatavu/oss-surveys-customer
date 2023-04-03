@@ -1,11 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:openapi_generator_annotations/openapi_generator_annotations.dart';
-import 'package:oss_surveys_api/oss_surveys_api.dart';
-import 'package:oss_surveys_customer/api/api_factory.dart';
-import 'package:oss_surveys_customer/mqtt/model/status_message.dart';
-import 'package:oss_surveys_customer/mqtt/mqtt_client.dart';
-import 'package:simple_logger/simple_logger.dart';
+import "package:flutter/material.dart";
+import "package:flutter_dotenv/flutter_dotenv.dart";
+import "package:openapi_generator_annotations/openapi_generator_annotations.dart";
+import "package:oss_surveys_customer/api/api_factory.dart";
+import "package:oss_surveys_customer/mqtt/mqtt_client.dart";
+import "package:simple_logger/simple_logger.dart";
 
 final logger = SimpleLogger();
 final apiFactory = ApiFactory();
@@ -30,20 +28,20 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: "Flutter Demo",
       theme: ThemeData(
         // This is the theme of your application.
         //
-        // Try running your application with "flutter run". You'll see the
+        // Try running your application with "flutter run". You"ll see the
         // application has a blue toolbar. Then, without quitting the app, try
         // changing the primarySwatch below to Colors.green and then invoke
         // "hot reload" (press "r" in the console where you ran "flutter run",
         // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
+        // Notice that the counter didn"t reset back to zero; the application
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(title: "Flutter Demo Home Page"),
     );
   }
 }
@@ -68,7 +66,6 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
-  String _connectionStatus = mqttClient.getClientConnectionStatus();
 
   void _incrementCounter() {
     setState(() {
@@ -79,35 +76,6 @@ class _MyHomePageState extends State<MyHomePage> {
       // called again, and so nothing would appear to happen.
       _counter++;
     });
-  }
-  
-  void _setConnectionStatus() {
-    setState(() {
-      _connectionStatus = mqttClient.getClientConnectionStatus();
-    });
-  }
-
-  void _disconnectMqttClient() {
-    mqttClient.disconnect();
-    _setConnectionStatus();
-  }
-  
-  void _connectMqttClient() {
-    mqttClient.connect();
-    _setConnectionStatus();
-  }
-  
-  void _sendTrueStatusMessage() {
-    mqttClient.publishMessage("oss/status", mqttClient.createMessagePayload(StatusMessage(true).toJson().toString()));
-  }
-  
-  void _sendFalseStatusMessage() {
-    mqttClient.publishMessage("oss/status", mqttClient.createMessagePayload(StatusMessage(false).toJson().toString()));
-  }
-  
-  void _getPing() async {
-    SystemApi systemApi = await apiFactory.getSystemApi();
-    SimpleLogger().info(await systemApi.ping());
   }
 
   @override
@@ -145,30 +113,18 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             const Text(
-              'You have pushed the button this many times:',
+              "You have pushed the button this many times:",
             ),
             Text(
-              '$_counter',
+              "$_counter",
               style: Theme.of(context).textTheme.headline4,
             ),
-            Text(
-              "Status: ${mqttClient.getClientConnectionStatus()}"
-            ),
-            Row(
-              children: <Widget>[
-                TextButton(onPressed: _disconnectMqttClient, child: const Text("Disconnect")),
-                TextButton(onPressed: _connectMqttClient, child: const Text("Connect")),
-                TextButton(onPressed: _sendTrueStatusMessage, child: const Text("Send true")),
-                TextButton(onPressed: _sendFalseStatusMessage, child: const Text("Send false")),
-                TextButton(onPressed: _getPing, child: const Text("Send ping"))
-              ],
-            )
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _incrementCounter,
-        tooltip: 'Increment',
+        tooltip: "Increment",
         child: const Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
@@ -178,7 +134,7 @@ class _MyHomePageState extends State<MyHomePage> {
 /// API Client generator config
 @Openapi(
     additionalProperties: AdditionalProperties(pubName: "oss_surveys_api"),
-    inputSpecFile: 'oss-surveys-api-spec/swagger.yaml',
+    inputSpecFile: "oss-surveys-api-spec/swagger.yaml",
     generatorName: Generator.dio,
-    outputDirectory: 'oss-surveys-api')
+    outputDirectory: "oss-surveys-api")
 class OssSurveysApi extends OpenapiGeneratorConfig {}

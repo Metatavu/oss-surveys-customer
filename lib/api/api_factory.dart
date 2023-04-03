@@ -1,5 +1,5 @@
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:oss_surveys_api/oss_surveys_api.dart';
+import "package:flutter_dotenv/flutter_dotenv.dart";
+import "package:oss_surveys_api/oss_surveys_api.dart";
 
 /// API Factory
 /// Provides initialized API Clients
@@ -12,7 +12,6 @@ class ApiFactory {
   
   /// Initializes API Client
   Future<OssSurveysApi> _getApi() async {
-    // TODO: Add support for planned asymmetric key authentication
     var apiBasePath = dotenv.env["SURVEYS_API_BASE_PATH"];
   
     return OssSurveysApi(basePathOverride: apiBasePath);

@@ -1,4 +1,4 @@
-import 'package:oss_surveys_customer/mqtt/mqtt_client.dart';
+import "package:oss_surveys_customer/mqtt/mqtt_client.dart";
 
 class MqttClientProvider {
   
