@@ -1,23 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:openapi_generator_annotations/openapi_generator_annotations.dart';
-import 'package:oss_surveys_api/oss_surveys_api.dart';
-import 'package:oss_surveys_customer/api/api_factory.dart';
-import 'package:oss_surveys_customer/mqtt/model/status_message.dart';
-import 'package:oss_surveys_customer/mqtt/mqtt_client.dart';
-import 'package:simple_logger/simple_logger.dart';
 
-void main() async {
-  _configureLogger();
-  await dotenv.load(fileName: ".env");
-  mqttClient.connect();
+void main() {
   runApp(const MyApp());
-}
-
-/// Configures logger to use [logLevel] and formats log messages to be cleaner than by default.
-void _configureLogger({logLevel = Level.INFO}) {
-  SimpleLogger().setLevel(logLevel);
-  SimpleLogger().formatter = ((info) => "[${info.time}] -- ${info.callerFrame ?? "NO CALLER INFO"} - ${info.message}");
 }
 
 class MyApp extends StatelessWidget {
@@ -65,7 +49,6 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
-  String _connectionStatus = mqttClient.getClientConnectionStatus();
 
   void _incrementCounter() {
     setState(() {
@@ -76,35 +59,6 @@ class _MyHomePageState extends State<MyHomePage> {
       // called again, and so nothing would appear to happen.
       _counter++;
     });
-  }
-  
-  void _setConnectionStatus() {
-    setState(() {
-      _connectionStatus = mqttClient.getClientConnectionStatus();
-    });
-  }
-
-  void _disconnectMqttClient() {
-    mqttClient.disconnect();
-    _setConnectionStatus();
-  }
-  
-  void _connectMqttClient() {
-    mqttClient.connect();
-    _setConnectionStatus();
-  }
-  
-  void _sendTrueStatusMessage() {
-    mqttClient.publishMessage("oss/status", mqttClient.createMessagePayload(StatusMessage(true).toJson().toString()));
-  }
-  
-  void _sendFalseStatusMessage() {
-    mqttClient.publishMessage("oss/status", mqttClient.createMessagePayload(StatusMessage(false).toJson().toString()));
-  }
-  
-  void _getPing() async {
-    SystemApi systemApi = await ApiFactory.instance.getSystemApi();
-    SimpleLogger().info(await systemApi.ping());
   }
 
   @override
@@ -148,18 +102,6 @@ class _MyHomePageState extends State<MyHomePage> {
               '$_counter',
               style: Theme.of(context).textTheme.headline4,
             ),
-            Text(
-              "Status: ${mqttClient.getClientConnectionStatus()}"
-            ),
-            Row(
-              children: <Widget>[
-                TextButton(onPressed: _disconnectMqttClient, child: const Text("Disconnect")),
-                TextButton(onPressed: _connectMqttClient, child: const Text("Connect")),
-                TextButton(onPressed: _sendTrueStatusMessage, child: const Text("Send true")),
-                TextButton(onPressed: _sendFalseStatusMessage, child: const Text("Send false")),
-                TextButton(onPressed: _getPing, child: const Text("Send ping"))
-              ],
-            )
           ],
         ),
       ),
@@ -171,11 +113,3 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 }
-
-/// API Client generator config
-@Openapi(
-    additionalProperties: AdditionalProperties(pubName: "oss_surveys_api"),
-    inputSpecFile: 'oss-surveys-api-spec/swagger.yaml',
-    generatorName: Generator.dio,
-    outputDirectory: 'oss-surveys-api')
-class OssSurveysApi extends OpenapiGeneratorConfig {}

@@ -22,15 +22,6 @@ version: 1.0.0+1
 environment:
   sdk: '>=2.18.6 <3.0.0'
 
-scripts:
-  # run is a default script. To use it, simply type
-  # in the command line: "rps" - that's all!
-  run: "flutter run -t lib/app.dart --flavor development"
-  generate:
-    client: >
-        flutter pub run build_runner build --delete-conflicting-outputs &&
-        flutter pub get oss-surveys-api
-        
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
 # consider running `flutter pub upgrade --major-versions`. Alternatively,
@@ -40,23 +31,15 @@ scripts:
 dependencies:
   flutter:
     sdk: flutter
-  openapi_generator_annotations: ^4.0.0
-  flutter_dotenv: ^5.0.2
-  simple_logger: ^1.9.0+2
-  mqtt_client: ^9.8.1
-  oss_surveys_api:
-    path: oss-surveys-api
+
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2
-  typed_data: ^1.3.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  openapi_generator: ^4.0.0
-  build_runner: ^2.1.8
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -70,8 +53,6 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
-  assets:
-    - .env
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
