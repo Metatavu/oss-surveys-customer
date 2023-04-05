@@ -8,6 +8,14 @@ Consumer display application for displaying surveys.
   - if not, `git submodule init` and `git submodule update`
 3. `flutter pub run build_runner build --delete-conflicting-outputs`
 
+### Working with database
+After editing database or entity/table classes, code generation needs to be ran with `flutter pub run build_runner build`   
+Another option is to have `flutter pub run build_runner watch` running in the background.
+#### Defining new table
+1. Create entity_name.dart and define corresponding class [reference](https://drift.simonbinder.eu/docs/getting-started/#declaring-tables)
+2. Add new migration to database.dart [reference](https://drift.simonbinder.eu/docs/advanced-features/migrations/#basics)
+3. Run code generation described earlier.
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.
