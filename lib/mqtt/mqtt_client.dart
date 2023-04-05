@@ -1,5 +1,3 @@
-import "dart:convert";
-
 import "package:flutter/foundation.dart";
 import "package:flutter_dotenv/flutter_dotenv.dart";
 import "package:mqtt_client/mqtt_client.dart";
@@ -12,7 +10,7 @@ import "../main.dart";
 class MqttClient {
   
   late final MqttServerClient _client;
-  final statusTopic = "oss/status";
+  final statusTopic = "oss/$environment/status";
   
   Map<String, Function(String)> listeners = {};
   
@@ -58,18 +56,15 @@ class MqttClient {
       if (c.isEmpty) {
         return;
       }
-      print("C: ${c[0].topic}");
-      listeners.keys.forEach((element) {print(element);});
+
       if (listeners.containsKey(c[0].topic)) {
+        logger.info("Handling message to ${c[0].topic}...");
         final MqttPublishMessage publishMessage = c[0].payload as MqttPublishMessage;
         String message = MqttPublishPayload.bytesToStringAsString(publishMessage.payload.message);
         listeners[c[0].topic]!(message);
+      } else {
+        logger.warning("Didn't have listener for topic ${c[0].topic}");
       }
-      final MqttPublishMessage message = c[0].payload as MqttPublishMessage;
-      final payload =
-      MqttPublishPayload.bytesToStringAsString(message.payload.message);
-
-      logger.info("Received message:$payload from topic: ${c[0].topic}>");
     });
   }
   
@@ -133,10 +128,11 @@ class MqttClient {
     _client.subscribe(topic, qos);
   }
   
+  /// Subscribes to topics listed in [newListeners] and adds topic:callback pairs to [listeners] for further callback invocation.
   void addListeners(Map<String, Function(String)> newListeners) {
     for (var listener in newListeners.entries) {
-      listeners[listener.key] = listener.value;
       subscribeToTopic(listener.key);
+      listeners[listener.key] = listener.value;
     }
   }
   
