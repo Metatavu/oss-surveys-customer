@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import "package:flutter/material.dart";
 
 /// Gets application theme
 ThemeData getTheme() => ThemeData(
