@@ -55,7 +55,7 @@ class SurveysDao extends DatabaseAccessor<Database> with _$SurveysDaoMixin {
       ) 
     );
     
-    return await (select(surveys)..where((row) => row.id.equals(foundSurvey!.id))).getSingle();
+    return await (select(surveys)..where((row) => row.id.equals(foundSurvey.id))).getSingle();
   }
   
   /// Deletes persisted Survey by [id]
