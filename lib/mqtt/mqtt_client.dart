@@ -1,3 +1,5 @@
+import "dart:convert";
+
 import "package:flutter/foundation.dart";
 import "package:flutter_dotenv/flutter_dotenv.dart";
 import "package:mqtt_client/mqtt_client.dart";
@@ -11,6 +13,8 @@ class MqttClient {
   
   late final MqttServerClient _client;
   final statusTopic = "oss/status";
+  
+  Map<String, Function(String)> listeners = {};
   
   /// Public constructor.
   /// 
@@ -53,6 +57,13 @@ class MqttClient {
     _client.updates?.listen((List<MqttReceivedMessage<MqttMessage>> c) {
       if (c.isEmpty) {
         return;
+      }
+      print("C: ${c[0].topic}");
+      listeners.keys.forEach((element) {print(element);});
+      if (listeners.containsKey(c[0].topic)) {
+        final MqttPublishMessage publishMessage = c[0].payload as MqttPublishMessage;
+        String message = MqttPublishPayload.bytesToStringAsString(publishMessage.payload.message);
+        listeners[c[0].topic]!(message);
       }
       final MqttPublishMessage message = c[0].payload as MqttPublishMessage;
       final payload =
@@ -113,6 +124,20 @@ class MqttClient {
     buffer.addAll(data);
     
     return buffer;
+  }
+  
+  /// Subscribes to given MQTT [topic].
+  /// 
+  /// Quality of Service (QoS) defaults to [MqttQos.atLeastOnce] (1)
+  void subscribeToTopic(String topic, { qos = MqttQos.atLeastOnce }) {
+    _client.subscribe(topic, qos);
+  }
+  
+  void addListeners(Map<String, Function(String)> newListeners) {
+    for (var listener in newListeners.entries) {
+      listeners[listener.key] = listener.value;
+      subscribeToTopic(listener.key);
+    }
   }
   
   /// Reconnects MQTT Client.

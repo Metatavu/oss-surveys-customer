@@ -1,5 +1,7 @@
+import 'package:oss_surveys_customer/mqtt/model/abstract_message.dart';
+
 /// MQTT Status Message Class
-class StatusMessage {
+class StatusMessage implements AbstractMqttMessage {
   
   StatusMessage(this.status);
   

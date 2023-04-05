@@ -21,4 +21,9 @@ class ApiFactory {
   Future<SystemApi> getSystemApi() {
     return _getApi().then((api) => api.getSystemApi());
   }
+  
+  /// Gets Surveys API
+  Future<SurveysApi> getSurveysApi() {
+    return _getApi().then((api) => api.getSurveysApi());
+  }
 }
