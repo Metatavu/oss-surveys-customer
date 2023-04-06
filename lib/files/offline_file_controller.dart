@@ -196,3 +196,5 @@ class MetaFile {
     "eTag": eTag
   };
 }
+
+final offlineFileController = OfflineFileController();
