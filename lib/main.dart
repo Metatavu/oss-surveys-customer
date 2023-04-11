@@ -1,5 +1,6 @@
 import "dart:async";
 import "dart:io";
+import "package:device_info_plus/device_info_plus.dart";
 import "package:flutter/material.dart";
 import "package:flutter_device_identifier/flutter_device_identifier.dart";
 import "package:flutter_dotenv/flutter_dotenv.dart";
@@ -17,18 +18,15 @@ final logger = SimpleLogger();
 final apiFactory = ApiFactory();
 
 late final String environment;
-
 late bool isDeviceApproved;
+late final String deviceSerialNumber;
 
 void main() async {
   _configureLogger();
   await dotenv.load(fileName: ".env");
   environment = dotenv.env["ENVIRONMENT"]!;
   mqttClient.connect().then((_) => _setupMqttListeners());
-  if (Platform.isAndroid) {
-    await FlutterDeviceIdentifier.requestPermission(); 
-  }
-  FlutterDeviceIdentifier.serialCode.then((value) => logger.info("SERIAL NUMBER: $value"));
+  deviceSerialNumber = await _getDeviceSerialNumber();
   await loadOfflinedFont();
   isDeviceApproved = await database.isDeviceApproved();
   _setupTimers();
@@ -57,6 +55,18 @@ void _setupTimers() async {
 Future<void> _pollDeviceApprovalStatus() async {
   logger.info("Polling device approval status...");
   // TODO: Add API call for polling device approval status.
+}
+
+/// Returns the serial number of the device
+Future<String> _getDeviceSerialNumber() async {
+  if (Platform.isAndroid) {
+    await FlutterDeviceIdentifier.requestPermission();
+    return await FlutterDeviceIdentifier.serialCode;
+  } else if (Platform.isLinux) {
+    return await DeviceInfoPlugin().linuxInfo.then((value) => value.data["machineId"]);
+  }
+  
+  throw new Exception("Unsupported operating system!");
 }
 
 class MyApp extends StatelessWidget {
