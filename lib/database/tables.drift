@@ -4,7 +4,7 @@ import 'tables.dart';
 
 --- Schema version 1
 CREATE TABLE surveys (
-  TEXT id NOT NULL
+  INTEGER id NOT NULL
   TEXT title NOT NULL
   TEXT creatorId NOT NULL
   TEXT lastModifierId NOT NULL
@@ -13,3 +13,12 @@ CREATE TABLE surveys (
   
   PRIMARY KEY (id)
 );
+
+--- Schema version 2
+CREATE TABLE keys (
+  INTEGER id NOT NULL
+  TEXT key NOT NULL
+  TEXT createdAt NOT NULL
+  
+  PRIMARY KEY (id)
+)

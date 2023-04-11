@@ -270,6 +270,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_device_identifier:
+    dependency: "direct main"
+    description:
+      name: flutter_device_identifier
+      sha256: "6c6ade9d3a568fffe4830c1f9afef18f44b2669da12d355aa9fa9089d8918328"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.1"
   flutter_dotenv:
     dependency: "direct main"
     description:

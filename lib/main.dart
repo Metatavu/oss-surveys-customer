@@ -1,7 +1,11 @@
+import "dart:async";
+import "dart:io";
 import "package:flutter/material.dart";
+import "package:flutter_device_identifier/flutter_device_identifier.dart";
 import "package:flutter_dotenv/flutter_dotenv.dart";
 import "package:openapi_generator_annotations/openapi_generator_annotations.dart";
 import "package:oss_surveys_customer/api/api_factory.dart";
+import "package:oss_surveys_customer/database/database.dart";
 import "package:oss_surveys_customer/mqtt/listeners/surveys_listener.dart";
 import "package:oss_surveys_customer/mqtt/mqtt_client.dart";
 import "package:oss_surveys_customer/screens/default_screen.dart";
@@ -14,12 +18,20 @@ final apiFactory = ApiFactory();
 
 late final String environment;
 
+late bool isDeviceApproved;
+
 void main() async {
   _configureLogger();
   await dotenv.load(fileName: ".env");
   environment = dotenv.env["ENVIRONMENT"]!;
   mqttClient.connect().then((_) => _setupMqttListeners());
+  if (Platform.isAndroid) {
+    await FlutterDeviceIdentifier.requestPermission(); 
+  }
+  FlutterDeviceIdentifier.serialCode.then((value) => logger.info("SERIAL NUMBER: $value"));
   await loadOfflinedFont();
+  isDeviceApproved = await database.isDeviceApproved();
+  _setupTimers();
   runApp(const MyApp());
 }
 
@@ -32,6 +44,19 @@ void _configureLogger({logLevel = Level.INFO}) {
 /// Setups MQTT Listeners
 void _setupMqttListeners() {
   SurveysListener();
+}
+
+/// Setups timers for background tasks ran on interval.
+void _setupTimers() async {
+  if (!isDeviceApproved) {
+    Timer.periodic(const Duration(seconds: 30), (_) => _pollDeviceApprovalStatus() );
+  }
+}
+
+/// Polls API for checking if device is approved.
+Future<void> _pollDeviceApprovalStatus() async {
+  logger.info("Polling device approval status...");
+  // TODO: Add API call for polling device approval status.
 }
 
 class MyApp extends StatelessWidget {

@@ -60,6 +60,7 @@ dependencies:
   flutter_svg: ^2.0.4
   meta: ^1.8.0
   crypto: ^3.0.2
+  flutter_device_identifier: ^0.0.1
 
 dev_dependencies:
   flutter_test:
