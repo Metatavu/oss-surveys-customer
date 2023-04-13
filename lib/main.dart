@@ -55,7 +55,7 @@ void _setupTimers() async {
 /// Polls API for checking if device is approved.
 Future<void> _pollDeviceApprovalStatus(Timer timer) async {
   logger.info("Polling device approval status...");
-  DevicesApi devicesApi = await apiFactory.getDevicesApi();
+  DeviceRequestsApi devicesApi = await apiFactory.getDeviceRequestsApi();
   try {
     String? deviceId = await keysDao.getDeviceId();
     if (deviceId == null) {
