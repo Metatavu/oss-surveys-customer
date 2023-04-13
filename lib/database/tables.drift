@@ -17,8 +17,9 @@ CREATE TABLE surveys (
 --- Schema version 2
 CREATE TABLE keys (
   INTEGER id NOT NULL
-  TEXT key NOT NULL
+  TEXT key NULL
+  TEXT deviceId NOT NULL
   TEXT createdAt NOT NULL
   
   PRIMARY KEY (id)
-)
+);

@@ -35,11 +35,6 @@ class Database extends _$Database {
       }
     );
   }
-  
-  /// Checks if this device is approved e.g. it has received a key from the API.
-  Future<bool> isDeviceApproved() async {
-    return (select(keys).getSingleOrNull()).then((value) => value != null);
-  }
 }
 
 /// Opens connection

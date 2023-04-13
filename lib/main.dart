@@ -5,8 +5,9 @@ import "package:flutter/material.dart";
 import "package:flutter_device_identifier/flutter_device_identifier.dart";
 import "package:flutter_dotenv/flutter_dotenv.dart";
 import "package:openapi_generator_annotations/openapi_generator_annotations.dart";
+import "package:oss_surveys_api/oss_surveys_api.dart";
 import "package:oss_surveys_customer/api/api_factory.dart";
-import "package:oss_surveys_customer/database/database.dart";
+import "package:oss_surveys_customer/database/dao/keys_dao.dart";
 import "package:oss_surveys_customer/mqtt/listeners/surveys_listener.dart";
 import "package:oss_surveys_customer/mqtt/mqtt_client.dart";
 import "package:oss_surveys_customer/screens/default_screen.dart";
@@ -28,7 +29,7 @@ void main() async {
   mqttClient.connect().then((_) => _setupMqttListeners());
   deviceSerialNumber = await _getDeviceSerialNumber();
   await loadOfflinedFont();
-  isDeviceApproved = await database.isDeviceApproved();
+  isDeviceApproved = await keysDao.isDeviceApproved();
   _setupTimers();
   runApp(const MyApp());
 }
@@ -47,14 +48,37 @@ void _setupMqttListeners() {
 /// Setups timers for background tasks ran on interval.
 void _setupTimers() async {
   if (!isDeviceApproved) {
-    Timer.periodic(const Duration(seconds: 30), (_) => _pollDeviceApprovalStatus() );
+    Timer.periodic(const Duration(seconds: 30), (timer) => _pollDeviceApprovalStatus(timer) );
   }
 }
 
 /// Polls API for checking if device is approved.
-Future<void> _pollDeviceApprovalStatus() async {
+Future<void> _pollDeviceApprovalStatus(Timer timer) async {
   logger.info("Polling device approval status...");
-  // TODO: Add API call for polling device approval status.
+  DevicesApi devicesApi = await apiFactory.getDevicesApi();
+  try {
+    String? deviceId = await keysDao.getDeviceId();
+    if (deviceId == null) {
+      DeviceRequest? deviceRequest = await devicesApi.createDeviceRequest(serialNumber: deviceSerialNumber).then((response) => response.data);
+      
+      if (deviceRequest != null) {
+        logger.info("Created a new Device Request, waiting for approval...");
+        keysDao.persistDeviceId(deviceRequest.id!);
+      }
+    } else {
+      String? deviceKey = await devicesApi.getDeviceKey(requestId: deviceId).then((response) => response.data);
+      
+      if (deviceKey != null) {
+        logger.info("Received device key...");
+        await keysDao.persistDeviceKey(deviceKey);
+        isDeviceApproved = true;
+        logger.info("Persisted device key, stopping polling!");
+        timer.cancel();
+      }
+    }
+  } catch (e) {
+    logger.info("Error: $e");
+  }
 }
 
 /// Returns the serial number of the device
@@ -66,7 +90,7 @@ Future<String> _getDeviceSerialNumber() async {
     return await DeviceInfoPlugin().linuxInfo.then((value) => value.data["machineId"]);
   }
   
-  throw new Exception("Unsupported operating system!");
+  throw Exception("Unsupported operating system!");
 }
 
 class MyApp extends StatelessWidget {

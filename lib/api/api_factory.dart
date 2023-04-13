@@ -1,5 +1,6 @@
 import "package:flutter_dotenv/flutter_dotenv.dart";
 import "package:oss_surveys_api/oss_surveys_api.dart";
+import "package:oss_surveys_customer/database/dao/keys_dao.dart";
 
 /// API Factory
 /// Provides initialized API Clients
@@ -13,8 +14,14 @@ class ApiFactory {
   /// Initializes API Client
   Future<OssSurveysApi> _getApi() async {
     var apiBasePath = dotenv.env["SURVEYS_API_BASE_PATH"];
-  
-    return OssSurveysApi(basePathOverride: apiBasePath);
+    String? deviceKey = await keysDao.getDeviceKey();
+    var api = OssSurveysApi(basePathOverride: apiBasePath);
+    
+    if (deviceKey != null) {
+      api.dio.options.headers.addAll({ "X-DEVICE-KEY": deviceKey });
+    }
+    
+    return api;
   }
   
   /// Gets System API
@@ -25,5 +32,10 @@ class ApiFactory {
   /// Gets Surveys API
   Future<SurveysApi> getSurveysApi() {
     return _getApi().then((api) => api.getSurveysApi());
+  }
+  
+  /// Gets Devices API
+  Future<DevicesApi> getDevicesApi() {
+    return _getApi().then((api) => api.getDevicesApi());
   }
 }
