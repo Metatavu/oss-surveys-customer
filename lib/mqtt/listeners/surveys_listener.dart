@@ -8,7 +8,6 @@ import "package:oss_surveys_customer/mqtt/model/survey_message.dart";
 
 /// MQTT Surveys Messages listener class
 class SurveysListener extends AbstractMqttListener {
-
   SurveysListener() {
     setListeners();
   }
@@ -20,8 +19,9 @@ class SurveysListener extends AbstractMqttListener {
   void handleCreate(String message) async {
     try {
       SurveysApi.SurveysApi surveysApi = await apiFactory.getSurveysApi();
-      SurveysApi.Survey foundSurvey = await surveysApi.findSurvey(surveyId: _getSurveyIdFromMessage(message))
-        .then((value) => value.data!);
+      SurveysApi.Survey foundSurvey = await surveysApi
+          .findSurvey(surveyId: _getSurveyIdFromMessage(message))
+          .then((value) => value.data!);
 
       await surveysDao.createSurvey(foundSurvey);
 
@@ -35,8 +35,9 @@ class SurveysListener extends AbstractMqttListener {
   void handleUpdate(String message) async {
     try {
       SurveysApi.SurveysApi surveysApi = await apiFactory.getSurveysApi();
-      SurveysApi.Survey foundSurvey = await surveysApi.findSurvey(surveyId: _getSurveyIdFromMessage(message))
-        .then((value) => value.data!);
+      SurveysApi.Survey foundSurvey = await surveysApi
+          .findSurvey(surveyId: _getSurveyIdFromMessage(message))
+          .then((value) => value.data!);
 
       await surveysDao.updateSurveyByExternalId(foundSurvey.id!, foundSurvey);
 

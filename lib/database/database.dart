@@ -8,30 +8,28 @@ import "package:path/path.dart" as p;
 part "database.g.dart";
 
 /// Database class
-/// 
+///
 /// Opens an in-file database, creating it if it doesn't exist.
 /// Add new migrations to [migration.onUpgrade] and bump the [schemaVersion].
 @DriftDatabase(tables: [Surveys], include: {"tables.drift"})
-class Database extends _$Database {  
-  Database(): super(_openConnection());
-  
+class Database extends _$Database {
+  Database() : super(_openConnection());
+
   @override
   int get schemaVersion => 1;
 
   @override
   MigrationStrategy get migration {
-    return MigrationStrategy(
-      onCreate: (Migrator migrator) async {
-        await migrator.createAll();
-      },
-      onUpgrade: (Migrator migrator, int from, int to) async {
-        for (int target = from + 1; target <= to; target++) {
-          switch (target) {
-            case 1: await migrator.create(surveys);
-          }
+    return MigrationStrategy(onCreate: (Migrator migrator) async {
+      await migrator.createAll();
+    }, onUpgrade: (Migrator migrator, int from, int to) async {
+      for (int target = from + 1; target <= to; target++) {
+        switch (target) {
+          case 1:
+            await migrator.create(surveys);
         }
       }
-    );
+    });
   }
 }
 
@@ -40,7 +38,7 @@ LazyDatabase _openConnection() {
   return LazyDatabase(() async {
     final dbFolder = await getApplicationDocumentsDirectory();
     final file = File(p.join(dbFolder.path, "db.sqlite"));
-    
+
     return NativeDatabase(file);
   });
 }
