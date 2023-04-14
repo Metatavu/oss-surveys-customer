@@ -26,7 +26,8 @@ void main() async {
 /// Configures logger to use [logLevel] and formats log messages to be cleaner than by default.
 void _configureLogger({logLevel = Level.INFO}) {
   SimpleLogger().setLevel(logLevel, includeCallerInfo: true);
-  SimpleLogger().formatter = ((info) => "[${info.time}] -- ${info.callerFrame ?? "NO CALLER INFO"} - ${info.message}");
+  SimpleLogger().formatter = ((info) =>
+      "[${info.time}] -- ${info.callerFrame ?? "NO CALLER INFO"} - ${info.message}");
 }
 
 /// Setups MQTT Listeners
