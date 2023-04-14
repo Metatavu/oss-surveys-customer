@@ -16,23 +16,31 @@ Future<void> loadOfflinedFont() async {
 }
 
 /// Returns offlined font.
-/// 
+///
 /// If font is already downloaded, returns that. Otherwise downloads it and stores it in disk.
 Future<ByteData> getOfflinedFont() async {
-  File offlinedFont = File("${(await getApplicationSupportDirectory()).path}/fonts/font.ttf");
-  
+  File offlinedFont =
+      File("${(await getApplicationSupportDirectory()).path}/fonts/font.ttf");
+
   if (await offlinedFont.exists()) {
     logger.info("Using already downloaded offlined font!");
-    return await offlinedFont.readAsBytes().then((value) => ByteData.view(value.buffer));
+    return await offlinedFont
+        .readAsBytes()
+        .then((value) => ByteData.view(value.buffer));
   }
-  
+
   logger.info("Didn't find offlined font, downloading...");
   HttpClient client = HttpClient();
   Uri uri = Uri.parse(dotenv.env["FONT_URL"]!);
-  HttpClientResponse response = await client.getUrl(uri).then((request) => request.close());
-  Int8Buffer byteBuffer = await offlineFileController.readResponseToBytes(response);
-  String fontsDirPath = await Directory("${(await getApplicationSupportDirectory()).path}/fonts").create().then((value) => value.path);
+  HttpClientResponse response =
+      await client.getUrl(uri).then((request) => request.close());
+  Int8Buffer byteBuffer =
+      await offlineFileController.readResponseToBytes(response);
+  String fontsDirPath =
+      await Directory("${(await getApplicationSupportDirectory()).path}/fonts")
+          .create()
+          .then((value) => value.path);
   await File("$fontsDirPath/font.ttf").writeAsBytes(byteBuffer);
-  
+
   return ByteData.view(byteBuffer.buffer);
 }
