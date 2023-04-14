@@ -53,7 +53,7 @@ class SurveysDao extends DatabaseAccessor<Database> with _$SurveysDaoMixin {
         modifiedAt: updatedSurvey.metadata!.modifiedAt));
 
     return await (select(surveys)
-          ..where((row) => row.id.equals(foundSurvey!.id)))
+          ..where((row) => row.id.equals(foundSurvey.id)))
         .getSingle();
   }
 
