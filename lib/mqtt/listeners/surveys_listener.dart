@@ -1,16 +1,13 @@
 import "dart:convert";
 import "package:oss_surveys_api/oss_surveys_api.dart" as SurveysApi;
 import "package:oss_surveys_customer/database/dao/surveys_dao.dart";
-import 'package:oss_surveys_customer/utils/offline_file_controller.dart';
 import "package:oss_surveys_customer/main.dart";
 import "package:oss_surveys_customer/mqtt/listeners/abstract_listener.dart";
 import "package:oss_surveys_customer/mqtt/model/survey_message.dart";
-
 import "../../database/database.dart";
 
 /// MQTT Surveys Messages listener class
 class SurveysListener extends AbstractMqttListener {
-
   SurveysListener() {
     setListeners();
   }
@@ -22,8 +19,9 @@ class SurveysListener extends AbstractMqttListener {
   void handleCreate(String message) async {
     try {
       SurveysApi.SurveysApi surveysApi = await apiFactory.getSurveysApi();
-      SurveysApi.Survey foundSurvey = await surveysApi.findSurvey(surveyId: _getSurveyIdFromMessage(message))
-        .then((value) => value.data!);
+      SurveysApi.Survey foundSurvey = await surveysApi
+          .findSurvey(surveyId: _getSurveyIdFromMessage(message))
+          .then((value) => value.data!);
 
       await surveysDao.createSurvey(foundSurvey);
 
@@ -37,8 +35,9 @@ class SurveysListener extends AbstractMqttListener {
   void handleUpdate(String message) async {
     try {
       SurveysApi.SurveysApi surveysApi = await apiFactory.getSurveysApi();
-      SurveysApi.Survey foundSurvey = await surveysApi.findSurvey(surveyId: _getSurveyIdFromMessage(message))
-        .then((value) => value.data!);
+      SurveysApi.Survey foundSurvey = await surveysApi
+          .findSurvey(surveyId: _getSurveyIdFromMessage(message))
+          .then((value) => value.data!);
 
       await surveysDao.updateSurveyByExternalId(foundSurvey.id!, foundSurvey);
 
