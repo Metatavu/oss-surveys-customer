@@ -3,6 +3,7 @@ import "package:flutter/material.dart";
 import "package:flutter_svg/svg.dart";
 import "package:oss_surveys_customer/database/dao/keys_dao.dart";
 import "package:oss_surveys_customer/main.dart";
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 /// Default Screen
 class DefaultScreen extends StatefulWidget {
@@ -46,8 +47,8 @@ class _DefaultScreenState extends State<DefaultScreen> {
             child:
                 Column(mainAxisAlignment: MainAxisAlignment.center, children: [
           if (!_isApprovedDevice)
-            const Text("Laitetta ei ole vielä otettu käyttöön.",
-                style: TextStyle(
+            Text(AppLocalizations.of(context)!.notYetApproved,
+                style: const TextStyle(
                   fontFamily: "S-Bonus-Regular",
                   color: Color(0xffffffff),
                   fontSize: 30,
