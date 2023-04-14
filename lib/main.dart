@@ -49,7 +49,8 @@ void _setupMqttListeners() {
 /// Setups timers for background tasks ran on interval.
 void _setupTimers() async {
   if (!isDeviceApproved) {
-    Timer.periodic(const Duration(seconds: 30), (timer) => _pollDeviceApprovalStatus(timer) );
+    Timer.periodic(const Duration(seconds: 30),
+        (timer) => _pollDeviceApprovalStatus(timer));
   }
 }
 
@@ -60,15 +61,19 @@ Future<void> _pollDeviceApprovalStatus(Timer timer) async {
   try {
     String? deviceId = await keysDao.getDeviceId();
     if (deviceId == null) {
-      DeviceRequest? deviceRequest = await devicesApi.createDeviceRequest(serialNumber: deviceSerialNumber).then((response) => response.data);
-      
+      DeviceRequest? deviceRequest = await devicesApi
+          .createDeviceRequest(serialNumber: deviceSerialNumber)
+          .then((response) => response.data);
+
       if (deviceRequest != null) {
         logger.info("Created a new Device Request, waiting for approval...");
         keysDao.persistDeviceId(deviceRequest.id!);
       }
     } else {
-      String? deviceKey = await devicesApi.getDeviceKey(requestId: deviceId).then((response) => response.data);
-      
+      String? deviceKey = await devicesApi
+          .getDeviceKey(requestId: deviceId)
+          .then((response) => response.data?.key);
+
       if (deviceKey != null) {
         logger.info("Received device key...");
         await keysDao.persistDeviceKey(deviceKey);
@@ -88,9 +93,11 @@ Future<String> _getDeviceSerialNumber() async {
     await FlutterDeviceIdentifier.requestPermission();
     return await FlutterDeviceIdentifier.serialCode;
   } else if (Platform.isLinux) {
-    return await DeviceInfoPlugin().linuxInfo.then((value) => value.data["machineId"]);
+    return await DeviceInfoPlugin()
+        .linuxInfo
+        .then((value) => value.data["machineId"]);
   }
-  
+
   throw Exception("Unsupported operating system!");
 }
 

@@ -10,7 +10,7 @@ class StatusMessage implements AbstractMqttMessage {
   factory StatusMessage.fromJson(Map<String, dynamic> json) {
     final online = json["online"] as bool;
 
-    return StatusMessage(onlin);
+    return StatusMessage(online);
   }
 
   /// Converts Status Message to JSON
