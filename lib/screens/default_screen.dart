@@ -42,22 +42,28 @@ class _DefaultScreenState extends State<DefaultScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: Theme.of(context).primaryColor,
-        body: Center(
-            child:
-                Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          if (!_isApprovedDevice)
-            Text(AppLocalizations.of(context)!.notYetApproved,
+      backgroundColor: Theme.of(context).primaryColor,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (!_isApprovedDevice)
+              Text(
+                AppLocalizations.of(context)!.notYetApproved,
                 style: const TextStyle(
                   fontFamily: "S-Bonus-Regular",
                   color: Color(0xffffffff),
                   fontSize: 30,
-                )),
-          SvgPicture.asset(
-            "assets/logo.svg",
-            width: MediaQuery.of(context).size.width * 0.7,
-            height: MediaQuery.of(context).size.height * 0.7,
-          )
-        ])));
+                ),
+              ),
+            SvgPicture.asset(
+              "assets/logo.svg",
+              width: MediaQuery.of(context).size.width * 0.7,
+              height: MediaQuery.of(context).size.height * 0.7,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
