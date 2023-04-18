@@ -1,6 +1,7 @@
 import "dart:io";
 import "package:drift/drift.dart";
 import "package:drift/native.dart";
+import "package:oss_surveys_customer/database/model/key.dart";
 import "package:oss_surveys_customer/database/model/survey.dart";
 import "package:path_provider/path_provider.dart";
 import "package:path/path.dart" as p;
@@ -11,12 +12,12 @@ part "database.g.dart";
 ///
 /// Opens an in-file database, creating it if it doesn't exist.
 /// Add new migrations to [migration.onUpgrade] and bump the [schemaVersion].
-@DriftDatabase(tables: [Surveys], include: {"tables.drift"})
+@DriftDatabase(tables: [Surveys, Keys], include: {"tables.drift"})
 class Database extends _$Database {
   Database() : super(_openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration {
@@ -26,7 +27,9 @@ class Database extends _$Database {
       for (int target = from + 1; target <= to; target++) {
         switch (target) {
           case 1:
-            await migrator.create(surveys);
+            return await migrator.create(surveys);
+          case 2:
+            return await migrator.create(keys);
         }
       }
     });

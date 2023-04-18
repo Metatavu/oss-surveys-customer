@@ -11,6 +11,7 @@ Consumer display application for displaying surveys.
 ### Working with database
 After editing database or entity/table classes, code generation needs to be ran with `flutter pub run build_runner build`   
 Another option is to have `flutter pub run build_runner watch` running in the background.
+
 #### Defining new table
 1. Create entity_name.dart and define corresponding class [reference](https://drift.simonbinder.eu/docs/getting-started/#declaring-tables)
 2. Define migrations in tables.drift

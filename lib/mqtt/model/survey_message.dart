@@ -14,6 +14,7 @@ class SurveyMessage implements AbstractMqttMessage {
   }
 
   /// Converts Status Message to JSON
+  @override
   Map<String, dynamic> toJson() {
     return {"id": id};
   }
