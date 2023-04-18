@@ -1,10 +1,10 @@
 import "dart:convert";
 import "package:oss_surveys_api/oss_surveys_api.dart" as SurveysApi;
 import "package:oss_surveys_customer/database/dao/surveys_dao.dart";
-import "package:oss_surveys_customer/database/database.dart";
 import "package:oss_surveys_customer/main.dart";
 import "package:oss_surveys_customer/mqtt/listeners/abstract_listener.dart";
 import "package:oss_surveys_customer/mqtt/model/survey_message.dart";
+import "../../database/database.dart";
 
 /// MQTT Surveys Messages listener class
 class SurveysListener extends AbstractMqttListener {
