@@ -131,7 +131,7 @@ class OfflineFileController {
       await filePart.delete();
     }
 
-    await filePart.writeAsBytes(await _readResponseToBytes(response));
+    await filePart.writeAsBytes(await readResponseToBytes(response));
 
     if (await existingFile.exists()) {
       await existingFile.delete();
@@ -145,7 +145,7 @@ class OfflineFileController {
   }
 
   /// Reads [response] to bytes and awaits for it to be ready.
-  Future<Int8Buffer> _readResponseToBytes(HttpClientResponse response) {
+  Future<Int8Buffer> readResponseToBytes(HttpClientResponse response) {
     final completer = Completer<Int8Buffer>();
     final byteBuffer = Int8Buffer();
     response.listen((data) => byteBuffer.addAll(data),

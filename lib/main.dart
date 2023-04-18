@@ -5,6 +5,7 @@ import "package:oss_surveys_customer/api/api_factory.dart";
 import "package:oss_surveys_customer/mqtt/listeners/surveys_listener.dart";
 import "package:oss_surveys_customer/mqtt/mqtt_client.dart";
 import "package:oss_surveys_customer/screens/default_screen.dart";
+import "package:oss_surveys_customer/theme/font.dart";
 import "package:oss_surveys_customer/theme/theme.dart";
 import "package:simple_logger/simple_logger.dart";
 
@@ -18,6 +19,7 @@ void main() async {
   await dotenv.load(fileName: ".env");
   environment = dotenv.env["ENVIRONMENT"]!;
   mqttClient.connect().then((_) => _setupMqttListeners());
+  await loadOfflinedFont();
   runApp(const MyApp());
 }
 
