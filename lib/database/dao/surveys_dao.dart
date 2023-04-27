@@ -12,19 +12,15 @@ class SurveysDao extends DatabaseAccessor<Database> with _$SurveysDaoMixin {
   SurveysDao(Database database) : super(database);
 
   /// Creates and persists new Survey from REST [newSurvey]
-  Future<Survey> createSurvey(SurveyApi.Survey newSurvey) async {
-    int createdSurveyId = await into(surveys).insert(SurveysCompanion.insert(
-        externalId: newSurvey.id!,
-        title: newSurvey.title,
-        createdAt: newSurvey.metadata!.createdAt!,
-        modifiedAt: newSurvey.metadata!.modifiedAt!,
-        creatorId: newSurvey.metadata!.creatorId!,
-        lastModifierId: newSurvey.metadata!.lastModifierId!));
+  Future<Survey> createSurvey(SurveysCompanion newSurvey) async {
+    int createdSurveyId = await into(surveys).insert(newSurvey);
 
     return await (select(surveys)
           ..where((row) => row.id.equals(createdSurveyId)))
         .getSingle();
   }
+
+  // TODO: Methods below to update as above
 
   /// Finds persisted Survey by [externalId]
   Future<Survey?> findSurveyByExternalId(String externalId) async {

@@ -10,7 +10,7 @@ CREATE TABLE surveys (
   TEXT lastModifierId NOT NULL
   TEXT createdAt NOT NULL
   TEXT modifiedAt NOT NULL
-  
+
   PRIMARY KEY (id)
 );
 
@@ -20,6 +20,11 @@ CREATE TABLE keys (
   TEXT key NULL
   TEXT deviceId NOT NULL
   TEXT createdAt NOT NULL
-  
+
   PRIMARY KEY (id)
 );
+
+---Schema version 3
+ALTER TABLE surveys
+  ADD COLUMN publishStart TEXT NULL
+  ADD COLUMN publishEnd TEXT NULL;

@@ -4,7 +4,6 @@ import "package:device_info_plus/device_info_plus.dart";
 import "package:flutter/material.dart";
 import "package:flutter_device_identifier/flutter_device_identifier.dart";
 import "package:flutter_dotenv/flutter_dotenv.dart";
-import "package:flutter_localizations/flutter_localizations.dart";
 import "package:openapi_generator_annotations/openapi_generator_annotations.dart";
 import "package:oss_surveys_api/oss_surveys_api.dart";
 import "package:oss_surveys_customer/api/api_factory.dart";
