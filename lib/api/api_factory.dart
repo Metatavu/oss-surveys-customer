@@ -43,4 +43,9 @@ class ApiFactory {
   Future<DeviceSurveysApi> getDeviceSurveysApi() {
     return _getApi().then((api) => api.getDeviceSurveysApi());
   }
+
+  /// Gets DeviceData API
+  Future<DeviceDataApi> getDeviceDataApi() {
+    return _getApi().then((api) => api.getDeviceDataApi());
+  }
 }

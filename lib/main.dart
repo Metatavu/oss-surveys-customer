@@ -31,6 +31,11 @@ void main() async {
   deviceSerialNumber = await _getDeviceSerialNumber();
   await loadOfflinedFont();
   isDeviceApproved = await keysDao.isDeviceApproved();
+
+  if (isDeviceApproved) {
+    _getSurveys();
+  }
+
   _setupTimers();
   runApp(const MyApp());
 }
@@ -100,6 +105,28 @@ Future<String> _getDeviceSerialNumber() async {
   }
 
   throw Exception("Unsupported operating system!");
+}
+
+/// Gets all Surveys assigned to this device
+Future<void> _getSurveys() async {
+  DeviceDataApi deviceDataApi = await apiFactory.getDeviceDataApi();
+  try {
+    String? deviceId = await keysDao.getDeviceId();
+
+    if (deviceId == null) {
+      logger.warning("Device ID is null, cannot get surveys!");
+      return;
+    }
+
+    deviceDataApi
+        .listDeviceDataSurveys(deviceId: deviceId)
+        .then((deviceDataSurveys) {
+      logger.info("Received ${deviceDataSurveys.data?.length} surveys!");
+      deviceDataSurveys.data?.forEach((survey) {});
+    });
+  } catch (e) {
+    logger.shout("Error while getting Surveys: $e");
+  }
 }
 
 class MyApp extends StatelessWidget {
