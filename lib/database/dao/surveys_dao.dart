@@ -2,7 +2,7 @@ import "package:drift/drift.dart";
 import "package:oss_surveys_customer/database/database.dart";
 import "package:oss_surveys_customer/main.dart";
 import "../model/survey.dart";
-import "package:oss_surveys_api/oss_surveys_api.dart" as SurveyApi;
+import "package:oss_surveys_api/oss_surveys_api.dart" as surveys_api;
 
 part "surveys_dao.g.dart";
 
@@ -36,7 +36,7 @@ class SurveysDao extends DatabaseAccessor<Database> with _$SurveysDaoMixin {
 
   /// Updates persisted Survey by [externalId] and [updatedSurvey]
   Future<Survey> updateSurveyByExternalId(
-      String externalId, SurveyApi.Survey updatedSurvey) async {
+      String externalId, surveys_api.Survey updatedSurvey) async {
     Survey? foundSurvey = await findSurveyByExternalId(externalId);
 
     if (foundSurvey == null) {

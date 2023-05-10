@@ -1,5 +1,5 @@
 import "dart:convert";
-import "package:oss_surveys_api/oss_surveys_api.dart" as SurveysApi;
+import "package:oss_surveys_api/oss_surveys_api.dart" as surveys_api;
 import "package:oss_surveys_customer/database/dao/surveys_dao.dart";
 import "package:oss_surveys_customer/main.dart";
 import "package:oss_surveys_customer/mqtt/listeners/abstract_listener.dart";
@@ -18,16 +18,16 @@ class SurveysListener extends AbstractMqttListener {
   @override
   void handleCreate(String message) async {
     try {
-      SurveysApi.SurveysApi surveysApi = await apiFactory.getSurveysApi();
-      SurveysApi.DeviceSurveysApi deviceSurveysApi =
+      surveys_api.SurveysApi surveysApi = await apiFactory.getSurveysApi();
+      surveys_api.DeviceSurveysApi deviceSurveysApi =
           await apiFactory.getDeviceSurveysApi();
-      SurveysApi.DeviceSurvey foundDeviceSurvey = await deviceSurveysApi
+      surveys_api.DeviceSurvey foundDeviceSurvey = await deviceSurveysApi
           .findDeviceSurvey(
               deviceId: _getSurveyIdFromMessage(message).deviceId,
               deviceSurveyId: _getSurveyIdFromMessage(message).deviceSurveyId)
           .then((value) => value.data!);
 
-      SurveysApi.Survey foundSurvey = await surveysApi
+      surveys_api.Survey foundSurvey = await surveysApi
           .findSurvey(surveyId: foundDeviceSurvey.surveyId)
           .then((value) => value.data!);
 
@@ -51,8 +51,8 @@ class SurveysListener extends AbstractMqttListener {
   @override
   void handleUpdate(String message) async {
     try {
-      SurveysApi.SurveysApi surveysApi = await apiFactory.getSurveysApi();
-      SurveysApi.Survey foundSurvey = await surveysApi
+      surveys_api.SurveysApi surveysApi = await apiFactory.getSurveysApi();
+      surveys_api.Survey foundSurvey = await surveysApi
           .findSurvey(surveyId: _getSurveyIdFromMessage(message).surveyId)
           .then((value) => value.data!);
 
