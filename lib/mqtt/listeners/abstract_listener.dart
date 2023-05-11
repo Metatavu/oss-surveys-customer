@@ -2,7 +2,7 @@ import "package:meta/meta.dart";
 import "package:oss_surveys_customer/mqtt/mqtt_client.dart";
 
 /// Abstract MQTT Listener class
-abstract class AbstractMqttListener {
+abstract class AbstractMqttListener<T> {
   abstract String baseTopic;
 
   /// Returns a map of topic:callback entries handled by this listener.
@@ -26,4 +26,7 @@ abstract class AbstractMqttListener {
   void setListeners() {
     mqttClient.addListeners(getListeners());
   }
+
+  /// Deserializes message into [T] object
+  T deserializeMessage(String message);
 }

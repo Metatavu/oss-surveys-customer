@@ -3,11 +3,11 @@ import "package:oss_surveys_api/oss_surveys_api.dart" as surveys_api;
 import "package:oss_surveys_customer/database/dao/surveys_dao.dart";
 import "package:oss_surveys_customer/main.dart";
 import "package:oss_surveys_customer/mqtt/listeners/abstract_listener.dart";
-import "package:oss_surveys_customer/mqtt/model/device_survey_message.dart";
 import "../../database/database.dart";
 
 /// MQTT Surveys Messages listener class
-class SurveysListener extends AbstractMqttListener {
+class SurveysListener
+    extends AbstractMqttListener<surveys_api.DeviceSurveyMessage> {
   SurveysListener() {
     setListeners();
   }
@@ -18,6 +18,7 @@ class SurveysListener extends AbstractMqttListener {
   @override
   void handleCreate(String message) async {
     try {
+      print(deserializeMessage(message));
       logger.info("Created new Survey with externalId");
     } catch (e) {
       logger.shout("Couldn't handle create survey message ${e.toString()}");
@@ -42,8 +43,16 @@ class SurveysListener extends AbstractMqttListener {
     }
   }
 
-  /// Gets Survey ID from [message]
-  DeviceSurveyMessage _getSurveyIdFromMessage(String message) {
-    return DeviceSurveyMessage.fromJson(jsonDecode(message));
+  @override
+  surveys_api.DeviceSurveyMessage deserializeMessage(String message) {
+    surveys_api.DeviceSurveyMessageBuilder builder =
+        surveys_api.DeviceSurveyMessageBuilder();
+    var decoded = jsonDecode(message);
+    builder.deviceSurveyId = decoded["deviceSurveyId"];
+    builder.deviceId = decoded["deviceId"];
+    builder.action = surveys_api.DeviceSurveysMessageAction.values
+        .firstWhere((e) => e.toString() == decoded["action"]);
+
+    return builder.build();
   }
 }

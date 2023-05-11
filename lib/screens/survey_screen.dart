@@ -17,7 +17,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance!.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       surveysDao.findActiveSurvey().then((value) {
         if (value == null) {
           Navigator.pop(context);
