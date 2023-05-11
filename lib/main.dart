@@ -1,18 +1,22 @@
 import "dart:async";
 import "dart:io";
 import "package:device_info_plus/device_info_plus.dart";
+import "package:drift/drift.dart";
 import "package:flutter/material.dart";
 import "package:flutter_device_identifier/flutter_device_identifier.dart";
 import "package:flutter_dotenv/flutter_dotenv.dart";
 import "package:openapi_generator_annotations/openapi_generator_annotations.dart";
-import "package:oss_surveys_api/oss_surveys_api.dart";
+import "package:oss_surveys_api/oss_surveys_api.dart" as surveys_api;
 import "package:oss_surveys_customer/api/api_factory.dart";
 import "package:oss_surveys_customer/database/dao/keys_dao.dart";
+import "package:oss_surveys_customer/database/dao/surveys_dao.dart";
+import "package:oss_surveys_customer/database/database.dart";
 import "package:oss_surveys_customer/mqtt/listeners/surveys_listener.dart";
 import "package:oss_surveys_customer/mqtt/mqtt_client.dart";
 import "package:oss_surveys_customer/screens/default_screen.dart";
 import "package:oss_surveys_customer/theme/font.dart";
 import "package:oss_surveys_customer/theme/theme.dart";
+import "package:oss_surveys_customer/utils/pages_controller.dart";
 import "package:simple_logger/simple_logger.dart";
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
@@ -63,11 +67,12 @@ void _setupTimers() async {
 /// Polls API for checking if device is approved.
 Future<void> _pollDeviceApprovalStatus(Timer timer) async {
   logger.info("Polling device approval status...");
-  DeviceRequestsApi devicesApi = await apiFactory.getDeviceRequestsApi();
+  surveys_api.DeviceRequestsApi devicesApi =
+      await apiFactory.getDeviceRequestsApi();
   try {
     String? deviceId = await keysDao.getDeviceId();
     if (deviceId == null) {
-      DeviceRequest? deviceRequest = await devicesApi
+      surveys_api.DeviceRequest? deviceRequest = await devicesApi
           .createDeviceRequest(serialNumber: deviceSerialNumber)
           .then((response) => response.data);
 
@@ -108,8 +113,10 @@ Future<String> _getDeviceSerialNumber() async {
 }
 
 /// Gets all Surveys assigned to this device
+///
+/// Retains published surveys (should be only one) and creates a new [Survey] for each of them.
 Future<void> _getSurveys() async {
-  DeviceDataApi deviceDataApi = await apiFactory.getDeviceDataApi();
+  surveys_api.DeviceDataApi deviceDataApi = await apiFactory.getDeviceDataApi();
   try {
     String? deviceId = await keysDao.getDeviceId();
 
@@ -117,13 +124,33 @@ Future<void> _getSurveys() async {
       logger.warning("Device ID is null, cannot get surveys!");
       return;
     }
-
+    List<surveys_api.DeviceSurveyData> surveys = [];
     deviceDataApi
         .listDeviceDataSurveys(deviceId: deviceId)
-        .then((deviceDataSurveys) {
-      logger.info("Received ${deviceDataSurveys.data?.length} surveys!");
-      deviceDataSurveys.data?.forEach((survey) {});
-    });
+        .then((deviceDataSurveys) => surveys.addAll(deviceDataSurveys.data!));
+
+    surveys.retainWhere(
+        (survey) => survey.status == surveys_api.DeviceSurveyStatus.PUBLISHED);
+
+    logger.info("Received ${surveys.length} surveys!");
+
+    for (var survey in surveys) {
+      Survey persistedSurvey =
+          await surveysDao.createSurvey(SurveysCompanion.insert(
+        externalId: survey.id!,
+        title: "",
+        publishStart: Value(survey.publishStartTime),
+        publishEnd: Value(survey.publishEndTime),
+        timeout: 0,
+      ));
+      if (survey.pages != null) {
+        for (var page in survey.pages!) {
+          pagesController.persistPage(page, persistedSurvey.id);
+        }
+      }
+    }
+
+    logger.info("Finished persisting surveys!");
   } catch (e) {
     logger.shout("Error while getting Surveys: $e");
   }

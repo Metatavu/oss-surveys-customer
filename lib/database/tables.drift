@@ -24,7 +24,30 @@ CREATE TABLE keys (
   PRIMARY KEY (id)
 );
 
----Schema version 3
-ALTER TABLE surveys
-  ADD COLUMN publishStart TEXT NULL
-  ADD COLUMN publishEnd TEXT NULL;
+--- Schema version 3
+DROP TABLE surveys;
+CREATE TABLE surveys (
+  INTEGER id NOT NULL
+  TEXT title NOT NULL
+  TEXT externalId NOT NULL
+  TEXT publishStart TEXT NULL
+  TEXT publishEnd TEXT NULL
+  INTEGER timeout NOT NULL
+  
+  PRIMARY KEY (id)
+  UNIQUE (externalId)
+);
+CREATE TABLE pages (
+  INTEGER id NOT NULL
+  TEXT externalId NOT NULL
+  TEXT html NOT NULL
+  INTEGER surveyId NOT NULL
+);
+ALTER TABLE pages (
+  ADD CONSTRAINT fk_page_survey_id FOREIGN KEY (surveyId) REFERENCES survey(id)
+)
+DROP TABLE surveys;
+CREATE TABLE surveys (
+  INTEGER id NOT NULL
+  TEXT externalId NOT NULL
+);

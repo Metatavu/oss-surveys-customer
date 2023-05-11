@@ -2,6 +2,7 @@ import "package:flutter/foundation.dart";
 import "package:flutter_dotenv/flutter_dotenv.dart";
 import "package:mqtt_client/mqtt_client.dart";
 import "package:mqtt_client/mqtt_server_client.dart";
+import "package:oss_surveys_api/oss_surveys_api.dart";
 import "package:oss_surveys_customer/mqtt/model/status_message.dart";
 import "package:typed_data/typed_buffers.dart";
 import "../main.dart";

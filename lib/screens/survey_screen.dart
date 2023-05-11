@@ -1,4 +1,6 @@
-import 'package:flutter/material.dart';
+import "package:flutter/material.dart";
+import "package:oss_surveys_customer/database/database.dart";
+import "package:oss_surveys_customer/database/dao/surveys_dao.dart";
 
 /// Survey screen
 class SurveyScreen extends StatefulWidget {
@@ -10,9 +12,21 @@ class SurveyScreen extends StatefulWidget {
 
 /// Survey Screen state
 class _SurveyScreenState extends State<SurveyScreen> {
+  late Survey survey;
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance!.addPostFrameCallback((_) {
+      surveysDao.findActiveSurvey().then((value) {
+        if (value == null) {
+          Navigator.pop(context);
+        }
+        setState(() {
+          survey = value!;
+        });
+      });
+    });
   }
 
   @override

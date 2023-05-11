@@ -20,8 +20,6 @@ class SurveysDao extends DatabaseAccessor<Database> with _$SurveysDaoMixin {
         .getSingle();
   }
 
-  // TODO: Methods below to update as above
-
   /// Finds persisted Survey by [externalId]
   Future<Survey?> findSurveyByExternalId(String externalId) async {
     return await (select(surveys)
@@ -36,7 +34,9 @@ class SurveysDao extends DatabaseAccessor<Database> with _$SurveysDaoMixin {
 
   /// Updates persisted Survey by [externalId] and [updatedSurvey]
   Future<Survey> updateSurveyByExternalId(
-      String externalId, surveys_api.Survey updatedSurvey) async {
+    String externalId,
+    Survey updatedSurvey,
+  ) async {
     Survey? foundSurvey = await findSurveyByExternalId(externalId);
 
     if (foundSurvey == null) {
@@ -44,9 +44,11 @@ class SurveysDao extends DatabaseAccessor<Database> with _$SurveysDaoMixin {
     }
 
     await update(surveys).replace(foundSurvey!.copyWith(
-        title: updatedSurvey.title,
-        lastModifierId: updatedSurvey.metadata!.lastModifierId,
-        modifiedAt: updatedSurvey.metadata!.modifiedAt));
+      title: updatedSurvey.title,
+      timeout: updatedSurvey.timeout,
+      publishStart: Value(updatedSurvey.publishStart),
+      publishEnd: Value(updatedSurvey.publishEnd),
+    ));
 
     return await (select(surveys)
           ..where((row) => row.id.equals(foundSurvey.id)))
@@ -56,6 +58,15 @@ class SurveysDao extends DatabaseAccessor<Database> with _$SurveysDaoMixin {
   /// Deletes persisted Survey by [id]
   Future deleteSurvey(int id) async {
     return (delete(surveys)..where((row) => row.id.equals(id)));
+  }
+
+  /// Finds currently active Survey
+  Future<Survey?> findActiveSurvey() async {
+    return await (select(surveys)
+          ..where((row) =>
+              row.publishStart.isSmallerOrEqualValue(DateTime.now()) &
+              row.publishEnd.isBiggerOrEqualValue(DateTime.now())))
+        .getSingleOrNull();
   }
 }
 
