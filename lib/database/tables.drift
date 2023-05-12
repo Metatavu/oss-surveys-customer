@@ -30,9 +30,10 @@ CREATE TABLE surveys (
   INTEGER id NOT NULL
   TEXT title NOT NULL
   TEXT externalId NOT NULL
-  TEXT publishStart TEXT NULL
-  TEXT publishEnd TEXT NULL
+  TEXT publishStart NULL
+  TEXT publishEnd NULL
   INTEGER timeout NOT NULL
+  TEXT modifiedAt NOT NULL
   
   PRIMARY KEY (id)
   UNIQUE (externalId)
@@ -46,8 +47,3 @@ CREATE TABLE pages (
 ALTER TABLE pages (
   ADD CONSTRAINT fk_page_survey_id FOREIGN KEY (surveyId) REFERENCES survey(id)
 )
-DROP TABLE surveys;
-CREATE TABLE surveys (
-  INTEGER id NOT NULL
-  TEXT externalId NOT NULL
-);

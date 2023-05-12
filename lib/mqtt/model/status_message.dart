@@ -1,21 +1,27 @@
+import "package:oss_surveys_api/oss_surveys_api.dart";
 import "package:oss_surveys_customer/mqtt/model/abstract_message.dart";
 
 /// MQTT Status Message Class
 class StatusMessage implements AbstractMqttMessage {
-  StatusMessage(this.online);
+  StatusMessage(this.status, this.deviceId);
 
-  bool online;
+  String status;
+  String deviceId;
 
   /// Converts JSON to Status Message
   factory StatusMessage.fromJson(Map<String, dynamic> json) {
-    final online = json["online"] as bool;
+    final status = json["status"] as String;
+    final deviceId = json["deviceId"] as String;
 
-    return StatusMessage(online);
+    return StatusMessage(status, deviceId);
   }
 
   /// Converts Status Message to JSON
   @override
   Map<String, dynamic> toJson() {
-    return {"online": online};
+    return {
+      "status": status,
+      "deviceId": deviceId,
+    };
   }
 }

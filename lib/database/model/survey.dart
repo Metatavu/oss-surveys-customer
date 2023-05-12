@@ -9,4 +9,5 @@ class Surveys extends Table {
   DateTimeColumn get publishStart => dateTime().nullable()();
   DateTimeColumn get publishEnd => dateTime().nullable()();
   IntColumn get timeout => integer()();
+  DateTimeColumn get modifiedAt => dateTime()();
 }

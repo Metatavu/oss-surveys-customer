@@ -9,8 +9,9 @@ import "package:openapi_generator_annotations/openapi_generator_annotations.dart
 import "package:oss_surveys_api/oss_surveys_api.dart" as surveys_api;
 import "package:oss_surveys_customer/api/api_factory.dart";
 import "package:oss_surveys_customer/database/dao/keys_dao.dart";
+import "package:oss_surveys_customer/database/dao/pages_dao.dart";
 import "package:oss_surveys_customer/database/dao/surveys_dao.dart";
-import "package:oss_surveys_customer/database/database.dart";
+import "package:oss_surveys_customer/database/database.dart" as database;
 import "package:oss_surveys_customer/mqtt/listeners/surveys_listener.dart";
 import "package:oss_surveys_customer/mqtt/mqtt_client.dart";
 import "package:oss_surveys_customer/screens/default_screen.dart";
@@ -57,11 +58,16 @@ void _setupMqttListeners() {
 }
 
 /// Setups timers for background tasks ran on interval.
+///
+/// Consider investigating https://docs.flutter.dev/packages-and-plugins/background-processes at some point
 void _setupTimers() async {
   if (!isDeviceApproved) {
     Timer.periodic(const Duration(seconds: 30),
         (timer) => _pollDeviceApprovalStatus(timer));
   }
+
+  Timer.periodic(
+      const Duration(minutes: 1), (_) => mqttClient.sendStatusMessage(true));
 }
 
 /// Polls API for checking if device is approved.
@@ -135,17 +141,32 @@ Future<void> _getSurveys() async {
     logger.info("Received ${surveys.length} surveys!");
 
     for (var survey in surveys) {
-      Survey persistedSurvey =
-          await surveysDao.createSurvey(SurveysCompanion.insert(
-        externalId: survey.id!,
-        title: "",
-        publishStart: Value(survey.publishStartTime),
-        publishEnd: Value(survey.publishEndTime),
-        timeout: 0,
-      ));
+      database.Survey? existingSurvey =
+          await surveysDao.findSurveyByExternalId(survey.id!);
+
+      if (existingSurvey != null) {
+        logger.info("Survey with id ${survey.id} already exists, replacing...");
+        List<database.Page> existingPages =
+            await pagesDao.listPagesBySurveyId(existingSurvey.id);
+        for (var page in existingPages) {
+          await pagesDao.deletePage(page.id);
+        }
+        await surveysDao.deleteSurvey(existingSurvey.id);
+      }
+
+      database.Survey persistedSurvey = await surveysDao.createSurvey(
+        database.SurveysCompanion.insert(
+          externalId: survey.id!,
+          title: "",
+          publishStart: Value(survey.publishStartTime),
+          publishEnd: Value(survey.publishEndTime),
+          timeout: 0,
+          modifiedAt: survey.metadata!.modifiedAt!,
+        ),
+      );
       if (survey.pages != null) {
         for (var page in survey.pages!) {
-          pagesController.persistPage(page, persistedSurvey.id);
+          await pagesController.persistPage(page, persistedSurvey.id);
         }
       }
     }

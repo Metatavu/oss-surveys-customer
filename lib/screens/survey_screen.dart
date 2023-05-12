@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 import "package:oss_surveys_customer/database/database.dart";
 import "package:oss_surveys_customer/database/dao/surveys_dao.dart";
+import "package:oss_surveys_customer/main.dart";
 
 /// Survey screen
 class SurveyScreen extends StatefulWidget {
@@ -21,6 +22,9 @@ class _SurveyScreenState extends State<SurveyScreen> {
       surveysDao.findActiveSurvey().then((value) {
         if (value == null) {
           Navigator.pop(context);
+          logger.warning(
+            "Couldn't find active survey, returning to default screen.",
+          );
         }
         setState(() {
           survey = value!;
@@ -36,6 +40,10 @@ class _SurveyScreenState extends State<SurveyScreen> {
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Placeholder until next feature and therefore not localized.
+            Text("Survey ${survey.title}")
+          ],
         ),
       ),
     );

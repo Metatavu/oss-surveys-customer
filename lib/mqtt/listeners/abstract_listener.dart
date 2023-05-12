@@ -1,15 +1,24 @@
 import "package:meta/meta.dart";
+import "package:oss_surveys_customer/database/dao/keys_dao.dart";
 import "package:oss_surveys_customer/mqtt/mqtt_client.dart";
+import "package:oss_surveys_customer/main.dart";
 
 /// Abstract MQTT Listener class
 abstract class AbstractMqttListener<T> {
-  abstract String baseTopic;
+  Future<String> get baseTopic async {
+    String? deviceId = await keysDao.getDeviceId();
+    if (deviceId == null) {
+      throw Exception("Device id is null");
+    }
+
+    return "oss/$environment/$deviceId/surveys";
+  }
 
   /// Returns a map of topic:callback entries handled by this listener.
-  Map<String, Function(String)> getListeners() => {
-        "$baseTopic/create": handleCreate,
-        "$baseTopic/update": handleUpdate,
-        "$baseTopic/delete": handleDelete
+  Future<Map<String, Function(String)>> getListeners() async => {
+        "${await baseTopic}/create": handleCreate,
+        "${await baseTopic}/update": handleUpdate,
+        "${await baseTopic}/delete": handleDelete
       };
 
   /// Callback function for handling create messages
@@ -23,8 +32,8 @@ abstract class AbstractMqttListener<T> {
 
   /// Sets listeners described here to MQTT Client
   @protected
-  void setListeners() {
-    mqttClient.addListeners(getListeners());
+  Future setListeners() async {
+    mqttClient.addListeners(await getListeners());
   }
 
   /// Deserializes message into [T] object
