@@ -2,8 +2,10 @@ import "dart:async";
 import "package:flutter/material.dart";
 import "package:flutter_svg/svg.dart";
 import "package:oss_surveys_customer/database/dao/keys_dao.dart";
+import "package:oss_surveys_customer/database/dao/surveys_dao.dart";
 import "package:oss_surveys_customer/main.dart";
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import "package:flutter_gen/gen_l10n/app_localizations.dart";
+import "package:oss_surveys_customer/screens/survey_screen.dart";
 
 /// Default Screen
 class DefaultScreen extends StatefulWidget {
@@ -16,6 +18,20 @@ class DefaultScreen extends StatefulWidget {
 /// Default Screen state
 class _DefaultScreenState extends State<DefaultScreen> {
   bool _isApprovedDevice = false;
+
+  /// Navigates to [SurveyScreen] if device is approved and it has active survey.
+  void _navigateToSurveyScreen() {
+    surveysDao.findActiveSurvey().then((survey) {
+      if (survey != null) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const SurveyScreen(),
+          ),
+        );
+      }
+    });
+  }
 
   @override
   void initState() {
@@ -35,6 +51,7 @@ class _DefaultScreenState extends State<DefaultScreen> {
           });
         }
         _isApprovedDevice = value;
+        _navigateToSurveyScreen();
       });
     });
   }

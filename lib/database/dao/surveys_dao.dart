@@ -2,7 +2,7 @@ import "package:drift/drift.dart";
 import "package:oss_surveys_customer/database/database.dart";
 import "package:oss_surveys_customer/main.dart";
 import "../model/survey.dart";
-import "package:oss_surveys_api/oss_surveys_api.dart" as SurveyApi;
+import "package:oss_surveys_api/oss_surveys_api.dart" as surveys_api;
 
 part "surveys_dao.g.dart";
 
@@ -12,14 +12,8 @@ class SurveysDao extends DatabaseAccessor<Database> with _$SurveysDaoMixin {
   SurveysDao(Database database) : super(database);
 
   /// Creates and persists new Survey from REST [newSurvey]
-  Future<Survey> createSurvey(SurveyApi.Survey newSurvey) async {
-    int createdSurveyId = await into(surveys).insert(SurveysCompanion.insert(
-        externalId: newSurvey.id!,
-        title: newSurvey.title,
-        createdAt: newSurvey.metadata!.createdAt!,
-        modifiedAt: newSurvey.metadata!.modifiedAt!,
-        creatorId: newSurvey.metadata!.creatorId!,
-        lastModifierId: newSurvey.metadata!.lastModifierId!));
+  Future<Survey> createSurvey(SurveysCompanion newSurvey) async {
+    int createdSurveyId = await into(surveys).insert(newSurvey);
 
     return await (select(surveys)
           ..where((row) => row.id.equals(createdSurveyId)))
@@ -40,7 +34,9 @@ class SurveysDao extends DatabaseAccessor<Database> with _$SurveysDaoMixin {
 
   /// Updates persisted Survey by [externalId] and [updatedSurvey]
   Future<Survey> updateSurveyByExternalId(
-      String externalId, SurveyApi.Survey updatedSurvey) async {
+    String externalId,
+    Survey updatedSurvey,
+  ) async {
     Survey? foundSurvey = await findSurveyByExternalId(externalId);
 
     if (foundSurvey == null) {
@@ -48,9 +44,11 @@ class SurveysDao extends DatabaseAccessor<Database> with _$SurveysDaoMixin {
     }
 
     await update(surveys).replace(foundSurvey!.copyWith(
-        title: updatedSurvey.title,
-        lastModifierId: updatedSurvey.metadata!.lastModifierId,
-        modifiedAt: updatedSurvey.metadata!.modifiedAt));
+      title: updatedSurvey.title,
+      timeout: updatedSurvey.timeout,
+      publishStart: Value(updatedSurvey.publishStart),
+      publishEnd: Value(updatedSurvey.publishEnd),
+    ));
 
     return await (select(surveys)
           ..where((row) => row.id.equals(foundSurvey.id)))
@@ -60,6 +58,15 @@ class SurveysDao extends DatabaseAccessor<Database> with _$SurveysDaoMixin {
   /// Deletes persisted Survey by [id]
   Future deleteSurvey(int id) async {
     return (delete(surveys)..where((row) => row.id.equals(id)));
+  }
+
+  /// Finds currently active Survey
+  Future<Survey?> findActiveSurvey() async {
+    return await (select(surveys)
+          ..where((row) =>
+              row.publishStart.isSmallerOrEqualValue(DateTime.now()) &
+              row.publishEnd.isBiggerOrEqualValue(DateTime.now())))
+        .getSingleOrNull();
   }
 }
 

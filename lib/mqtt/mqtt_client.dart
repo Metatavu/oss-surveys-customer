@@ -1,7 +1,10 @@
+import "dart:convert";
 import "package:flutter/foundation.dart";
 import "package:flutter_dotenv/flutter_dotenv.dart";
 import "package:mqtt_client/mqtt_client.dart";
 import "package:mqtt_client/mqtt_server_client.dart";
+import "package:oss_surveys_api/oss_surveys_api.dart" as surveys_api;
+import "package:oss_surveys_customer/database/dao/keys_dao.dart";
 import "package:oss_surveys_customer/mqtt/model/status_message.dart";
 import "package:typed_data/typed_buffers.dart";
 import "../main.dart";
@@ -9,7 +12,17 @@ import "../main.dart";
 /// MQTT Client
 class MqttClient {
   late final MqttServerClient _client;
-  final statusTopic = "oss/$environment/status";
+
+  Future<String> get _statusTopic async {
+    String? deviceId = await keysDao.getDeviceId();
+
+    if (deviceId == null) {
+      logger.warning("Device ID not found, cannot get status topic.");
+      return "";
+    }
+
+    return "oss/$environment/$deviceId/status";
+  }
 
   Map<String, Function(String)> listeners = {};
 
@@ -26,6 +39,8 @@ class MqttClient {
 
   /// Connects MQTT Client if not already connected.
   Future<void> connect() async {
+    var mqttUsername = dotenv.env["MQTT_USERNAME"];
+    var mqttPassword = dotenv.env["MQTT_PASSWORD"];
     if (_client.connectionStatus!.state == MqttConnectionState.connected) {
       logger.info("MQTT Client already connected");
       return;
@@ -40,13 +55,17 @@ class MqttClient {
 
     final connMessage = MqttConnectMessage()
         .keepAliveFor(60)
-        .withWillTopic(statusTopic)
-        .withWillMessage(StatusMessage(false).toJson().toString())
+        .withWillTopic(await _statusTopic)
+        .withWillMessage(jsonEncode((await _buildStatusMessage(false))))
+        .authenticateAs(mqttUsername, mqttPassword)
         .startClean()
         .withWillQos(MqttQos.atLeastOnce);
     _client.connectionMessage = connMessage;
     try {
-      await _client.connect();
+      await _client.connect(
+        mqttUsername,
+        mqttPassword,
+      );
     } catch (e) {
       logger.shout("Exception: $e");
       _client.disconnect();
@@ -71,10 +90,19 @@ class MqttClient {
   }
 
   /// Handler for successful connections event.
-  void onConnected() {
+  Future onConnected() async {
+    StatusMessage? statusMessage = await _buildStatusMessage(true);
+
+    if (statusMessage == null) {
+      logger.info("Device not yet registered, not sending status message!");
+      return;
+    }
+
     logger.info("Connected, sending status message...");
-    publishMessage(statusTopic,
-        createMessagePayload(StatusMessage(true).toJson().toString()));
+    publishMessage(
+      await _statusTopic,
+      createMessagePayload(statusMessage.toJson().toString()),
+    );
   }
 
   /// Handler for disconnection event.
@@ -137,6 +165,43 @@ class MqttClient {
       subscribeToTopic(listener.key);
       listeners[listener.key] = listener.value;
     }
+  }
+
+  /// Sends [StatusMessage]
+  Future sendStatusMessage(bool status) async {
+    StatusMessage? statusMessage = await _buildStatusMessage(status);
+
+    if (statusMessage == null) {
+      logger.warning("Device not yet registered, cannot send status message.");
+      return;
+    }
+
+    String statusTopic = await _statusTopic;
+
+    publishMessage(
+      statusTopic,
+      createMessagePayload(jsonEncode(statusMessage)),
+    );
+    logger.info("Sent status message to topic: $statusTopic");
+  }
+
+  /// Builds [StatusMessage]
+  Future<StatusMessage?> _buildStatusMessage(
+    bool status,
+  ) async {
+    String? deviceId = await keysDao.getDeviceId();
+
+    if (deviceId == null) {
+      logger.warning("Device ID not found, cannot send status message.");
+      return null;
+    }
+
+    return StatusMessage(
+      status
+          ? surveys_api.DeviceStatus.ONLINE.name
+          : surveys_api.DeviceStatus.OFFLINE.name,
+      deviceId,
+    );
   }
 
   /// Reconnects MQTT Client.

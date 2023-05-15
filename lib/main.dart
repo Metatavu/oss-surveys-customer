@@ -1,19 +1,23 @@
 import "dart:async";
 import "dart:io";
 import "package:device_info_plus/device_info_plus.dart";
+import "package:drift/drift.dart";
 import "package:flutter/material.dart";
 import "package:flutter_device_identifier/flutter_device_identifier.dart";
 import "package:flutter_dotenv/flutter_dotenv.dart";
-import "package:flutter_localizations/flutter_localizations.dart";
 import "package:openapi_generator_annotations/openapi_generator_annotations.dart";
-import "package:oss_surveys_api/oss_surveys_api.dart";
+import "package:oss_surveys_api/oss_surveys_api.dart" as surveys_api;
 import "package:oss_surveys_customer/api/api_factory.dart";
 import "package:oss_surveys_customer/database/dao/keys_dao.dart";
+import "package:oss_surveys_customer/database/dao/pages_dao.dart";
+import "package:oss_surveys_customer/database/dao/surveys_dao.dart";
+import "package:oss_surveys_customer/database/database.dart" as database;
 import "package:oss_surveys_customer/mqtt/listeners/surveys_listener.dart";
 import "package:oss_surveys_customer/mqtt/mqtt_client.dart";
 import "package:oss_surveys_customer/screens/default_screen.dart";
 import "package:oss_surveys_customer/theme/font.dart";
 import "package:oss_surveys_customer/theme/theme.dart";
+import "package:oss_surveys_customer/utils/pages_controller.dart";
 import "package:simple_logger/simple_logger.dart";
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
@@ -32,6 +36,11 @@ void main() async {
   deviceSerialNumber = await _getDeviceSerialNumber();
   await loadOfflinedFont();
   isDeviceApproved = await keysDao.isDeviceApproved();
+
+  if (isDeviceApproved) {
+    _getSurveys();
+  }
+
   _setupTimers();
   runApp(const MyApp());
 }
@@ -49,21 +58,27 @@ void _setupMqttListeners() {
 }
 
 /// Setups timers for background tasks ran on interval.
+///
+/// Consider investigating https://docs.flutter.dev/packages-and-plugins/background-processes at some point
 void _setupTimers() async {
   if (!isDeviceApproved) {
     Timer.periodic(const Duration(seconds: 30),
         (timer) => _pollDeviceApprovalStatus(timer));
   }
+
+  Timer.periodic(
+      const Duration(minutes: 1), (_) => mqttClient.sendStatusMessage(true));
 }
 
 /// Polls API for checking if device is approved.
 Future<void> _pollDeviceApprovalStatus(Timer timer) async {
   logger.info("Polling device approval status...");
-  DeviceRequestsApi devicesApi = await apiFactory.getDeviceRequestsApi();
+  surveys_api.DeviceRequestsApi devicesApi =
+      await apiFactory.getDeviceRequestsApi();
   try {
     String? deviceId = await keysDao.getDeviceId();
     if (deviceId == null) {
-      DeviceRequest? deviceRequest = await devicesApi
+      surveys_api.DeviceRequest? deviceRequest = await devicesApi
           .createDeviceRequest(serialNumber: deviceSerialNumber)
           .then((response) => response.data);
 
@@ -101,6 +116,65 @@ Future<String> _getDeviceSerialNumber() async {
   }
 
   throw Exception("Unsupported operating system!");
+}
+
+/// Gets all Surveys assigned to this device
+///
+/// Retains published surveys (should be only one) and creates a new [Survey] for each of them.
+Future<void> _getSurveys() async {
+  surveys_api.DeviceDataApi deviceDataApi = await apiFactory.getDeviceDataApi();
+  try {
+    String? deviceId = await keysDao.getDeviceId();
+
+    if (deviceId == null) {
+      logger.warning("Device ID is null, cannot get surveys!");
+      return;
+    }
+    List<surveys_api.DeviceSurveyData> surveys = [];
+    deviceDataApi
+        .listDeviceDataSurveys(deviceId: deviceId)
+        .then((deviceDataSurveys) => surveys.addAll(deviceDataSurveys.data!));
+
+    surveys.retainWhere(
+        (survey) => survey.status == surveys_api.DeviceSurveyStatus.PUBLISHED);
+
+    logger.info("Received ${surveys.length} surveys!");
+
+    for (var survey in surveys) {
+      database.Survey? existingSurvey =
+          await surveysDao.findSurveyByExternalId(survey.id!);
+
+      if (existingSurvey != null) {
+        logger.info("Survey with id ${survey.id} already exists, replacing...");
+        List<database.Page> existingPages =
+            await pagesDao.listPagesBySurveyId(existingSurvey.id);
+        for (var page in existingPages) {
+          await pagesDao.deletePage(page.id);
+        }
+        await surveysDao.deleteSurvey(existingSurvey.id);
+      }
+
+      database.Survey persistedSurvey = await surveysDao.createSurvey(
+        database.SurveysCompanion.insert(
+          externalId: survey.id!,
+          title: "",
+          publishStart: Value(survey.publishStartTime),
+          publishEnd: Value(survey.publishEndTime),
+          timeout: 0,
+          modifiedAt: survey.metadata!.modifiedAt!,
+        ),
+      );
+      if (survey.pages != null) {
+        for (var page in survey.pages!) {
+          await pagesController.persistPage(page, persistedSurvey.id);
+        }
+      }
+    }
+
+    logger.info("Finished persisting surveys!");
+  } catch (e) {
+    logger.shout("Error while getting Surveys: $e");
+  }
 }
 
 class MyApp extends StatelessWidget {

@@ -14,7 +14,6 @@ class ApiFactory {
   Future<OssSurveysApi> _getApi() async {
     var apiBasePath = dotenv.env["SURVEYS_API_BASE_PATH"];
 
-    return OssSurveysApi(basePathOverride: apiBasePath);
     String? deviceKey = await keysDao.getDeviceKey();
     var api = OssSurveysApi(basePathOverride: apiBasePath);
 
@@ -38,5 +37,15 @@ class ApiFactory {
   /// Gets DeviceRequests API
   Future<DeviceRequestsApi> getDeviceRequestsApi() {
     return _getApi().then((api) => api.getDeviceRequestsApi());
+  }
+
+  /// Gets DeviceSurveys API
+  Future<DeviceSurveysApi> getDeviceSurveysApi() {
+    return _getApi().then((api) => api.getDeviceSurveysApi());
+  }
+
+  /// Gets DeviceData API
+  Future<DeviceDataApi> getDeviceDataApi() {
+    return _getApi().then((api) => api.getDeviceDataApi());
   }
 }
