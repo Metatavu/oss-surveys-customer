@@ -57,7 +57,7 @@ void _setupMqttListeners() {
   if (mqttClient.isConnected) {
     SurveysListener();
   } else {
-    logger.info("MQTT Client not connected, cannot setup listeners!");
+    logger.warning("MQTT Client not connected, cannot setup listeners!");
   }
 }
 
