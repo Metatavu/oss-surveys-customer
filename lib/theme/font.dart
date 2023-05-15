@@ -24,6 +24,7 @@ Future<ByteData> getOfflinedFont() async {
 
   if (await offlinedFont.exists()) {
     logger.info("Using already downloaded offlined font!");
+
     return await offlinedFont
         .readAsBytes()
         .then((value) => ByteData.view(value.buffer));

@@ -92,6 +92,7 @@ class HTMLController {
       html +=
           "<div><button style=\"width: 100%; height: 100px; font-size: 5rem;\">${pageProperty.value}</button></div>";
     }
+
     return html;
   }
 
