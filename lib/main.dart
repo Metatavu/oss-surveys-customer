@@ -54,7 +54,11 @@ void _configureLogger({logLevel = Level.INFO}) {
 
 /// Setups MQTT Listeners
 void _setupMqttListeners() {
-  SurveysListener();
+  if (mqttClient.isConnected) {
+    SurveysListener();
+  } else {
+    logger.info("MQTT Client not connected, cannot setup listeners!");
+  }
 }
 
 /// Setups timers for background tasks ran on interval.
@@ -66,8 +70,11 @@ void _setupTimers() async {
         (timer) => _pollDeviceApprovalStatus(timer));
   }
 
-  Timer.periodic(
-      const Duration(minutes: 1), (_) => mqttClient.sendStatusMessage(true));
+  Timer.periodic(const Duration(minutes: 1), (_) {
+    if (mqttClient.isConnected) {
+      mqttClient.sendStatusMessage(true);
+    }
+  });
 }
 
 /// Polls API for checking if device is approved.
@@ -85,6 +92,11 @@ Future<void> _pollDeviceApprovalStatus(Timer timer) async {
       if (deviceRequest != null) {
         logger.info("Created a new Device Request, waiting for approval...");
         keysDao.persistDeviceId(deviceRequest.id!);
+
+        if (!mqttClient.isConnected) {
+          logger.info("MQTT client is not connected, attempting to connect");
+          await mqttClient.connect();
+        }
       }
     } else {
       String? deviceKey = await devicesApi

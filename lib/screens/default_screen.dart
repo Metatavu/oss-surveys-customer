@@ -50,7 +50,9 @@ class _DefaultScreenState extends State<DefaultScreen> {
             }
           });
         }
-        _isApprovedDevice = value;
+        setState(() {
+          _isApprovedDevice = value;
+        });
         _navigateToSurveyScreen();
       });
     });
