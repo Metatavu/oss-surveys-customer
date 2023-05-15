@@ -47,4 +47,8 @@ CREATE TABLE pages (
 );
 ALTER TABLE pages (
   ADD CONSTRAINT fk_page_survey_id FOREIGN KEY (surveyId) REFERENCES survey(id)
-)
+);
+
+--- Schema version 4
+ALTER TABLE pages
+  ADD COLUMN modifiedAt TEXT NOT NULL;

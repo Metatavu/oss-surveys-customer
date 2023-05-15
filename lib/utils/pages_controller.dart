@@ -1,7 +1,7 @@
 import "dart:io";
 import "package:oss_surveys_api/oss_surveys_api.dart" as surveys_api;
 import "package:oss_surveys_customer/database/dao/pages_dao.dart";
-import "package:oss_surveys_customer/database/database.dart";
+import "package:oss_surveys_customer/database/database.dart" as database;
 import "package:oss_surveys_customer/main.dart";
 import "package:oss_surveys_customer/utils/html_controller.dart";
 import "package:oss_surveys_customer/utils/offline_file_controller.dart";
@@ -18,24 +18,54 @@ class PagesController {
     surveys_api.DeviceSurveyPageData page,
     int surveyId,
   ) async {
-    logger.info("Persisting page ${page.id}");
+    database.Page? existingPage = await pagesDao.findPageByExternalId(page.id!);
     Map<String, String> mediaFilesMap =
-        await offlineMedias(page.properties?.toList() ?? []);
+        await _offlineMedias(page.properties?.toList() ?? []);
     String processedHTML = HTMLController.processSurveyPage(
       page,
       mediaFilesMap,
     );
+    if (existingPage == null) {
+      logger.info("Persisting new page ${page.id}");
+      await pagesDao.createPage(
+        database.PagesCompanion.insert(
+          externalId: page.id!,
+          html: processedHTML,
+          pageNumber: page.pageNumber!,
+          surveyId: surveyId,
+          modifiedAt: page.metadata!.modifiedAt!,
+        ),
+      );
+    } else {
+      logger.info(
+        "Page with id ${page.id} already exists, checking if updated...",
+      );
+      if (_comparePages(existingPage, page)) {
+        logger.info("Page with id ${page.id} is updated, updating...");
+        await pagesDao.updatePage(
+          existingPage,
+          database.PagesCompanion.insert(
+              externalId: page.id!,
+              html: processedHTML,
+              pageNumber: page.pageNumber!,
+              surveyId: surveyId,
+              modifiedAt: page.metadata!.modifiedAt!),
+        );
+      }
+    }
+  }
 
-    await pagesDao.createPage(PagesCompanion.insert(
-      externalId: page.id!,
-      html: processedHTML,
-      pageNumber: page.pageNumber!,
-      surveyId: surveyId,
-    ));
+  /// Deletes Pages by [surveyId]
+  Future deletePagesBySurveyId(int surveyId) async {
+    List<database.Page> pages = await pagesDao.listPagesBySurveyId(surveyId);
+
+    for (var page in pages) {
+      await pagesDao.deletePage(page.id);
+    }
   }
 
   /// Offline medias for a Page
-  Future<Map<String, String>> offlineMedias(
+  Future<Map<String, String>> _offlineMedias(
     List<surveys_api.PageProperty> pageProperties,
   ) async {
     Map<String, String> mediaFilesMap = {};
@@ -61,6 +91,11 @@ class PagesController {
 
     return mediaFilesMap;
   }
+
+  /// Compares if [page] is different from persisted Page
+  bool _comparePages(
+          database.Page page, surveys_api.DeviceSurveyPageData newPage) =>
+      page.modifiedAt.isBefore(newPage.metadata!.modifiedAt!);
 }
 
 final pagesController = PagesController();

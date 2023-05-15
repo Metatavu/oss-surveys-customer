@@ -34,6 +34,20 @@ class PagesDao extends DatabaseAccessor<Database> with _$PagesDaoMixin {
   Future deletePage(int id) async {
     return (delete(pages)..where((row) => row.id.equals(id)));
   }
+
+  /// Updates [page]
+  Future<Page> updatePage(Page existingPage, PagesCompanion newPage) async {
+    await update(pages).replace(
+      existingPage.copyWith(
+        html: newPage.html.value,
+        pageNumber: newPage.pageNumber.value,
+        modifiedAt: newPage.modifiedAt.value,
+      ),
+    );
+
+    return await (select(pages)..where((row) => row.id.equals(existingPage.id)))
+        .getSingle();
+  }
 }
 
 final pagesDao = PagesDao(database);

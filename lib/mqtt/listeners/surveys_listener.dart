@@ -1,12 +1,9 @@
 import "dart:convert";
 import "package:oss_surveys_api/oss_surveys_api.dart" as surveys_api;
-import "package:oss_surveys_customer/database/dao/surveys_dao.dart";
-import "package:oss_surveys_customer/database/database.dart" as database;
 import "package:oss_surveys_customer/main.dart";
 import "package:oss_surveys_customer/mqtt/listeners/abstract_listener.dart";
 import "package:oss_surveys_customer/mqtt/model/device_survey_message.dart";
-import "../../database/dao/pages_dao.dart";
-import "../../utils/pages_controller.dart";
+import "package:oss_surveys_customer/utils/surveys_controller.dart";
 
 /// MQTT Surveys Messages listener class
 class SurveysListener extends AbstractMqttListener<DeviceSurveyMessage> {
@@ -16,69 +13,40 @@ class SurveysListener extends AbstractMqttListener<DeviceSurveyMessage> {
 
   @override
   void handleCreate(String message) async {
+    logger.info("Handling create survey message");
     try {
-      DeviceSurveyMessage deserializedMessage = deserializeMessage(message);
-      surveys_api.DeviceDataApi deviceDataApi =
-          await apiFactory.getDeviceDataApi();
-      surveys_api.DeviceSurveyData? deviceSurveyData = await deviceDataApi
-          .findDeviceDataSurvey(
-            deviceId: deserializedMessage.deviceId,
-            deviceSurveyId: deserializedMessage.deviceSurveyId,
-          )
-          .then((value) => value.data);
+      surveys_api.DeviceSurveyData? deviceSurveyData =
+          await _findDeviceSurveyData(message);
 
       if (deviceSurveyData != null) {
-        database.Survey? existingSurvey =
-            await surveysDao.findSurveyByExternalId(deviceSurveyData.surveyId!);
-
-        if (existingSurvey != null) {
-          logger.info(
-              "Survey with id ${deviceSurveyData.surveyId} already exists, replacing...");
-          List<database.Page> existingPages =
-              await pagesDao.listPagesBySurveyId(existingSurvey.id);
-          for (var page in existingPages) {
-            await pagesDao.deletePage(page.id);
-          }
-          await surveysDao.deleteSurvey(existingSurvey.id);
-        }
-
-        database.Survey persistedSurvey = await surveysDao.createSurvey(
-          database.SurveysCompanion.insert(
-            externalId: deviceSurveyData.surveyId!,
-            title: deviceSurveyData.title!,
-            timeout: deviceSurveyData.timeout!,
-            modifiedAt: deviceSurveyData.metadata!.modifiedAt!,
-          ),
-        );
-        if (deviceSurveyData.pages != null) {
-          for (var page in deviceSurveyData.pages!) {
-            await pagesController.persistPage(page, persistedSurvey.id);
-          }
-        }
-        logger.info(
-          "Created new Survey ${deviceSurveyData.title} with externalId ${deviceSurveyData.surveyId}",
-        );
+        surveysController.persistSurvey(deviceSurveyData);
       }
     } catch (e) {
       logger.shout("Couldn't handle create survey message ${e.toString()}");
     }
   }
 
-  /// TODO: Implement this in later task
   @override
   void handleUpdate(String message) async {
+    logger.info("Handling update survey message");
     try {
-      logger.info("Updated Survey with externalId");
+      surveys_api.DeviceSurveyData? deviceSurveyData =
+          await _findDeviceSurveyData(message);
+
+      if (deviceSurveyData != null) {
+        surveysController.persistSurvey(deviceSurveyData);
+      }
     } catch (e) {
       logger.shout("Couldn't handle update survey message ${e.toString()}");
     }
   }
 
-  /// TODO: Implement this in later task
   @override
   void handleDelete(String message) async {
+    logger.info("Handling delete survey message");
     try {
-      logger.info("Deleted Survey with externalId");
+      DeviceSurveyMessage deserializedMessage = deserializeMessage(message);
+      await surveysController.deleteSurvey(deserializedMessage.deviceSurveyId);
     } catch (e) {
       logger.shout("Couldn't handle update survey message ${e.toString()}");
     }
@@ -87,4 +55,20 @@ class SurveysListener extends AbstractMqttListener<DeviceSurveyMessage> {
   @override
   DeviceSurveyMessage deserializeMessage(String message) =>
       DeviceSurveyMessage.fromJson(jsonDecode(message));
+
+  /// Finds [DeviceSurveyData] by parsing [message] from API
+  Future<surveys_api.DeviceSurveyData?> _findDeviceSurveyData(
+    String message,
+  ) async {
+    DeviceSurveyMessage deserializedMessage = deserializeMessage(message);
+    surveys_api.DeviceDataApi deviceDataApi =
+        await apiFactory.getDeviceDataApi();
+
+    return await deviceDataApi
+        .findDeviceDataSurvey(
+          deviceId: deserializedMessage.deviceId,
+          deviceSurveyId: deserializedMessage.deviceSurveyId,
+        )
+        .then((value) => value.data);
+  }
 }
