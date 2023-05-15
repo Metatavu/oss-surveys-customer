@@ -1,4 +1,3 @@
-import "package:oss_surveys_api/oss_surveys_api.dart";
 import "package:oss_surveys_customer/mqtt/model/abstract_message.dart";
 
 /// MQTT Status Message Class

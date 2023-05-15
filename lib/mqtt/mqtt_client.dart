@@ -24,6 +24,9 @@ class MqttClient {
     return "oss/$environment/$deviceId/status";
   }
 
+  bool get isConnected =>
+      _getClientConnectionStatus() == MqttConnectionState.connected.name;
+
   Map<String, Function(String)> listeners = {};
 
   /// Public constructor.
@@ -43,6 +46,11 @@ class MqttClient {
     var mqttPassword = dotenv.env["MQTT_PASSWORD"];
     if (_client.connectionStatus!.state == MqttConnectionState.connected) {
       logger.info("MQTT Client already connected");
+      return;
+    }
+
+    if (await keysDao.getDeviceId() == null) {
+      logger.warning("Device ID not found, cannot connect to MQTT.");
       return;
     }
 
