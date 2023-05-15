@@ -42,6 +42,7 @@ CREATE TABLE pages (
   INTEGER id NOT NULL
   TEXT externalId NOT NULL
   TEXT html NOT NULL
+  INTEGER pageNumber NOT NULL
   INTEGER surveyId NOT NULL
 );
 ALTER TABLE pages (

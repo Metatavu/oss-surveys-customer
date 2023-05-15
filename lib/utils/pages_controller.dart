@@ -15,7 +15,9 @@ class PagesController {
   ///
   /// Offlines medias and processes HTML into displayable format and persists it
   Future<void> persistPage(
-      surveys_api.DeviceSurveyPageData page, int surveyId) async {
+    surveys_api.DeviceSurveyPageData page,
+    int surveyId,
+  ) async {
     logger.info("Persisting page ${page.id}");
     Map<String, String> mediaFilesMap =
         await offlineMedias(page.properties?.toList() ?? []);
@@ -27,6 +29,7 @@ class PagesController {
     await pagesDao.createPage(PagesCompanion.insert(
       externalId: page.id!,
       html: processedHTML,
+      pageNumber: page.pageNumber!,
       surveyId: surveyId,
     ));
   }
