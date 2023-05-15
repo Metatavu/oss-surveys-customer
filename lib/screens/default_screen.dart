@@ -20,15 +20,20 @@ class _DefaultScreenState extends State<DefaultScreen> {
   bool _isApprovedDevice = false;
 
   /// Navigates to [SurveyScreen] if device is approved and it has active survey.
-  void _navigateToSurveyScreen() {
+  ///
+  /// Cancels pending [timer]
+  void _navigateToSurveyScreen(Timer timer) {
     surveysDao.findActiveSurvey().then((survey) {
       if (survey != null) {
+        timer.cancel();
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => const SurveyScreen(),
+            builder: (context) => SurveyScreen(survey: survey),
           ),
         );
+      } else {
+        logger.info("No active survey found.");
       }
     });
   }
@@ -53,7 +58,9 @@ class _DefaultScreenState extends State<DefaultScreen> {
         setState(() {
           _isApprovedDevice = value;
         });
-        _navigateToSurveyScreen();
+        Timer.periodic(const Duration(seconds: 10), (timer) async {
+          _navigateToSurveyScreen(timer);
+        });
       });
     });
   }

@@ -62,11 +62,16 @@ class SurveysDao extends DatabaseAccessor<Database> with _$SurveysDaoMixin {
 
   /// Finds currently active Survey
   Future<Survey?> findActiveSurvey() async {
-    return await (select(surveys)
+    Survey? foundSurvey = await (select(surveys)
           ..where((row) =>
               row.publishStart.isSmallerOrEqualValue(DateTime.now()) &
               row.publishEnd.isBiggerOrEqualValue(DateTime.now())))
         .getSingleOrNull();
+
+    foundSurvey ??=
+        await (select(surveys)..limit(1, offset: 0)).getSingleOrNull();
+
+    return foundSurvey;
   }
 }
 
