@@ -1,7 +1,6 @@
 import "package:flutter/material.dart";
 import "package:oss_surveys_customer/database/dao/pages_dao.dart";
 import "package:oss_surveys_customer/database/database.dart" as database;
-import "package:oss_surveys_customer/database/dao/surveys_dao.dart";
 import "package:oss_surveys_customer/main.dart";
 import "package:webview_flutter/webview_flutter.dart";
 
