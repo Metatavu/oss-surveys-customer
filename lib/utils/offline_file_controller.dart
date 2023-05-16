@@ -24,10 +24,12 @@ class OfflineFileController {
         if (await offlinedFile.exists()) {
           return offlinedFile;
         }
+
         return null;
       }
     } catch (e) {
       logger.shout("Couldn't download file from $url");
+
       return null;
     }
   }
@@ -58,18 +60,22 @@ class OfflineFileController {
       case 200:
         {
           logger.info("Downloading file $url...");
+
           return await _handleNewFile(fileName, response);
         }
       case 304:
         {
           logger.info("File not changed. Using offlined file $url");
+
           return await _getDirectoryFileByNameAndExt(
               await _getImagesDirectoryPath(), fileName, ".jpeg");
         }
       default:
         {
           logger.shout(
-              "Failed to download file $url, ${response.statusCode}, ${response.reasonPhrase}");
+            "Failed to download file $url, ${response.statusCode}, ${response.reasonPhrase}",
+          );
+
           return null;
         }
     }
@@ -176,6 +182,7 @@ class OfflineFileController {
           .path);
     } catch (e) {
       logger.warning("Couldn't find File $fileName$fileExt in $directoryPath");
+
       return null;
     }
   }

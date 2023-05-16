@@ -118,6 +118,7 @@ Future<void> _pollDeviceApprovalStatus(Timer timer) async {
 Future<String> _getDeviceSerialNumber() async {
   if (Platform.isAndroid) {
     await FlutterDeviceIdentifier.requestPermission();
+
     return await FlutterDeviceIdentifier.serialCode;
   } else if (Platform.isLinux) {
     return await DeviceInfoPlugin()
@@ -138,6 +139,7 @@ Future<void> _getSurveys() async {
 
     if (deviceId == null) {
       logger.warning("Device ID is null, cannot get surveys!");
+
       return;
     }
     List<surveys_api.DeviceSurveyData> surveys = [];
