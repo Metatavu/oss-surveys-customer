@@ -19,7 +19,9 @@ class SurveysListener extends AbstractMqttListener<DeviceSurveyMessage> {
           await _findDeviceSurveyData(message);
 
       if (deviceSurveyData != null) {
-        surveysController.persistSurvey(deviceSurveyData);
+        surveysController
+            .persistSurvey(deviceSurveyData)
+            .then((value) => streamController.sink.add(value));
       }
     } catch (e) {
       logger.shout("Couldn't handle create survey message ${e.toString()}");
@@ -34,7 +36,9 @@ class SurveysListener extends AbstractMqttListener<DeviceSurveyMessage> {
           await _findDeviceSurveyData(message);
 
       if (deviceSurveyData != null) {
-        surveysController.persistSurvey(deviceSurveyData);
+        surveysController
+            .persistSurvey(deviceSurveyData)
+            .then((value) => streamController.sink.add(value));
       }
     } catch (e) {
       logger.shout("Couldn't handle update survey message ${e.toString()}");

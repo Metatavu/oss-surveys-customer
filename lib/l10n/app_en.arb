@@ -2,5 +2,9 @@
   "notYetApproved": "Device has not yet been approved.",
   "@notYetApproved": {
     "description": "New device needs to be approved within the Management application."
+  },
+  "loadingSurvey": "Survey is being loaded...",
+  "@loadingSurvey": {
+    "description": "Currently active survey is being loaded from database."
   }
 }

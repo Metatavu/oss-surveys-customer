@@ -13,13 +13,14 @@ import "package:oss_surveys_customer/mqtt/mqtt_client.dart";
 import "package:oss_surveys_customer/screens/default_screen.dart";
 import "package:oss_surveys_customer/theme/font.dart";
 import "package:oss_surveys_customer/theme/theme.dart";
-import "package:oss_surveys_customer/utils/pages_controller.dart";
 import "package:oss_surveys_customer/utils/surveys_controller.dart";
+import "package:responsive_framework/responsive_framework.dart";
 import "package:simple_logger/simple_logger.dart";
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 final logger = SimpleLogger();
 final apiFactory = ApiFactory();
+final StreamController streamController = StreamController();
 
 late final String environment;
 late bool isDeviceApproved;
@@ -165,6 +166,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      builder: (context, child) => ResponsiveBreakpoints(
+        breakpoints: const [
+          Breakpoint(start: 0, end: double.infinity, name: "4K"),
+        ],
+        child: child!,
+      ),
       theme: getTheme(),
       home: const DefaultScreen(),
       localizationsDelegates: AppLocalizations.localizationsDelegates,

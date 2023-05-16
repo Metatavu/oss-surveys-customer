@@ -1,4 +1,5 @@
 import "dart:io";
+import "package:drift/drift.dart";
 import "package:oss_surveys_api/oss_surveys_api.dart" as surveys_api;
 import "package:oss_surveys_customer/database/dao/pages_dao.dart";
 import "package:oss_surveys_customer/database/database.dart" as database;
@@ -33,7 +34,7 @@ class PagesController {
           html: processedHTML,
           pageNumber: page.pageNumber!,
           surveyId: surveyId,
-          modifiedAt: page.metadata!.modifiedAt!,
+          modifiedAt: Value(page.metadata!.modifiedAt!),
         ),
       );
     } else {
@@ -45,11 +46,12 @@ class PagesController {
         await pagesDao.updatePage(
           existingPage,
           database.PagesCompanion.insert(
-              externalId: page.id!,
-              html: processedHTML,
-              pageNumber: page.pageNumber!,
-              surveyId: surveyId,
-              modifiedAt: page.metadata!.modifiedAt!),
+            externalId: page.id!,
+            html: processedHTML,
+            pageNumber: page.pageNumber!,
+            surveyId: surveyId,
+            modifiedAt: Value(page.metadata!.modifiedAt!),
+          ),
         );
       }
     }
@@ -95,7 +97,7 @@ class PagesController {
   /// Compares if [page] is different from persisted Page
   bool _comparePages(
           database.Page page, surveys_api.DeviceSurveyPageData newPage) =>
-      page.modifiedAt.isBefore(newPage.metadata!.modifiedAt!);
+      page.modifiedAt!.isBefore(newPage.metadata!.modifiedAt!);
 }
 
 final pagesController = PagesController();

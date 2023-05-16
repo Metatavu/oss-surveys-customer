@@ -8,7 +8,7 @@ import 'package:oss_surveys_customer/utils/pages_controller.dart';
 /// Surveys Controller class
 class SurveysController {
   /// Persists [newSurvey]
-  Future persistSurvey(surveys_api.DeviceSurveyData newSurvey) async {
+  Future<Survey> persistSurvey(surveys_api.DeviceSurveyData newSurvey) async {
     Survey? existingSurvey =
         await surveysDao.findSurveyByExternalId(newSurvey.id!);
 
@@ -26,15 +26,21 @@ class SurveysController {
       );
 
       await _handlePages(newSurvey.pages?.toList(), createdSurvey.id);
+
+      return createdSurvey;
     } else {
       logger.info(
         "Survey with id ${newSurvey.id} already exists, checking if updated...",
       );
+      Survey updatedSurvey = existingSurvey;
       if (_compareSurveys(existingSurvey, newSurvey)) {
         logger.info("Survey with id ${newSurvey.id} is updated, updating...");
-        await surveysDao.updateSurvey(existingSurvey, newSurvey);
+        updatedSurvey =
+            await surveysDao.updateSurvey(existingSurvey, newSurvey);
         await _handlePages(newSurvey.pages?.toList(), existingSurvey.id);
       }
+
+      return updatedSurvey;
     }
   }
 

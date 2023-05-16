@@ -1,6 +1,5 @@
 import "package:drift/drift.dart";
 import "package:oss_surveys_customer/database/database.dart";
-import "package:oss_surveys_customer/main.dart";
 import "../model/survey.dart";
 import "package:oss_surveys_api/oss_surveys_api.dart" as surveys_api;
 

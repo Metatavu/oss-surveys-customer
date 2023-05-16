@@ -17,7 +17,7 @@ class HTMLController {
       return "";
     }
 
-    Document document = _deserializeHTML(page.layoutHtml!);
+    Document document = _wrapTemplate(page.layoutHtml!);
 
     if (document.body == null) {
       return "";
@@ -28,15 +28,18 @@ class HTMLController {
     }
     var documentClone = document.clone(true);
     var bodyClone = document.body!.clone(true);
+    bodyClone.attributes["style"] = "margin: 0; padding: 0;";
     bodyClone.children.clear();
-    bodyClone.children.addAll(_handleChildren(
-      document.body!.children,
-      page.properties!.toList(),
-      mediaFilesMap,
-    ));
+    bodyClone.children.addAll(
+      _handleChildren(
+        document.body!.children,
+        page.properties!.toList(),
+        mediaFilesMap,
+        page.pageNumber!,
+      ),
+    );
 
     documentClone.body!.replaceWith(bodyClone);
-
     return _serializeHTML(documentClone);
   }
 
@@ -45,21 +48,44 @@ class HTMLController {
     List<Element> children,
     List<surveys_api.PageProperty> pageProperties,
     Map<String, String> mediaFilesMap,
+    int pageNumber,
   ) {
     List<Element> updatedChildren = [];
     for (Element child in children) {
+      print(pageProperties);
       surveys_api.PageProperty? foundProperty;
       try {
         foundProperty =
             pageProperties.firstWhere((element) => element.key == child.id);
-      } catch (e) {}
+      } catch (e) {
+        if (child.id.isNotEmpty) {
+          var pagePropertyBuilder = surveys_api.PagePropertyBuilder();
+          pagePropertyBuilder.key = child.id;
+          pagePropertyBuilder.value = child.text + pageNumber.toString();
+          pagePropertyBuilder.type = surveys_api.PagePropertyType.TEXT;
+          foundProperty = pagePropertyBuilder.build();
+        }
+      }
       var updatedChild = child.clone(true);
       updatedChild.children.clear();
-      updatedChild.children.addAll(_handleChildren(
-        child.children,
-        pageProperties,
-        mediaFilesMap,
-      ));
+      updatedChild.children.addAll(
+        _handleChildren(
+          child.children,
+          pageProperties,
+          mediaFilesMap,
+          pageNumber,
+        ),
+      );
+
+      var dataComponent = updatedChild.attributes["data-component"];
+
+      if (dataComponent == "next-button") {
+        updatedChild.attributes["onClick"] = '''(function () {
+          NextButton.postMessage($pageNumber + 1);
+        })();
+        return false;''';
+      }
+
       if (foundProperty != null) {
         _insertPageProperty(
           updatedChild,
@@ -79,11 +105,7 @@ class HTMLController {
   }
 
   /// Serializes HTML from [document] into a String
-  static String _serializeHTML(Document document) {
-    document.querySelectorAll("h1").forEach((element) => print(element.text));
-
-    return document.outerHtml;
-  }
+  static String _serializeHTML(Document document) => document.outerHtml;
 
   /// Convert Options from [pageProperties] into HTML
   static String _convertOptions(List<surveys_api.PageProperty> pageProperties) {
@@ -114,5 +136,31 @@ class HTMLController {
         );
         break;
     }
+  }
+
+  /// Wraps given [html] inside a wrapper
+  static Document _wrapTemplate(String html) {
+    return parse(
+      '''
+      <!DOCTYPE html>
+      <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta http-equiv="X-UA-Compatible" content="IE=edge">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Page</title>
+          <style>
+            body {
+              margin: 0;
+              padding: 0;
+            }
+          </style>
+        </head>
+        <body>
+          $html
+        </body>
+      </html>
+    ''',
+    );
   }
 }

@@ -50,5 +50,28 @@ ALTER TABLE pages (
 );
 
 --- Schema version 4
-ALTER TABLE pages
-  ADD COLUMN modifiedAt TEXT NOT NULL;
+DROP TABLE surveys;
+DROP TABLE pages;
+CREATE TABLE surveys (
+  INTEGER id NOT NULL
+  TEXT title NOT NULL
+  TEXT externalId NOT NULL
+  TEXT publishStart NULL
+  TEXT publishEnd NULL
+  INTEGER timeout NOT NULL
+  TEXT modifiedAt NOT NULL
+  
+  PRIMARY KEY (id)
+  UNIQUE (externalId)
+);
+CREATE TABLE pages (
+  INTEGER id NOT NULL
+  TEXT externalId NOT NULL
+  TEXT html NOT NULL
+  INTEGER pageNumber NOT NULL
+  INTEGER surveyId NOT NULL
+  TEXT modifiedAt NOT NULL
+);
+ALTER TABLE pages (
+  ADD CONSTRAINT fk_page_survey_id FOREIGN KEY (surveyId) REFERENCES survey(id)
+);

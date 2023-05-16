@@ -58,15 +58,15 @@ class _DefaultScreenState extends State<DefaultScreen> {
         setState(() {
           _isApprovedDevice = value;
         });
-        Timer.periodic(const Duration(seconds: 10), (timer) async {
-          _navigateToSurveyScreen(timer);
-        });
       });
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    Timer.periodic(const Duration(seconds: 10), (timer) async {
+      _navigateToSurveyScreen(timer);
+    });
     return Scaffold(
       backgroundColor: Theme.of(context).primaryColor,
       body: Center(

@@ -51,7 +51,13 @@ class Database extends _$Database {
               return;
             }
           case 4:
-            return await migrator.addColumn(pages, pages.modifiedAt);
+            await migrator.drop(surveys);
+            await migrator.drop(pages);
+            await migrator.create(surveys);
+            await migrator.create(pages);
+            await migrator.alterTable(TableMigration(pages));
+
+            return;
         }
       }
     });

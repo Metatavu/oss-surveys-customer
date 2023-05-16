@@ -41,7 +41,7 @@ class PagesDao extends DatabaseAccessor<Database> with _$PagesDaoMixin {
       existingPage.copyWith(
         html: newPage.html.value,
         pageNumber: newPage.pageNumber.value,
-        modifiedAt: newPage.modifiedAt.value,
+        modifiedAt: Value(newPage.modifiedAt.value),
       ),
     );
 
