@@ -23,6 +23,7 @@ class KeysDao extends DatabaseAccessor<Database> with _$KeysDaoMixin {
   /// Persists given [deviceKey] to database
   Future<int> persistDeviceKey(String deviceKey) async {
     int rowId = (await select(keys).getSingle()).id;
+
     return (update(keys)..where((row) => row.id.equals(rowId)))
         .write(KeysCompanion(key: Value(deviceKey)));
   }

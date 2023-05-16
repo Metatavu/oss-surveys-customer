@@ -18,6 +18,7 @@ class MqttClient {
 
     if (deviceId == null) {
       logger.warning("Device ID not found, cannot get status topic.");
+
       return "";
     }
 
@@ -46,11 +47,13 @@ class MqttClient {
     var mqttPassword = dotenv.env["MQTT_PASSWORD"];
     if (_client.connectionStatus!.state == MqttConnectionState.connected) {
       logger.info("MQTT Client already connected");
+
       return;
     }
 
     if (await keysDao.getDeviceId() == null) {
       logger.warning("Device ID not found, cannot connect to MQTT.");
+
       return;
     }
 
@@ -103,6 +106,7 @@ class MqttClient {
 
     if (statusMessage == null) {
       logger.info("Device not yet registered, not sending status message!");
+
       return;
     }
 
@@ -181,6 +185,7 @@ class MqttClient {
 
     if (statusMessage == null) {
       logger.warning("Device not yet registered, cannot send status message.");
+
       return;
     }
 
@@ -201,6 +206,7 @@ class MqttClient {
 
     if (deviceId == null) {
       logger.warning("Device ID not found, cannot send status message.");
+
       return null;
     }
 
