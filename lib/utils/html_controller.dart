@@ -40,6 +40,7 @@ class HTMLController {
     );
 
     documentClone.body!.replaceWith(bodyClone);
+
     return _serializeHTML(documentClone);
   }
 

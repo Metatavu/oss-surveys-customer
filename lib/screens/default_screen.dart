@@ -67,6 +67,7 @@ class _DefaultScreenState extends State<DefaultScreen> {
     Timer.periodic(const Duration(seconds: 10), (timer) async {
       _navigateToSurveyScreen(timer);
     });
+
     return Scaffold(
       backgroundColor: Theme.of(context).primaryColor,
       body: Center(
