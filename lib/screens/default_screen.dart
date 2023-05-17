@@ -26,12 +26,14 @@ class _DefaultScreenState extends State<DefaultScreen> {
     surveysDao.findActiveSurvey().then((survey) {
       if (survey != null) {
         timer.cancel();
-        Navigator.push(
+        Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(
             builder: (context) => SurveyScreen(survey: survey),
           ),
+          (Route<dynamic> route) => false,
         );
+        dispose();
       } else {
         logger.info("No active survey found.");
       }

@@ -20,7 +20,8 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 final logger = SimpleLogger();
 final apiFactory = ApiFactory();
-final StreamController streamController = StreamController();
+final StreamController streamController =
+    StreamController.broadcast(sync: true);
 
 late final String environment;
 late bool isDeviceApproved;

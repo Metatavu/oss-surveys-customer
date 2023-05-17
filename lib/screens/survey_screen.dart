@@ -14,6 +14,9 @@ class SurveyScreen extends StatefulWidget {
 
   final database.Survey survey;
 
+  static const nextButtonMessageChannel = "NextButton";
+  static const singleSelectOptionChannel = "SingleSelect";
+
   @override
   State<SurveyScreen> createState() => _SurveyScreenState();
 }
@@ -29,20 +32,24 @@ class _SurveyScreenState extends State<SurveyScreen> {
   List<database.Page> _pages = [];
   late WebViewController _controller;
 
-  /// TODO: ADD DOCS
+  /// Callback function for handling next page button click [message] from the WebView
   void _handleNextPage(JavaScriptMessage message) {
     if (int.tryParse(message.message) != null) {
       setState(() {
-        _currentPageNumber++;
+        if (_currentPageNumber ==
+            _pages.maxOf((element) => element.pageNumber)) {
+          _currentPageNumber = 1;
+        } else {
+          _currentPageNumber++;
+        }
         _controller
             .loadHtmlString(_getPage()?.html ?? "No page found")
-            .then((_) {
-          logger.info("Loaded page $_currentPageNumber");
-        });
+            .then((_) => logger.info("Loaded page $_currentPageNumber"));
       });
     }
   }
 
+  /// Gets current page from [_pages] list
   database.Page? _getPage() {
     return _pages.firstWhereOrNull(
         (element) => element.pageNumber == _currentPageNumber);
@@ -50,6 +57,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
 
   /// Callback method for handling [event] pushed to the stream
   Future _handleStreamEvent(dynamic event) async {
+    logger.info("Received stream event.");
     if (event is database.Survey) {
       if (event.id == widget.survey.id) {
         setState(() {
@@ -59,28 +67,27 @@ class _SurveyScreenState extends State<SurveyScreen> {
             await surveysDao.findSurveyByExternalId(event.externalId);
         var foundPages = await pagesDao.listPagesBySurveyId(foundSurvey!.id);
         setState(() {
+          _currentPageNumber = 1;
           _survey = foundSurvey;
           _pages = foundPages;
           _loading = false;
           _controller
               .loadHtmlString(_getPage()?.html ?? "No page found")
-              .then((_) {
-            logger.info("Loaded page 1");
-          });
+              .then((_) => logger.info("Loaded page 1"));
         });
       }
     }
   }
 
-  /// TODO: ADD DOCS
+  /// Loads pages from database, sets them in state and loads the first page in the WebView
   Future _loadPages() async {
     var foundPages = await pagesDao.listPagesBySurveyId(widget.survey.id);
     setState(() {
       _survey = widget.survey;
       _pages = foundPages;
-      _controller.loadHtmlString(foundPages[0].html).then((_) {
-        logger.info("Loaded page 1");
-      });
+      _controller
+          .loadHtmlString(_getPage()?.html ?? "No page found")
+          .then((_) => logger.info("Loaded page 1"));
       _loading = false;
     });
   }
@@ -90,10 +97,14 @@ class _SurveyScreenState extends State<SurveyScreen> {
     super.initState();
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..addJavaScriptChannel("NextButton", onMessageReceived: _handleNextPage);
+      ..addJavaScriptChannel(
+        SurveyScreen.nextButtonMessageChannel,
+        onMessageReceived: _handleNextPage,
+      );
 
     _subscription = streamController.stream.listen(_handleStreamEvent);
     _loadPages();
+    logger.info("Survey screen init ${widget.survey.title}");
   }
 
   @override
@@ -127,14 +138,16 @@ class _SurveyScreenState extends State<SurveyScreen> {
   }
 
   @override
-  void deactivate() async {
-    await _subscription.cancel();
+  void deactivate() {
     super.deactivate();
+    _subscription.cancel();
+    Navigator.of(context).pop();
   }
 
   @override
-  void dispose() async {
-    await _subscription.cancel();
+  void dispose() {
     super.dispose();
+    _subscription.cancel();
+    Navigator.of(context).pop();
   }
 }

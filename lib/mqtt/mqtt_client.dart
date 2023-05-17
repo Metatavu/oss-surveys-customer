@@ -57,7 +57,7 @@ class MqttClient {
       return;
     }
 
-    _client.logging(on: true);
+    _client.logging(on: false);
     _client.onConnected = onConnected;
     _client.onDisconnected = onDisconnected;
     _client.onUnsubscribed = onUnsubscribed;
