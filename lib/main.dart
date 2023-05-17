@@ -3,6 +3,7 @@ import "dart:io";
 import "package:device_info_plus/device_info_plus.dart";
 import "package:drift/drift.dart";
 import "package:flutter/material.dart";
+import "package:flutter_app_installer/flutter_app_installer.dart";
 import "package:flutter_device_identifier/flutter_device_identifier.dart";
 import "package:flutter_dotenv/flutter_dotenv.dart";
 import "package:openapi_generator_annotations/openapi_generator_annotations.dart";
@@ -17,9 +18,13 @@ import "package:oss_surveys_customer/mqtt/mqtt_client.dart";
 import "package:oss_surveys_customer/screens/default_screen.dart";
 import "package:oss_surveys_customer/theme/font.dart";
 import "package:oss_surveys_customer/theme/theme.dart";
+import "package:oss_surveys_customer/utils/offline_file_controller.dart";
 import "package:oss_surveys_customer/utils/pages_controller.dart";
+import "package:path_provider/path_provider.dart";
 import "package:simple_logger/simple_logger.dart";
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import "package:typed_data/typed_data.dart";
+import "package:package_info/package_info.dart" as pkg_info;
 
 final logger = SimpleLogger();
 final apiFactory = ApiFactory();
@@ -32,16 +37,19 @@ void main() async {
   _configureLogger();
   await dotenv.load(fileName: ".env");
   environment = dotenv.env["ENVIRONMENT"]!;
-  mqttClient.connect().then((_) => _setupMqttListeners());
-  deviceSerialNumber = await _getDeviceSerialNumber();
-  await loadOfflinedFont();
-  isDeviceApproved = await keysDao.isDeviceApproved();
 
-  if (isDeviceApproved) {
-    _getSurveys();
-  }
+  await _updateVersion();
+  // mqttClient.connect().then((_) => _setupMqttListeners());
+  // deviceSerialNumber = await _getDeviceSerialNumber();
+  // await loadOfflinedFont();
+  // isDeviceApproved = await keysDao.isDeviceApproved();
 
-  _setupTimers();
+  // if (isDeviceApproved) {
+  //   _getSurveys();
+  // }
+
+  // _setupTimers();
+
   runApp(const MyApp());
 }
 
@@ -189,6 +197,35 @@ Future<void> _getSurveys() async {
   } catch (e) {
     logger.shout("Error while getting Surveys: $e");
   }
+}
+
+Future _updateVersion() async {
+  logger.info("Downloading new version...");
+  // Download the apk
+  HttpClient httpClient = HttpClient();
+  HttpClientRequest request = await httpClient.getUrl(Uri.parse(
+      "https://staging-oss-surveys-customer-updates.s3.us-east-2.amazonaws.com/app-arm64-v8a-release.apk"));
+  HttpClientResponse response = await request.close();
+  Int8Buffer fileContent =
+      await offlineFileController.readResponseToBytes(response);
+
+  logger.info("Creating new .apk file...");
+  // Create .apk file from the response byte array
+  File apkFile =
+      File("${(await getApplicationSupportDirectory()).path}/testiappi.apk");
+  await apkFile.create();
+
+  // Write to the .apk file
+  logger.info("Writing content to the .apk file...");
+  await apkFile.writeAsBytes(fileContent);
+
+  logger.info("Installing the new .apk file...");
+  // Install the apk
+  await FlutterAppInstaller.installApk(
+    filePath: apkFile.path,
+    silently: true,
+  );
+  logger.info("Installed!");
 }
 
 class MyApp extends StatelessWidget {
