@@ -95,6 +95,7 @@ Future<void> _pollDeviceApprovalStatus(Timer timer) async {
         if (!mqttClient.isConnected) {
           logger.info("MQTT client is not connected, attempting to connect");
           await mqttClient.connect();
+          _setupMqttListeners();
         }
       }
     } else {

@@ -33,7 +33,7 @@ class SurveysDao extends DatabaseAccessor<Database> with _$SurveysDaoMixin {
 
   /// Deletes persisted Survey by [id]
   Future deleteSurvey(int id) async {
-    return (delete(surveys)..where((row) => row.id.equals(id)));
+    return await (delete(surveys)..where((row) => row.id.equals(id))).go();
   }
 
   /// Finds currently active Survey

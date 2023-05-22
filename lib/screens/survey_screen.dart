@@ -77,6 +77,9 @@ class _SurveyScreenState extends State<SurveyScreen> {
         });
       }
     }
+    if (event == null) {
+      logger.info("Received null event, going to default screen...");
+    }
   }
 
   /// Loads pages from database, sets them in state and loads the first page in the WebView
@@ -141,13 +144,11 @@ class _SurveyScreenState extends State<SurveyScreen> {
   void deactivate() {
     super.deactivate();
     _subscription.cancel();
-    Navigator.of(context).pop();
   }
 
   @override
   void dispose() {
     super.dispose();
     _subscription.cancel();
-    Navigator.of(context).pop();
   }
 }

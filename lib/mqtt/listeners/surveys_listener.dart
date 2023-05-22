@@ -50,7 +50,9 @@ class SurveysListener extends AbstractMqttListener<DeviceSurveyMessage> {
     logger.info("Handling delete survey message");
     try {
       DeviceSurveyMessage deserializedMessage = deserializeMessage(message);
-      await surveysController.deleteSurvey(deserializedMessage.deviceSurveyId);
+      surveysController
+          .deleteSurvey(deserializedMessage.deviceSurveyId)
+          .then((_) => streamController.sink.add(null));
     } catch (e) {
       logger.shout("Couldn't handle update survey message ${e.toString()}");
     }

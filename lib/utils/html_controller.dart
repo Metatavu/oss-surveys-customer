@@ -1,6 +1,5 @@
 import "package:html/dom.dart";
 import "package:html/parser.dart";
-import "package:list_ext/list_ext.dart";
 import "package:oss_surveys_api/oss_surveys_api.dart" as surveys_api;
 import "../screens/survey_screen.dart";
 
@@ -35,7 +34,9 @@ class HTMLController {
     bodyClone.children.addAll(
       _handleChildren(
         document.body!.children,
+        page.question?.options.toList(),
         page.properties!.toList(),
+        page.layoutVariables!.toList(),
         mediaFilesMap,
         page.pageNumber!,
       ),
@@ -49,57 +50,51 @@ class HTMLController {
   /// Handles children
   static List<Element> _handleChildren(
     List<Element> children,
+    List<surveys_api.PageQuestionOption>? options,
     List<surveys_api.PageProperty> pageProperties,
+    List<surveys_api.LayoutVariable> layoutVariables,
     Map<String, String> mediaFilesMap,
     int pageNumber,
   ) {
     List<Element> updatedChildren = [];
     for (Element child in children) {
       surveys_api.PageProperty? foundProperty;
+      surveys_api.LayoutVariable? layoutVariable;
       try {
         foundProperty =
-            pageProperties.firstWhere((element) => element.key == child.id);
-      } catch (e) {
-        if (child.id.isNotEmpty) {
-          var pagePropertyBuilder = surveys_api.PagePropertyBuilder();
-          pagePropertyBuilder.key = child.id;
-          pagePropertyBuilder.value = child.text + pageNumber.toString();
-          pagePropertyBuilder.type = surveys_api.PagePropertyType.TEXT;
-          foundProperty = pagePropertyBuilder.build();
-        }
-      }
-      var updatedChild = child.clone(true);
-      updatedChild.children.clear();
-      updatedChild.children.addAll(
+            pageProperties.firstWhere((property) => property.key == child.id);
+        layoutVariable =
+            layoutVariables.firstWhere((variable) => variable.key == child.id);
+      } catch (e) {}
+      child.replaceWith(_insertPageProperty(
+          child, foundProperty, layoutVariable, mediaFilesMap));
+      child.children.addAll(
         _handleChildren(
           child.children,
+          options,
           pageProperties,
+          layoutVariables,
           mediaFilesMap,
           pageNumber,
         ),
       );
 
-      var dataComponent = updatedChild.attributes["data-component"];
+      var dataComponent = child.attributes["data-component"];
 
       if (dataComponent == "next-button") {
-        updatedChild.attributes["onClick"] = '''(function () {
+        child.attributes["onClick"] = '''(function () {
           ${SurveyScreen.nextButtonMessageChannel}.postMessage($pageNumber + 1);
         })();
         return false;''';
       } else if (dataComponent == "question") {
-        _handleQuestionElement(
-          updatedChild,
-          pageProperties,
-        );
+        if (options != null) {
+          _handleQuestionElement(
+            child,
+            options,
+          );
+        }
       }
-      if (foundProperty != null) {
-        _insertPageProperty(
-          updatedChild,
-          foundProperty,
-          mediaFilesMap,
-        );
-      }
-      updatedChildren.add(updatedChild);
+      updatedChildren.add(child);
     }
 
     return updatedChildren;
@@ -108,22 +103,13 @@ class HTMLController {
   /// Adds options to question element
   static void _handleQuestionElement(
     Element element,
-    List<surveys_api.PageProperty> pageProperties,
+    List<surveys_api.PageQuestionOption> options,
   ) {
     element.attributes["style"] =
-        "width:  100%; display:flex; flex:1; flex-direction: column; gap: 6rem; justify-content: center; margin-top: 10%;";
+        "width: 100%; display:flex; flex:1; flex-direction: column; gap: 6rem; justify-content: center; margin-top: 10%;";
     element.children.addAll(
-      (pageProperties
-                  .firstWhereOrNull((element) => element.key == "OPTIONS")
-                  ?.value ??
-              "")
-          .split(",")
-          .map(
-            (e) => e.isNotEmpty
-                ? Element.html(
-                    "<div style='margin-bottom: 6rem;'><button style='width: 100%; height: 250px; font-size: 6rem; color: #fff; background: transparent; border: 20px solid #fff'>${e.replaceAll(RegExp('[^A-Za-z]'), '')}</button></div>")
-                : Element.html("<div></div>"),
-          ),
+      options.map((e) => Element.html(
+          "<button style='margin-bottom: 6rem; width: 100%; height: 250px; font-size: 6rem; color: #fff; background: transparent; border: 20px solid #fff; font-family: SBonusText-Bold;'>${e.questionOptionValue}</button>")),
     );
   }
 
@@ -131,21 +117,39 @@ class HTMLController {
   static String _serializeHTML(Document document) => document.outerHtml;
 
   /// Inserts PageProperty value into HTML
-  static void _insertPageProperty(
+  static Element _insertPageProperty(
     Element element,
-    surveys_api.PageProperty pageProperty,
+    surveys_api.PageProperty? pageProperty,
+    surveys_api.LayoutVariable? layoutVariable,
     Map<String, String> mediaFilesMap,
   ) {
-    switch (pageProperty.type) {
-      case surveys_api.PagePropertyType.TEXT:
-        element.text = pageProperty.value.toString();
-        break;
-      case surveys_api.PagePropertyType.IMAGE_URL:
-        element.attributes["src"] = mediaFilesMap[pageProperty.key] ?? "";
-        break;
-      case surveys_api.PagePropertyType.OPTIONS:
-        break;
+    if (pageProperty == null || layoutVariable == null) {
+      return element;
     }
+
+    switch (layoutVariable.type) {
+      case surveys_api.LayoutVariableType.TEXT:
+        element.text = pageProperty.value.toString();
+
+        return element;
+      case surveys_api.LayoutVariableType.IMAGE_URL:
+        if (element.localName == "img") {
+          element.attributes["src"] = mediaFilesMap[pageProperty.key] ?? "";
+        } else if (element.localName == "div") {
+          var styles = element.attributes["style"];
+          if (styles != null) {
+            element.attributes["style"] =
+                "$styles background-image: url('${mediaFilesMap[pageProperty.key]}');";
+          } else {
+            element.attributes["style"] =
+                "background-image: url('${mediaFilesMap[pageProperty.key]}');";
+          }
+        }
+
+        return element;
+    }
+
+    return element;
   }
 
   /// Wraps given [html] inside a wrapper
@@ -159,6 +163,7 @@ class HTMLController {
           <meta http-equiv="X-UA-Compatible" content="IE=edge">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <title>Page</title>
+          <link rel="stylesheet" href="https://cdn.metatavu.io/fonts/sok/fonts/stylesheet.css"/>
           <style>
             body {
               margin: 0;

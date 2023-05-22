@@ -32,7 +32,7 @@ class PagesDao extends DatabaseAccessor<Database> with _$PagesDaoMixin {
 
   /// Deletes Page by [id]
   Future deletePage(int id) async {
-    return (delete(pages)..where((row) => row.id.equals(id)));
+    return await (delete(pages)..where((row) => row.id.equals(id))).go();
   }
 
   /// Updates [page]
@@ -41,7 +41,7 @@ class PagesDao extends DatabaseAccessor<Database> with _$PagesDaoMixin {
       existingPage.copyWith(
         html: newPage.html.value,
         pageNumber: newPage.pageNumber.value,
-        modifiedAt: Value(newPage.modifiedAt.value),
+        modifiedAt: newPage.modifiedAt.value,
       ),
     );
 
