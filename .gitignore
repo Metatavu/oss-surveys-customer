@@ -53,3 +53,6 @@ app.*.map.json
 
 # Metrics
 metrics
+
+# Android Keystore
+android/key.properties

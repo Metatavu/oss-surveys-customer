@@ -21,6 +21,9 @@ Another option is to have `flutter pub run build_runner watch` running in the ba
 #### Dart Code Metrics
 1. Run Dart Code Metrics analyzer with `flutter pub run dart_code_metrics:metrics lib`
 
+#### Building
+Build with `flutter build apk --split-per-abi`
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.

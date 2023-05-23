@@ -5,6 +5,7 @@ import "package:oss_surveys_customer/database/dao/keys_dao.dart";
 import "package:oss_surveys_customer/database/dao/surveys_dao.dart";
 import "package:oss_surveys_customer/main.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
+import "package:oss_surveys_customer/screens/management_screen.dart";
 import "package:oss_surveys_customer/screens/survey_screen.dart";
 
 /// Default Screen
@@ -18,6 +19,7 @@ class DefaultScreen extends StatefulWidget {
 /// Default Screen state
 class _DefaultScreenState extends State<DefaultScreen> {
   bool _isApprovedDevice = false;
+  int _clicks = 0;
 
   /// Navigates to [SurveyScreen] if device is approved and it has active survey.
   void _navigateToSurveyScreen() {
@@ -58,30 +60,64 @@ class _DefaultScreenState extends State<DefaultScreen> {
     });
   }
 
+  void _handleManagementButton() {
+    if (_clicks >= 10) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const ManagementScreen(),
+        ),
+      );
+    }
+
+    Timer(const Duration(seconds: 5), () {
+      _clicks = 0;
+    });
+    setState(() {
+      _clicks++;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).primaryColor,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (!_isApprovedDevice)
-              Text(
-                AppLocalizations.of(context)!.notYetApproved,
-                style: const TextStyle(
-                  fontFamily: "S-Bonus-Regular",
-                  color: Color(0xffffffff),
-                  fontSize: 30,
-                ),
+      body: Stack(
+        children: [
+          Positioned(
+            left: 0,
+            top: 0,
+            child: Container(
+              width: 200,
+              height: 200,
+              child: TextButton(
+                onPressed: _handleManagementButton,
+                child: Container(),
               ),
-            SvgPicture.asset(
-              "assets/logo.svg",
-              width: MediaQuery.of(context).size.width * 0.7,
-              height: MediaQuery.of(context).size.height * 0.7,
             ),
-          ],
-        ),
+          ),
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (!_isApprovedDevice)
+                  Text(
+                    AppLocalizations.of(context)!.notYetApproved,
+                    style: const TextStyle(
+                      fontFamily: "S-Bonus-Regular",
+                      color: Color(0xffffffff),
+                      fontSize: 96,
+                    ),
+                  ),
+                SvgPicture.asset(
+                  "assets/logo.svg",
+                  width: MediaQuery.of(context).size.width * 0.7,
+                  height: MediaQuery.of(context).size.height * 0.7,
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

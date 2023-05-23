@@ -2,5 +2,29 @@
   "notYetApproved": "Device has not yet been approved.",
   "@notYetApproved": {
     "description": "New device needs to be approved within the Management application."
-  }
+  },
+  "currentVersion": "Applications current version: {currentVersion}",
+  "@currentVersion": {
+    "description": "Current version of the application.",
+    "placeholders": {
+      "currentVersion": {
+        "type": "String",
+        "example": "1.0.0"
+      }
+    }
+  },
+  "availableVersion": "Servers version: {availableVersion}",
+  "@availableVersion": {
+    "description": "Available version of the application.",
+    "placeholders": {
+      "availableVersion": {
+        "type": "String",
+        "example": "1.0.0"
+      }
+    }
+  },
+  "installVersionButton": "Install new version",
+  "@installVersionButton": {
+    "description": "Install new version buttons text"
+    }
 }

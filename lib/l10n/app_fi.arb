@@ -1,3 +1,6 @@
 {
-  "notYetApproved": "Laitetta ei ole vielä otettu käyttöön."
+  "notYetApproved": "Laitetta ei ole vielä otettu käyttöön.",
+  "currentVersion": "Laitteen versio: {currentVersion}",
+  "availableVersion": "Palvelimella oleva versio: {availableVersion}",
+  "installVersionButton": "Asenna uusin versio"
 }

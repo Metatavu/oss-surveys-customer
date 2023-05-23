@@ -36,12 +36,14 @@ void main() async {
   deviceSerialNumber = await _getDeviceSerialNumber();
   await loadOfflinedFont();
   isDeviceApproved = await keysDao.isDeviceApproved();
+  WidgetsFlutterBinding.ensureInitialized();
 
   if (isDeviceApproved) {
     _getSurveys();
   }
 
   _setupTimers();
+
   runApp(const MyApp());
 }
 
