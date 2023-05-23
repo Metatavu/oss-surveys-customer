@@ -26,10 +26,10 @@ class Updater {
     return VersionMetadata.fromJson(jsonDecode(utf8.decode(fileContent)));
   }
 
-  /// Updates the app to the latest version
-  static Future updateVersion() async {
+  /// Updates the app to the latest version by [platform]
+  static Future updateVersion(String platform) async {
     logger.info("Downloading new version...");
-    Int8Buffer fileContent = await _doRequest("app-arm64-v8a-release.apk");
+    Int8Buffer fileContent = await _doRequest("app-$platform-release.apk");
 
     String? storageDir = (await getExternalStorageDirectory())?.absolute.path;
     File apkFile = File("$storageDir/fi.metatavu.oss_surveys_customer.apk");

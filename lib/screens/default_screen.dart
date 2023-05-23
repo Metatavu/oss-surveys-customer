@@ -76,8 +76,6 @@ class _DefaultScreenState extends State<DefaultScreen> {
     setState(() {
       _clicks++;
     });
-
-    print("CLICKS: $_clicks");
   }
 
   @override
@@ -90,8 +88,8 @@ class _DefaultScreenState extends State<DefaultScreen> {
             left: 0,
             top: 0,
             child: Container(
-              width: 50,
-              height: 50,
+              width: 200,
+              height: 200,
               child: TextButton(
                 onPressed: _handleManagementButton,
                 child: Container(),
@@ -108,7 +106,7 @@ class _DefaultScreenState extends State<DefaultScreen> {
                     style: const TextStyle(
                       fontFamily: "S-Bonus-Regular",
                       color: Color(0xffffffff),
-                      fontSize: 30,
+                      fontSize: 96,
                     ),
                   ),
                 SvgPicture.asset(

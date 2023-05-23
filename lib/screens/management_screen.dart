@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:flutter_dotenv/flutter_dotenv.dart";
 import "dart:core";
 import "package:oss_surveys_customer/updates/updater.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
@@ -22,7 +23,13 @@ class _ManagementScreenState extends State<ManagementScreen> {
 
   /// On click handler for button
   Future _handleUpdate() async {
-    await Updater.updateVersion();
+    setState(() {
+      _loading = true;
+    });
+    await Updater.updateVersion(dotenv.env["PLATFORM"]!);
+    setState(() {
+      _loading = false;
+    });
   }
 
   /// Checks applications current and available version numbers
@@ -31,7 +38,8 @@ class _ManagementScreenState extends State<ManagementScreen> {
     String currentVersion = await Updater.getCurrentVersion();
     String serverVersion = (await Updater.checkVersion())
         .elements
-        .firstWhere((element) => element.filters.first.value == "arm64-v8a")
+        .firstWhere(
+            (element) => element.filters.first.value == dotenv.env["PLATFORM"]!)
         .versionName;
 
     int? currentVersionNumber = int.tryParse(
@@ -60,9 +68,16 @@ class _ManagementScreenState extends State<ManagementScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      floatingActionButton: BackButton(
-        onPressed: () => Navigator.pop(context),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
+      floatingActionButton: SizedBox(
+        width: 200,
+        height: 200,
+        child: FittedBox(
+          child: FloatingActionButton.large(
+            child: const Icon(Icons.arrow_back),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
       ),
       body: Center(
         child: _loading
@@ -75,16 +90,31 @@ class _ManagementScreenState extends State<ManagementScreen> {
                   Text(
                     AppLocalizations.of(context)!
                         .currentVersion(_currentVersion),
+                    style: const TextStyle(fontSize: 50),
                   ),
                   Text(
                     AppLocalizations.of(context)!
                         .availableVersion(_serverVersion),
+                    style: const TextStyle(fontSize: 50),
                   ),
-                  ElevatedButton(
-                    onPressed: _updateAvailable ? _handleUpdate : null,
-                    child: Text(
-                        AppLocalizations.of(context)!.installVersionButton),
-                  ),
+                  SizedBox(
+                    child: ElevatedButton(
+                      style: ButtonStyle(
+                        padding: MaterialStateProperty.all(
+                          EdgeInsetsGeometry.lerp(
+                            const EdgeInsets.all(20),
+                            const EdgeInsets.all(30),
+                            0.5,
+                          ),
+                        ),
+                      ),
+                      onPressed: _updateAvailable ? _handleUpdate : null,
+                      child: Text(
+                        AppLocalizations.of(context)!.installVersionButton,
+                        style: const TextStyle(fontSize: 50),
+                      ),
+                    ),
+                  )
                 ],
               ),
       ),
