@@ -24,6 +24,10 @@ Another option is to have `flutter pub run build_runner watch` running in the ba
 #### Building
 Build with `flutter build apk --split-per-abi`
 
+#### Localizations
+1. Add new localization to `lib/app_en|fi.yaml`
+2. Run `flutter gen-l10n` to generate localization files
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.
