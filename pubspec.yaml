@@ -69,6 +69,7 @@ dependencies:
   html: ^0.15.3
   built_collection: ^5.1.1
   flutter_app_installer: ^0.0.3
+  package_info_plus: ^4.0.1
 
 dev_dependencies:
   flutter_test:
