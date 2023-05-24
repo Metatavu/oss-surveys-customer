@@ -97,10 +97,16 @@ class HTMLController {
 
     element.attributes["style"] =
         "width: 100%; display:flex; flex:1; flex-direction: column; gap: 6rem; justify-content: center; margin-top: 10%;";
-    element.children.addAll(
-      options.map((e) => Element.html(
-          "<button style='margin-bottom: 3rem; width: 100%; height: 150px; font-size: 2.5rem; color: #fff; background: transparent; border: 20px solid #fff; font-family: SBonusText-Bold;'>${e.questionOptionValue}</button>")),
-    );
+    element.children.addAll(options.map((e) {
+      Element optionElement = Element.html(
+          "<button style='margin-bottom: 3rem; width: 100%; height: 150px; font-size: 2.5rem; color: #fff; background: transparent; border: 20px solid #fff; font-family: SBonusText-Bold;'>${e.questionOptionValue}</button>");
+      optionElement.attributes["onClick"] = '''(function () {
+        ${SurveyScreen.singleSelectOptionChannel}.postMessage("${SurveyScreen.singleSelectOptionPrefix}${e.id}");
+      })();
+      return false;''';
+
+      return optionElement;
+    }));
   }
 
   /// Serializes HTML from [document] into a String

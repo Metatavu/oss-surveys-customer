@@ -17,6 +17,7 @@ class SurveyScreen extends StatefulWidget {
 
   static const nextButtonMessageChannel = "NextButton";
   static const singleSelectOptionChannel = "SingleSelect";
+  static const singleSelectOptionPrefix = "single-";
 
   @override
   State<SurveyScreen> createState() => _SurveyScreenState();
@@ -47,6 +48,13 @@ class _SurveyScreenState extends State<SurveyScreen> {
             .loadHtmlString(_getPage()?.html ?? "No page found")
             .then((_) => logger.info("Loaded page $_currentPageNumber"));
       });
+    }
+  }
+
+  /// Callback function for handling single select option clicking [message] from the WebView
+  void _handleSingleSelectOption(JavaScriptMessage message) {
+    if (message.message.startsWith(SurveyScreen.singleSelectOptionPrefix)) {
+      logger.info("Single select option clicked: ${message.message}");
     }
   }
 
@@ -113,6 +121,10 @@ class _SurveyScreenState extends State<SurveyScreen> {
       ..addJavaScriptChannel(
         SurveyScreen.nextButtonMessageChannel,
         onMessageReceived: _handleNextPage,
+      )
+      ..addJavaScriptChannel(
+        SurveyScreen.singleSelectOptionChannel,
+        onMessageReceived: _handleSingleSelectOption,
       );
 
     _subscription = streamController.stream.listen(_handleStreamEvent);
