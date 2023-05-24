@@ -1,7 +1,6 @@
 import "dart:async";
 import "dart:io";
 import "package:device_info_plus/device_info_plus.dart";
-import "package:drift/drift.dart";
 import "package:flutter/material.dart";
 import "package:flutter_device_identifier/flutter_device_identifier.dart";
 import "package:flutter_dotenv/flutter_dotenv.dart";
@@ -9,20 +8,20 @@ import "package:openapi_generator_annotations/openapi_generator_annotations.dart
 import "package:oss_surveys_api/oss_surveys_api.dart" as surveys_api;
 import "package:oss_surveys_customer/api/api_factory.dart";
 import "package:oss_surveys_customer/database/dao/keys_dao.dart";
-import "package:oss_surveys_customer/database/dao/pages_dao.dart";
-import "package:oss_surveys_customer/database/dao/surveys_dao.dart";
-import "package:oss_surveys_customer/database/database.dart" as database;
 import "package:oss_surveys_customer/mqtt/listeners/surveys_listener.dart";
 import "package:oss_surveys_customer/mqtt/mqtt_client.dart";
 import "package:oss_surveys_customer/screens/default_screen.dart";
 import "package:oss_surveys_customer/theme/font.dart";
 import "package:oss_surveys_customer/theme/theme.dart";
-import "package:oss_surveys_customer/utils/pages_controller.dart";
+import "package:oss_surveys_customer/utils/surveys_controller.dart";
+import "package:responsive_framework/responsive_framework.dart";
 import "package:simple_logger/simple_logger.dart";
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 final logger = SimpleLogger();
 final apiFactory = ApiFactory();
+final StreamController streamController =
+    StreamController.broadcast(sync: true);
 
 late final String environment;
 late bool isDeviceApproved;
@@ -98,6 +97,7 @@ Future<void> _pollDeviceApprovalStatus(Timer timer) async {
         if (!mqttClient.isConnected) {
           logger.info("MQTT client is not connected, attempting to connect");
           await mqttClient.connect();
+          _setupMqttListeners();
         }
       }
     } else {
@@ -157,34 +157,7 @@ Future<void> _getSurveys() async {
     logger.info("Received ${surveys.length} surveys!");
 
     for (var survey in surveys) {
-      database.Survey? existingSurvey =
-          await surveysDao.findSurveyByExternalId(survey.id!);
-
-      if (existingSurvey != null) {
-        logger.info("Survey with id ${survey.id} already exists, replacing...");
-        List<database.Page> existingPages =
-            await pagesDao.listPagesBySurveyId(existingSurvey.id);
-        for (var page in existingPages) {
-          await pagesDao.deletePage(page.id);
-        }
-        await surveysDao.deleteSurvey(existingSurvey.id);
-      }
-
-      database.Survey persistedSurvey = await surveysDao.createSurvey(
-        database.SurveysCompanion.insert(
-          externalId: survey.id!,
-          title: "",
-          publishStart: Value(survey.publishStartTime),
-          publishEnd: Value(survey.publishEndTime),
-          timeout: 0,
-          modifiedAt: survey.metadata!.modifiedAt!,
-        ),
-      );
-      if (survey.pages != null) {
-        for (var page in survey.pages!) {
-          await pagesController.persistPage(page, persistedSurvey.id);
-        }
-      }
+      surveysController.persistSurvey(survey);
     }
 
     logger.info("Finished persisting surveys!");
@@ -199,6 +172,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      builder: (context, child) => ResponsiveBreakpoints(
+        breakpoints: const [
+          Breakpoint(start: 0, end: double.infinity, name: "4K"),
+        ],
+        child: child!,
+      ),
       theme: getTheme(),
       home: const DefaultScreen(),
       localizationsDelegates: AppLocalizations.localizationsDelegates,

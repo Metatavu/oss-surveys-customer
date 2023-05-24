@@ -19,8 +19,8 @@ class OfflineFileController {
       if (download) {
         return _download(url);
       } else {
-        File offlinedFile = File(p.join(
-            (await _getImagesDirectoryPath()), _getOfflineFileName(url)));
+        File offlinedFile = File(
+            p.join((await getImagesDirectoryPath()), _getOfflineFileName(url)));
         if (await offlinedFile.exists()) {
           return offlinedFile;
         }
@@ -42,7 +42,7 @@ class OfflineFileController {
     Uri uri = Uri.parse(url);
     String fileName = _getOfflineFileName(url);
     File? metaFile = await _getDirectoryFileByNameAndExt(
-        await _getImagesDirectoryPath(), fileName, ".meta");
+        await getImagesDirectoryPath(), fileName, ".meta");
 
     HttpClientRequest request = await httpClient.getUrl(uri);
 
@@ -68,7 +68,7 @@ class OfflineFileController {
           logger.info("File not changed. Using offlined file $url");
 
           return await _getDirectoryFileByNameAndExt(
-              await _getImagesDirectoryPath(), fileName, ".jpeg");
+              await getImagesDirectoryPath(), fileName, ".jpeg");
         }
       default:
         {
@@ -119,7 +119,7 @@ class OfflineFileController {
 
   /// Gets path to given [file]s .meta file
   Future<String> _getMetaFilePath(File file) async =>
-      "${(await _getImagesDirectoryPath())}/${p.withoutExtension(p.basename(file.path))}.meta";
+      "${(await getImagesDirectoryPath())}/${p.withoutExtension(p.basename(file.path))}.meta";
 
   /// Handles creating of new file with [fileName].
   ///
@@ -129,9 +129,9 @@ class OfflineFileController {
     String? eTag = response.headers.value("ETag");
     File existingFile = File(fileName);
     String? fileExtension = _getFileExtFromHeaders(response);
-    String filePartName = "${(await _getImagesDirectoryPath())}/$fileName.part";
+    String filePartName = "${(await getImagesDirectoryPath())}/$fileName.part";
     File filePart = File(filePartName);
-    String newFileName = filePart.path.replaceAll(".part", ".$fileExtension");
+    String newFileName = filePart.path.replaceAll(".part", "");
 
     if (await filePart.exists()) {
       await filePart.delete();
@@ -143,11 +143,11 @@ class OfflineFileController {
       await existingFile.delete();
     }
 
-    await filePart.rename(newFileName);
+    File newFile = await filePart.rename(newFileName);
     await _writeMetaFile(existingFile, eTag);
-    logger.info("Downloaded $fileName!");
+    logger.info("Downloaded $newFileName!");
 
-    return existingFile;
+    return newFile;
   }
 
   /// Reads [response] to bytes and awaits for it to be ready.
@@ -161,9 +161,9 @@ class OfflineFileController {
   }
 
   /// Returns path to offlined images directory as string.
-  Future<String> _getImagesDirectoryPath() async {
+  Future<String> getImagesDirectoryPath() async {
     return (await Directory(
-                "${(await getApplicationSupportDirectory()).path}/images")
+                "${(await getApplicationDocumentsDirectory()).path}/images")
             .create())
         .path;
   }
@@ -192,7 +192,7 @@ class OfflineFileController {
   /// Returns null if Content-Type header is not present.
   String? _getFileExtFromHeaders(HttpClientResponse response) {
     String? contentTypeHeader = response.headers.value("Content-Type");
-
+    logger.info("Content-Type header: $contentTypeHeader");
     if (contentTypeHeader == null) {
       return null;
     }

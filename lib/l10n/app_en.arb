@@ -26,5 +26,9 @@
   "installVersionButton": "Install new version",
   "@installVersionButton": {
     "description": "Install new version buttons text"
-    }
+    },
+  "loadingSurvey": "Survey is being loaded...",
+  "@loadingSurvey": {
+    "description": "Currently active survey is being loaded from database."
+  }
 }

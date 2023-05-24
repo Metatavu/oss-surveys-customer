@@ -7,6 +7,7 @@ import "package:oss_surveys_customer/main.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
 import "package:oss_surveys_customer/screens/management_screen.dart";
 import "package:oss_surveys_customer/screens/survey_screen.dart";
+import "../database/database.dart";
 
 /// Default Screen
 class DefaultScreen extends StatefulWidget {
@@ -22,42 +23,55 @@ class _DefaultScreenState extends State<DefaultScreen> {
   int _clicks = 0;
 
   /// Navigates to [SurveyScreen] if device is approved and it has active survey.
-  void _navigateToSurveyScreen() {
-    surveysDao.findActiveSurvey().then((survey) {
-      if (survey != null) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const SurveyScreen(),
-          ),
-        );
+  Future _navigateToSurveyScreen(BuildContext context, Survey survey) async {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SurveyScreen(survey: survey),
+      ),
+    );
+  }
+
+  /// Polls database with 10 second interval to check if device is approved.
+  Future _checkDeviceApproval() async {
+    bool isApproved = await keysDao.isDeviceApproved();
+    if (!isApproved) {
+      Timer.periodic(const Duration(seconds: 10), (timer) async {
+        logger.info("Checking if device is approved...");
+        if (await keysDao.isDeviceApproved()) {
+          logger.info("Device was approved, canceling timer.");
+          timer.cancel();
+          setState(() => _isApprovedDevice = true);
+        }
+      });
+    } else {
+      setState(() => _isApprovedDevice = true);
+    }
+  }
+
+  /// Polls database with 10 second interval to check if device has active survey.
+  Future _pollActiveSurvey() async {
+    Timer.periodic(const Duration(seconds: 10), (timer) async {
+      Survey? foundSurvey = await surveysDao.findActiveSurvey();
+      if (foundSurvey != null && context.mounted) {
+        timer.cancel();
+        await _navigateToSurveyScreen(context, foundSurvey);
+      } else {
+        logger.info("No active survey found.");
       }
     });
+  }
+
+  /// Sets up timers for checking if device is approved and if there is active survey.
+  Future _setupTimers() async {
+    await _checkDeviceApproval();
+    await _pollActiveSurvey();
   }
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      keysDao.isDeviceApproved().then((value) {
-        if (!value) {
-          Timer.periodic(const Duration(seconds: 10), (timer) async {
-            logger.info("Checking if device is approved...");
-            if (await keysDao.isDeviceApproved()) {
-              logger.info("Device was approved, canceling timer.");
-              setState(() {
-                _isApprovedDevice = true;
-              });
-              timer.cancel();
-            }
-          });
-        }
-        setState(() {
-          _isApprovedDevice = value;
-        });
-        _navigateToSurveyScreen();
-      });
-    });
+    _setupTimers();
   }
 
   void _handleManagementButton() {
@@ -71,11 +85,9 @@ class _DefaultScreenState extends State<DefaultScreen> {
     }
 
     Timer(const Duration(seconds: 5), () {
-      _clicks = 0;
+      setState(() => _clicks = 0);
     });
-    setState(() {
-      _clicks++;
-    });
+    setState(() => _clicks++);
   }
 
   @override
@@ -87,12 +99,15 @@ class _DefaultScreenState extends State<DefaultScreen> {
           Positioned(
             left: 0,
             top: 0,
-            child: Container(
+            child: SizedBox(
               width: 200,
               height: 200,
               child: TextButton(
                 onPressed: _handleManagementButton,
-                child: Container(),
+                style: TextButton.styleFrom(
+                  splashFactory: NoSplash.splashFactory,
+                ),
+                child: const SizedBox(),
               ),
             ),
           ),
@@ -106,7 +121,7 @@ class _DefaultScreenState extends State<DefaultScreen> {
                     style: const TextStyle(
                       fontFamily: "S-Bonus-Regular",
                       color: Color(0xffffffff),
-                      fontSize: 96,
+                      fontSize: 50,
                     ),
                   ),
                 SvgPicture.asset(

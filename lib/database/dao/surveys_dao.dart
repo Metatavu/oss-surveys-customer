@@ -1,6 +1,5 @@
 import "package:drift/drift.dart";
 import "package:oss_surveys_customer/database/database.dart";
-import "package:oss_surveys_customer/main.dart";
 import "../model/survey.dart";
 import "package:oss_surveys_api/oss_surveys_api.dart" as surveys_api;
 
@@ -32,41 +31,46 @@ class SurveysDao extends DatabaseAccessor<Database> with _$SurveysDaoMixin {
     return await (select(surveys).get());
   }
 
-  /// Updates persisted Survey by [externalId] and [updatedSurvey]
-  Future<Survey> updateSurveyByExternalId(
-    String externalId,
-    Survey updatedSurvey,
-  ) async {
-    Survey? foundSurvey = await findSurveyByExternalId(externalId);
-
-    if (foundSurvey == null) {
-      logger.shout("Couldn't find Survey with external id $externalId");
-    }
-
-    await update(surveys).replace(foundSurvey!.copyWith(
-      title: updatedSurvey.title,
-      timeout: updatedSurvey.timeout,
-      publishStart: Value(updatedSurvey.publishStart),
-      publishEnd: Value(updatedSurvey.publishEnd),
-    ));
-
-    return await (select(surveys)
-          ..where((row) => row.id.equals(foundSurvey.id)))
-        .getSingle();
-  }
-
   /// Deletes persisted Survey by [id]
   Future deleteSurvey(int id) async {
-    return (delete(surveys)..where((row) => row.id.equals(id)));
+    return await (delete(surveys)..where((row) => row.id.equals(id))).go();
   }
 
   /// Finds currently active Survey
   Future<Survey?> findActiveSurvey() async {
-    return await (select(surveys)
-          ..where((row) =>
-              row.publishStart.isSmallerOrEqualValue(DateTime.now()) &
-              row.publishEnd.isBiggerOrEqualValue(DateTime.now())))
+    Survey? foundSurvey = await (select(surveys)
+          ..where(
+            (row) =>
+                row.publishStart.isSmallerOrEqualValue(DateTime.now()) &
+                row.publishEnd.isBiggerOrEqualValue(DateTime.now()),
+          )
+          ..limit(1))
         .getSingleOrNull();
+
+    foundSurvey ??= await (select(surveys)
+          ..where((row) => row.publishStart.isNull() & row.publishEnd.isNull())
+          ..limit(1))
+        .getSingleOrNull();
+
+    return foundSurvey;
+  }
+
+  /// Updates [survey]
+  Future<Survey> updateSurvey(
+      Survey existingSurvey, surveys_api.DeviceSurveyData newSurvey) async {
+    await update(surveys).replace(
+      existingSurvey.copyWith(
+        title: newSurvey.title,
+        timeout: newSurvey.timeout,
+        publishStart: Value(newSurvey.publishStartTime),
+        publishEnd: Value(newSurvey.publishEndTime),
+        modifiedAt: newSurvey.metadata!.modifiedAt!,
+      ),
+    );
+
+    return await (select(surveys)
+          ..where((row) => row.id.equals(existingSurvey.id)))
+        .getSingle();
   }
 }
 
