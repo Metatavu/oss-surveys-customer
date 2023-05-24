@@ -29,7 +29,7 @@ class PagesController {
       mediaFilesMap,
     );
     if (existingPage == null) {
-      // logger.info("Persisting new page ${page.id}");
+      logger.info("Persisting new page ${page.id}");
       await pagesDao.createPage(
         database.PagesCompanion.insert(
           externalId: page.id!,
