@@ -42,7 +42,7 @@ class PagesController {
     } else {
       if (_comparePages(existingPage, page)) {
         logger.info("Page with id ${page.id} is updated, updating...");
-        var updatedPage = await pagesDao.updatePage(
+        await pagesDao.updatePage(
           existingPage,
           database.PagesCompanion.insert(
             externalId: page.id!,
@@ -82,7 +82,6 @@ class PagesController {
       if (property.value.isEmpty) {
         continue;
       }
-      logger.info("Offlining media ${property.value}");
 
       File? offlinedFile =
           await offlineFileController.getOfflineFile(property.value);

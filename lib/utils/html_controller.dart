@@ -1,5 +1,6 @@
 import "package:html/dom.dart";
 import "package:html/parser.dart";
+import "package:list_ext/list_ext.dart";
 import "package:oss_surveys_api/oss_surveys_api.dart" as surveys_api;
 import "../screens/survey_screen.dart";
 
@@ -20,23 +21,17 @@ class HTMLController {
 
     Document document = _wrapTemplate(page.layoutHtml!);
 
-    if (document.body == null) {
-      return "";
-    }
+    if (document.body == null) return "";
+    if (document.body?.children == null) return "";
 
-    if (document.body?.children == null) {
-      return "";
-    }
     var documentClone = document.clone(true);
     var bodyClone = document.body!.clone(true);
-    bodyClone.attributes["style"] = "margin: 0; padding: 0;";
     bodyClone.children.clear();
     bodyClone.children.addAll(
       _handleChildren(
         document.body!.children,
+        page,
         page.question?.options.toList(),
-        page.properties!.toList(),
-        page.layoutVariables!.toList(),
         mediaFilesMap,
         page.pageNumber!,
       ),
@@ -50,30 +45,25 @@ class HTMLController {
   /// Handles children
   static List<Element> _handleChildren(
     List<Element> children,
+    surveys_api.DeviceSurveyPageData page,
     List<surveys_api.PageQuestionOption>? options,
-    List<surveys_api.PageProperty> pageProperties,
-    List<surveys_api.LayoutVariable> layoutVariables,
     Map<String, String> mediaFilesMap,
     int pageNumber,
   ) {
     List<Element> updatedChildren = [];
     for (Element child in children) {
-      surveys_api.PageProperty? foundProperty;
-      surveys_api.LayoutVariable? layoutVariable;
-      try {
-        foundProperty =
-            pageProperties.firstWhere((property) => property.key == child.id);
-        layoutVariable =
-            layoutVariables.firstWhere((variable) => variable.key == child.id);
-      } catch (e) {}
+      surveys_api.PageProperty? foundProperty = page.properties
+          ?.firstWhereOrNull((property) => property.key == child.id);
+      surveys_api.LayoutVariable? layoutVariable = page.layoutVariables
+          ?.firstWhereOrNull((variable) => variable.key == child.id);
+
       child.replaceWith(_insertPageProperty(
           child, foundProperty, layoutVariable, mediaFilesMap));
       child.children.addAll(
         _handleChildren(
           child.children,
+          page,
           options,
-          pageProperties,
-          layoutVariables,
           mediaFilesMap,
           pageNumber,
         ),
@@ -87,12 +77,10 @@ class HTMLController {
         })();
         return false;''';
       } else if (dataComponent == "question") {
-        if (options != null) {
-          _handleQuestionElement(
-            child,
-            options,
-          );
-        }
+        _handleQuestionElement(
+          child,
+          options,
+        );
       }
       updatedChildren.add(child);
     }
@@ -103,13 +91,15 @@ class HTMLController {
   /// Adds options to question element
   static void _handleQuestionElement(
     Element element,
-    List<surveys_api.PageQuestionOption> options,
+    List<surveys_api.PageQuestionOption>? options,
   ) {
+    if (options == null) return;
+
     element.attributes["style"] =
         "width: 100%; display:flex; flex:1; flex-direction: column; gap: 6rem; justify-content: center; margin-top: 10%;";
     element.children.addAll(
       options.map((e) => Element.html(
-          "<button style='margin-bottom: 6rem; width: 100%; height: 250px; font-size: 6rem; color: #fff; background: transparent; border: 20px solid #fff; font-family: SBonusText-Bold;'>${e.questionOptionValue}</button>")),
+          "<button style='margin-bottom: 3rem; width: 100%; height: 150px; font-size: 2.5rem; color: #fff; background: transparent; border: 20px solid #fff; font-family: SBonusText-Bold;'>${e.questionOptionValue}</button>")),
     );
   }
 
@@ -129,6 +119,12 @@ class HTMLController {
 
     switch (layoutVariable.type) {
       case surveys_api.LayoutVariableType.TEXT:
+        var styles = element.attributes["style"];
+        if (element.localName == "h1") {
+          element.attributes["style"] = "$styles font-size: 7rem;";
+        } else if (element.localName == "p") {
+          element.attributes["style"] = "$styles font-size: 4rem;";
+        }
         element.text = pageProperty.value.toString();
 
         return element;
@@ -137,13 +133,8 @@ class HTMLController {
           element.attributes["src"] = mediaFilesMap[pageProperty.key] ?? "";
         } else if (element.localName == "div") {
           var styles = element.attributes["style"];
-          if (styles != null) {
-            element.attributes["style"] =
-                "$styles background-image: url('${mediaFilesMap[pageProperty.key]}');";
-          } else {
-            element.attributes["style"] =
-                "background-image: url('${mediaFilesMap[pageProperty.key]}');";
-          }
+          element.attributes["style"] =
+              "${styles ?? ""}background-image: url('file://${mediaFilesMap[pageProperty.key]}')";
         }
 
         return element;
@@ -164,6 +155,7 @@ class HTMLController {
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <title>Page</title>
           <link rel="stylesheet" href="https://cdn.metatavu.io/fonts/sok/fonts/stylesheet.css"/>
+          <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
           <style>
             body {
               margin: 0;

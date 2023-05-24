@@ -7,6 +7,7 @@ import "package:oss_surveys_customer/database/database.dart" as database;
 import "package:oss_surveys_customer/main.dart";
 import "package:webview_flutter/webview_flutter.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
+import "default_screen.dart";
 
 /// Survey screen
 class SurveyScreen extends StatefulWidget {
@@ -55,14 +56,22 @@ class _SurveyScreenState extends State<SurveyScreen> {
         (element) => element.pageNumber == _currentPageNumber);
   }
 
+  /// Navigates back to default screen
+  void _navigateBack() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const DefaultScreen(),
+      ),
+    );
+  }
+
   /// Callback method for handling [event] pushed to the stream
   Future _handleStreamEvent(dynamic event) async {
     logger.info("Received stream event.");
     if (event is database.Survey) {
       if (event.id == widget.survey.id) {
-        setState(() {
-          _loading = true;
-        });
+        setState(() => _loading = true);
         database.Survey? foundSurvey =
             await surveysDao.findSurveyByExternalId(event.externalId);
         var foundPages = await pagesDao.listPagesBySurveyId(foundSurvey!.id);
@@ -79,6 +88,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
     }
     if (event == null) {
       logger.info("Received null event, going to default screen...");
+      _navigateBack();
     }
   }
 

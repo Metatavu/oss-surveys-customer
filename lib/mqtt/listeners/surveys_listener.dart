@@ -17,7 +17,6 @@ class SurveysListener extends AbstractMqttListener<DeviceSurveyMessage> {
     try {
       surveys_api.DeviceSurveyData? deviceSurveyData =
           await _findDeviceSurveyData(message);
-
       if (deviceSurveyData != null) {
         surveysController
             .persistSurvey(deviceSurveyData)
