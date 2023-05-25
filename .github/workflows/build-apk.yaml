@@ -20,6 +20,7 @@ jobs:
           MQTT_USERNAME: ${{ secrets.MQTT_USERNAME }}
           SURVEYS_API_BASE_PATH: ${{ secrets.SURVEYS_API_BASE_PATH }}
       - run: |
+          touch .env
           flutter pub get
           flutter pub run build_runner build --delete-conflicting-outputs
           flutter build apk --split-per-abi
