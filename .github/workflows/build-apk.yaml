@@ -9,4 +9,9 @@ jobs:
         with:
           flutter-version: '3.7.12'
           channel: 'stable'
-      - run: flutter --version
+      - run: |
+        flutter doctor
+        flutter pub get
+        flutter pub run build_runner build --delete-conflicting-outputs
+        flutter build apk --split-per-abi
+
