@@ -1,4 +1,5 @@
 import "dart:async";
+import "package:async/async.dart";
 import "package:flutter/material.dart";
 import "package:list_ext/list_ext.dart";
 import "package:oss_surveys_customer/database/dao/pages_dao.dart";
@@ -32,6 +33,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
   int _currentPageNumber = 1;
   List<database.Page> _pages = [];
   late WebViewController _controller;
+  late RestartableTimer _timeoutTimer;
 
   /// Callback function for handling next page button click [message] from the WebView
   void _handleNextPage(JavaScriptMessage message) {
@@ -47,6 +49,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
             .loadHtmlString(_getPage()?.html ?? "No page found")
             .then((_) => logger.info("Loaded page $_currentPageNumber"));
       });
+      _timeoutTimer.reset();
     }
   }
 
@@ -105,6 +108,19 @@ class _SurveyScreenState extends State<SurveyScreen> {
     });
   }
 
+  /// Callback function for timeout timer.
+  ///
+  /// Navigates back to surveys first page after timeout.
+  void _handleTimeout() {
+    logger.info("Timeout ${widget.survey.timeout}");
+    if (_currentPageNumber != 1) {
+      setState(() => _currentPageNumber = 1);
+      _controller
+          .loadHtmlString(_getPage()?.html ?? "No page found")
+          .then((_) => logger.info("Loaded page 1"));
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -116,6 +132,10 @@ class _SurveyScreenState extends State<SurveyScreen> {
       );
 
     _subscription = streamController.stream.listen(_handleStreamEvent);
+    _timeoutTimer = RestartableTimer(
+      Duration(seconds: widget.survey.timeout),
+      _handleTimeout,
+    );
     _loadPages();
     logger.info("Survey screen init ${widget.survey.title}");
   }

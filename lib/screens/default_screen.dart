@@ -21,6 +21,7 @@ class DefaultScreen extends StatefulWidget {
 class _DefaultScreenState extends State<DefaultScreen> {
   bool _isApprovedDevice = false;
   int _clicks = 0;
+  late Timer _surveyNavigationTimer;
 
   /// Navigates to [SurveyScreen] if device is approved and it has active survey.
   Future _navigateToSurveyScreen(BuildContext context, Survey survey) async {
@@ -29,7 +30,7 @@ class _DefaultScreenState extends State<DefaultScreen> {
       MaterialPageRoute(
         builder: (context) => SurveyScreen(survey: survey),
       ),
-    );
+    ).then((_) => _setupTimers());
   }
 
   /// Polls database with 10 second interval to check if device is approved.
@@ -51,7 +52,8 @@ class _DefaultScreenState extends State<DefaultScreen> {
 
   /// Polls database with 10 second interval to check if device has active survey.
   Future _pollActiveSurvey() async {
-    Timer.periodic(const Duration(seconds: 10), (timer) async {
+    _surveyNavigationTimer =
+        Timer.periodic(const Duration(seconds: 10), (timer) async {
       Survey? foundSurvey = await surveysDao.findActiveSurvey();
       if (foundSurvey != null && context.mounted) {
         timer.cancel();
@@ -64,6 +66,7 @@ class _DefaultScreenState extends State<DefaultScreen> {
 
   /// Sets up timers for checking if device is approved and if there is active survey.
   Future _setupTimers() async {
+    logger.info("Initializing default screen timers...");
     await _checkDeviceApproval();
     await _pollActiveSurvey();
   }
@@ -76,12 +79,11 @@ class _DefaultScreenState extends State<DefaultScreen> {
 
   void _handleManagementButton() {
     if (_clicks >= 10) {
+      _surveyNavigationTimer.cancel();
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (context) => const ManagementScreen(),
-        ),
-      );
+        MaterialPageRoute(builder: (context) => const ManagementScreen()),
+      ).then((_) => _setupTimers());
     }
 
     Timer(const Duration(seconds: 5), () {
