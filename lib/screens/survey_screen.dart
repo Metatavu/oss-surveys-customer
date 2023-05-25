@@ -3,6 +3,7 @@ import "package:async/async.dart";
 import "package:flutter/material.dart";
 import "package:list_ext/list_ext.dart";
 import "package:oss_surveys_customer/database/dao/answer_dao.dart";
+import "package:oss_surveys_customer/database/dao/keys_dao.dart";
 import "package:oss_surveys_customer/database/dao/pages_dao.dart";
 import "package:oss_surveys_customer/database/dao/surveys_dao.dart";
 import "package:oss_surveys_customer/database/database.dart" as database;
@@ -10,6 +11,7 @@ import "package:oss_surveys_customer/main.dart";
 import "package:webview_flutter/webview_flutter.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
 import "default_screen.dart";
+import "package:oss_surveys_api/oss_surveys_api.dart" as surveys_api;
 
 /// Survey screen
 class SurveyScreen extends StatefulWidget {
@@ -59,18 +61,37 @@ class _SurveyScreenState extends State<SurveyScreen> {
 
   /// Callback function for handling single select option clicking [message] from the WebView
   void _handleSingleSelectOption(JavaScriptMessage message) async {
+    database.Page page = _getPage()!;
     try {
       logger.info("Single select option selected: ${message.message}");
+      _navigateToPage(_currentPageNumber + 1);
+      surveys_api.DeviceDataApi deviceDataApi =
+          await apiFactory.getDeviceDataApi();
+      String? deviceId = await keysDao.getDeviceId();
+      if (deviceId == null) throw Exception("Device ID not found!");
+      surveys_api.DevicePageSurveyAnswerBuilder builder =
+          surveys_api.DevicePageSurveyAnswerBuilder();
+      builder.pageId = page.externalId;
+      builder.answer = message.message;
+
+      await deviceDataApi.submitSurveyAnswer(
+        deviceId: deviceId,
+        deviceSurveyId: _survey.externalId,
+        pageId: page.externalId,
+        devicePageSurveyAnswer: builder.build(),
+      );
+    } catch (error) {
+      logger.shout(
+        "Error while answering single select question, persisting for later...: $error",
+      );
       await answersDao.createAnswer(
         database.AnswersCompanion.insert(
-          pageId: _getPage()!.id,
-          questionType: _getPage()!.questionType!,
+          pageId: page.id,
+          pageExternalId: page.externalId,
+          questionType: page.questionType!,
           answer: message.message,
         ),
       );
-      _navigateToPage(_currentPageNumber + 1);
-    } catch (error) {
-      logger.shout("Error while selecting single select option: $error");
     }
   }
 

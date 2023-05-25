@@ -15,8 +15,23 @@ class AnswersDao extends DatabaseAccessor<Database> with _$AnswersDaoMixin {
   }
 
   /// Creates a new answer
-  Future<int> createAnswer(AnswersCompanion newAnswer) async {
-    return await into(answers).insert(newAnswer);
+  Future<Answer> createAnswer(AnswersCompanion newAnswer) async {
+    int createdAnswerId = await into(answers).insert(newAnswer);
+
+    return await (select(answers)
+          ..where((row) => row.id.equals(createdAnswerId)))
+        .getSingle();
+  }
+
+  /// Deletes an answer by [id]
+  Future deleteAnswer(int id) async {
+    return await (delete(answers)..where((answer) => answer.id.equals(id)))
+        .go();
+  }
+
+  /// Lists all answers
+  Future<List<Answer>> listAnswers() async {
+    return await select(answers).get();
   }
 }
 
