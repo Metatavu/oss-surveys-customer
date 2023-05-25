@@ -72,6 +72,10 @@ class HTMLController {
       var dataComponent = child.attributes["data-component"];
 
       if (dataComponent == "next-button") {
+        bool nextButtonVisible = page.nextButtonVisible ?? false;
+        if (!nextButtonVisible) {
+          child.attributes["style"] = "display: none;";
+        }
         child.attributes["onClick"] = '''(function () {
           ${SurveyScreen.nextButtonMessageChannel}.postMessage($pageNumber + 1);
         })();
@@ -101,7 +105,7 @@ class HTMLController {
       Element optionElement = Element.html(
           "<button style='margin-bottom: 3rem; width: 100%; height: 150px; font-size: 2.5rem; color: #fff; background: transparent; border: 20px solid #fff; font-family: SBonusText-Bold;'>${e.questionOptionValue}</button>");
       optionElement.attributes["onClick"] = '''(function () {
-        ${SurveyScreen.singleSelectOptionChannel}.postMessage("${SurveyScreen.singleSelectOptionPrefix}${e.id}");
+        ${SurveyScreen.selectOptionChannel}.postMessage("${e.id}");
       })();
       return false;''';
 

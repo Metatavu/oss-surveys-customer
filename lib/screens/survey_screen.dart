@@ -17,8 +17,7 @@ class SurveyScreen extends StatefulWidget {
   final database.Survey survey;
 
   static const nextButtonMessageChannel = "NextButton";
-  static const singleSelectOptionChannel = "SingleSelect";
-  static const singleSelectOptionPrefix = "single-";
+  static const selectOptionChannel = "SelectOption";
 
   @override
   State<SurveyScreen> createState() => _SurveyScreenState();
@@ -36,29 +35,32 @@ class _SurveyScreenState extends State<SurveyScreen> {
   late WebViewController _controller;
   late RestartableTimer _timeoutTimer;
 
+  /// Navigates the survey to next page
+  void _navigateToPage(int pageNumber) {
+    setState(() {
+      _currentPageNumber =
+          pageNumber > _pages.maxOf((element) => element.pageNumber)
+              ? 1
+              : pageNumber;
+      _controller
+          .loadHtmlString(_getPage()?.html ?? "No page found")
+          .then((_) => logger.info("Loaded page $_currentPageNumber"));
+    });
+    _timeoutTimer.reset();
+  }
+
   /// Callback function for handling next page button click [message] from the WebView
-  void _handleNextPage(JavaScriptMessage message) {
+  void _handleNextPageButton(JavaScriptMessage message) {
     if (int.tryParse(message.message) != null) {
-      setState(() {
-        if (_currentPageNumber ==
-            _pages.maxOf((element) => element.pageNumber)) {
-          _currentPageNumber = 1;
-        } else {
-          _currentPageNumber++;
-        }
-        _controller
-            .loadHtmlString(_getPage()?.html ?? "No page found")
-            .then((_) => logger.info("Loaded page $_currentPageNumber"));
-      });
-      _timeoutTimer.reset();
+      _navigateToPage(int.parse(message.message));
     }
   }
 
   /// Callback function for handling single select option clicking [message] from the WebView
   void _handleSingleSelectOption(JavaScriptMessage message) {
-    if (message.message.startsWith(SurveyScreen.singleSelectOptionPrefix)) {
-      logger.info("Single select option clicked: ${message.message}");
-    }
+    logger.info("Single select option selected: ${message.message}");
+    // TODO: Handle single select option
+    _navigateToPage(_currentPageNumber + 1);
   }
 
   /// Gets current page from [_pages] list
@@ -136,10 +138,10 @@ class _SurveyScreenState extends State<SurveyScreen> {
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..addJavaScriptChannel(
         SurveyScreen.nextButtonMessageChannel,
-        onMessageReceived: _handleNextPage,
+        onMessageReceived: _handleNextPageButton,
       )
       ..addJavaScriptChannel(
-        SurveyScreen.singleSelectOptionChannel,
+        SurveyScreen.selectOptionChannel,
         onMessageReceived: _handleSingleSelectOption,
       );
 
