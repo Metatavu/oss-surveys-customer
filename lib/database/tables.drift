@@ -75,3 +75,32 @@ CREATE TABLE pages (
 ALTER TABLE pages (
   ADD CONSTRAINT fk_page_survey_id FOREIGN KEY (surveyId) REFERENCES survey(id)
 );
+
+--- Schema version 5
+DROP TABLE pages;
+CREATE TABLE pages (
+  INTEGER id NOT NULL
+  TEXT externalId NOT NULL
+  TEXT html NOT NULL
+  INTEGER pageNumber NOT NULL
+  INTEGER surveyId NOT NULL
+  TEXT questionType NULL
+  TEXT modifiedAt NOT NULL
+  
+  PRIMARY KEY (id)
+  UNIQUE (externalId)
+);
+ALTER TABLE pages (
+  ADD CONSTRAINT fk_page_survey_id FOREIGN KEY (surveyId) REFERENCES survey(id)
+);
+CREATE TABLE answers (
+  INTEGER id NOT NULL 
+  INTEGER pageId NOT NULL
+  TEXT answer NOT NULL
+  TEXT questionType NOT NULL
+  
+  PRIMARY KEY (id)
+);
+ALTER TABLE singleanswers (
+  ADD CONSTRAINT fk_singleanswer_page_id FOREIGN KEY (pageId) REFERENCES page(id)
+);

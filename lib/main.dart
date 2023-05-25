@@ -1,5 +1,6 @@
 import "dart:async";
 import "dart:io";
+import "dart:isolate";
 import "package:device_info_plus/device_info_plus.dart";
 import "package:flutter/material.dart";
 import "package:flutter_device_identifier/flutter_device_identifier.dart";
@@ -27,6 +28,30 @@ late final String environment;
 late bool isDeviceApproved;
 late final String deviceSerialNumber;
 
+class AnswerWorker {
+  static void answerQuestion(SendPort sendPort) {
+    ReceivePort receivePort = ReceivePort();
+    sendPort.send(receivePort.sendPort);
+    receivePort.listen((message) {
+      print("Message: $message");
+    });
+  }
+
+  static void init(AnswerWorker worker) async {
+    try {
+      String? deviceId = await keysDao.getDeviceId();
+
+      if (deviceId == null) {
+        logger.warning("Device ID is null, cannot get surveys!");
+
+        return;
+      }
+    } catch (error) {
+      logger.shout("Answer worker error: $error");
+    }
+  }
+}
+
 void main() async {
   _configureLogger();
   await dotenv.load(fileName: ".env");
@@ -36,6 +61,8 @@ void main() async {
   await loadOfflinedFont();
   isDeviceApproved = await keysDao.isDeviceApproved();
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Isolate.spawn(AnswerWorker.init, AnswerWorker());
 
   if (isDeviceApproved) {
     _getSurveys();

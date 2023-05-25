@@ -1,4 +1,5 @@
 import "dart:io";
+import "package:drift/drift.dart";
 import "package:list_ext/list_ext.dart";
 import "package:oss_surveys_api/oss_surveys_api.dart" as surveys_api;
 import "package:oss_surveys_customer/database/dao/pages_dao.dart";
@@ -36,6 +37,7 @@ class PagesController {
           html: processedHTML,
           pageNumber: page.pageNumber!,
           surveyId: surveyId,
+          questionType: Value(page.question?.type.name),
           modifiedAt: page.metadata!.modifiedAt!,
         ),
       );
@@ -49,6 +51,7 @@ class PagesController {
             html: processedHTML,
             pageNumber: page.pageNumber!,
             surveyId: surveyId,
+            questionType: Value(page.question?.type.name),
             modifiedAt: page.metadata!.modifiedAt!,
           ),
         );

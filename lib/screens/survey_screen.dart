@@ -2,6 +2,7 @@ import "dart:async";
 import "package:async/async.dart";
 import "package:flutter/material.dart";
 import "package:list_ext/list_ext.dart";
+import "package:oss_surveys_customer/database/dao/answer_dao.dart";
 import "package:oss_surveys_customer/database/dao/pages_dao.dart";
 import "package:oss_surveys_customer/database/dao/surveys_dao.dart";
 import "package:oss_surveys_customer/database/database.dart" as database;
@@ -57,10 +58,20 @@ class _SurveyScreenState extends State<SurveyScreen> {
   }
 
   /// Callback function for handling single select option clicking [message] from the WebView
-  void _handleSingleSelectOption(JavaScriptMessage message) {
-    logger.info("Single select option selected: ${message.message}");
-    // TODO: Handle single select option
-    _navigateToPage(_currentPageNumber + 1);
+  void _handleSingleSelectOption(JavaScriptMessage message) async {
+    try {
+      logger.info("Single select option selected: ${message.message}");
+      await answersDao.createAnswer(
+        database.AnswersCompanion.insert(
+          pageId: _getPage()!.id,
+          questionType: _getPage()!.questionType!,
+          answer: message.message,
+        ),
+      );
+      _navigateToPage(_currentPageNumber + 1);
+    } catch (error) {
+      logger.shout("Error while selecting single select option: $error");
+    }
   }
 
   /// Gets current page from [_pages] list
