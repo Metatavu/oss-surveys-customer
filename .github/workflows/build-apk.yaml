@@ -1,5 +1,8 @@
 name: Build APK
-on: pull_request
+on:
+  push:
+    branches:
+      - flutter-build
 jobs:
   build:
     runs-on: ubuntu-latest
