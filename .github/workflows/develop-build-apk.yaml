@@ -1,8 +1,8 @@
-name: Build APK
+name: Build APK (develop)
 on:
   push:
     branches:
-      - flutter-build
+      - develop
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -39,8 +39,6 @@ jobs:
           git config --local user.name "github-actions[bot]"
           git add pubspec.yaml
           git commit -m "Updated version in pubspec.yaml"
-          git checkout develop
-          git merge main
       - name: Push version changes to develop
         uses: ad-m/github-push-action@v0.6.0
         with:
