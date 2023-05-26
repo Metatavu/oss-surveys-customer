@@ -1,0 +1,3 @@
+[submodule "oss-surveys-api-spec"]
+	path = oss-surveys-api-spec
+	url = https://github.com/Metatavu/oss-surveys-api-spec
