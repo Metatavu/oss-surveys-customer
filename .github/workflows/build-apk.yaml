@@ -22,6 +22,9 @@ jobs:
       FONT_URL: ${{ secrets.FONT_URL }}
       PLATFORM: ${{ secrets.PLATFORM }}
     steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
       - name: Bump version and push tag
         id: tag_version
         uses: mathieudutour/github-tag-action@v6.1
@@ -30,7 +33,7 @@ jobs:
           tag_prefix: ""
       - name: Update version in pubspec.yaml
         run: |
-          sed -i 's/version: .*/version: xx/g' pubspec.yaml
+          sed -i 's/version: .*/version: ${{ steps.tag_version.outputs.new_tag }}/g' pubspec.yaml
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add pubspec.yaml
@@ -42,9 +45,6 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: develop
-      - uses: actions/checkout@v3
-        with:
-          submodules: true
       - name: Build APK
         uses: subosito/flutter-action@v2
         with:
