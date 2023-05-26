@@ -40,7 +40,7 @@ jobs:
           git add pubspec.yaml
           git commit -m "Updated version in pubspec.yaml"
           git checkout develop
-          git merge main
+          git merge master
       - name: Push version changes to develop
         uses: ad-m/github-push-action@v0.6.0
         with:
