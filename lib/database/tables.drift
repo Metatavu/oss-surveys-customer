@@ -94,14 +94,10 @@ ALTER TABLE pages (
   ADD CONSTRAINT fk_page_survey_id FOREIGN KEY (surveyId) REFERENCES survey(id)
 );
 CREATE TABLE answers (
-  INTEGER id NOT NULL 
-  INTEGER pageId NOT NULL
+  INTEGER id NOT NULL
   TEXT answer NOT NULL
   TEXT questionType NOT NULL
   TEXT pageExternalId NOT NULL
   
   PRIMARY KEY (id)
-);
-ALTER TABLE singleanswers (
-  ADD CONSTRAINT fk_singleanswer_page_id FOREIGN KEY (pageId) REFERENCES page(id)
 );

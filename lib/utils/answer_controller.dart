@@ -38,7 +38,6 @@ class AnswerController {
       );
       await answersDao.createAnswer(
         database.AnswersCompanion.insert(
-          pageId: page.id,
           pageExternalId: page.externalId,
           questionType: page.questionType!,
           answer: answer,
