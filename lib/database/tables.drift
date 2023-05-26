@@ -98,6 +98,7 @@ CREATE TABLE answers (
   INTEGER pageId NOT NULL
   TEXT answer NOT NULL
   TEXT questionType NOT NULL
+  TEXT pageExternalId NOT NULL
   
   PRIMARY KEY (id)
 );

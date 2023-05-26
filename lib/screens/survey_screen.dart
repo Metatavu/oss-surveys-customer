@@ -1,13 +1,13 @@
 import "dart:async";
+import "dart:convert";
 import "package:async/async.dart";
 import "package:flutter/material.dart";
 import "package:list_ext/list_ext.dart";
-import "package:oss_surveys_customer/database/dao/answer_dao.dart";
-import "package:oss_surveys_customer/database/dao/keys_dao.dart";
 import "package:oss_surveys_customer/database/dao/pages_dao.dart";
 import "package:oss_surveys_customer/database/dao/surveys_dao.dart";
 import "package:oss_surveys_customer/database/database.dart" as database;
 import "package:oss_surveys_customer/main.dart";
+import "package:oss_surveys_customer/utils/answer_controller.dart";
 import "package:webview_flutter/webview_flutter.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
 import "default_screen.dart";
@@ -35,6 +35,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
   late database.Survey _survey;
   int _currentPageNumber = 1;
   List<database.Page> _pages = [];
+  final List<String> _selectedOptions = [];
   late WebViewController _controller;
   late RestartableTimer _timeoutTimer;
 
@@ -53,46 +54,51 @@ class _SurveyScreenState extends State<SurveyScreen> {
   }
 
   /// Callback function for handling next page button click [message] from the WebView
-  void _handleNextPageButton(JavaScriptMessage message) {
+  void _handleNextPageButton(JavaScriptMessage message) async {
+    database.Page? page = _getPage();
+    if (page!.questionType == surveys_api.PageQuestionType.MULTI_SELECT.name) {
+      _navigateToPage(_currentPageNumber + 1);
+      AnswerController.submitAnswer(
+        jsonEncode(_selectedOptions),
+        page,
+        _survey.externalId,
+      );
+    }
     if (int.tryParse(message.message) != null) {
       _navigateToPage(int.parse(message.message));
     }
   }
 
-  /// Callback function for handling single select option clicking [message] from the WebView
-  void _handleSingleSelectOption(JavaScriptMessage message) async {
-    database.Page page = _getPage()!;
-    try {
-      logger.info("Single select option selected: ${message.message}");
-      _navigateToPage(_currentPageNumber + 1);
-      surveys_api.DeviceDataApi deviceDataApi =
-          await apiFactory.getDeviceDataApi();
-      String? deviceId = await keysDao.getDeviceId();
-      if (deviceId == null) throw Exception("Device ID not found!");
-      surveys_api.DevicePageSurveyAnswerBuilder builder =
-          surveys_api.DevicePageSurveyAnswerBuilder();
-      builder.pageId = page.externalId;
-      builder.answer = message.message;
-
-      await deviceDataApi.submitSurveyAnswer(
-        deviceId: deviceId,
-        deviceSurveyId: _survey.externalId,
-        pageId: page.externalId,
-        devicePageSurveyAnswer: builder.build(),
-      );
-    } catch (error) {
-      logger.shout(
-        "Error while answering single select question, persisting for later...: $error",
-      );
-      await answersDao.createAnswer(
-        database.AnswersCompanion.insert(
-          pageId: page.id,
-          pageExternalId: page.externalId,
-          questionType: page.questionType!,
-          answer: message.message,
-        ),
-      );
+  /// Callback function for handling option select [message] from the WebView
+  void _handleOptionSelect(JavaScriptMessage message) async {
+    switch (_getPage()?.questionType) {
+      case "SINGLE_SELECT":
+        _handleSingleSelectOption(message.message);
+        break;
+      case "MULTI_SELECT":
+        _handleMultiSelectOption(message.message);
+        break;
     }
+  }
+
+  /// Callback function for handling multi select option clicking [message] from the WebView
+  void _handleMultiSelectOption(String optionId) async {
+    if (_selectedOptions.contains(optionId)) {
+      _selectedOptions.retainWhere((element) => element != optionId);
+    } else {
+      _selectedOptions.add(optionId);
+    }
+  }
+
+  /// Callback function for handling single select option clicking [message] from the WebView
+  void _handleSingleSelectOption(String optionId) async {
+    database.Page page = _getPage()!;
+    _navigateToPage(_currentPageNumber + 1);
+    AnswerController.submitAnswer(
+      optionId,
+      page,
+      _survey.externalId,
+    );
   }
 
   /// Gets current page from [_pages] list
@@ -174,7 +180,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
       )
       ..addJavaScriptChannel(
         SurveyScreen.selectOptionChannel,
-        onMessageReceived: _handleSingleSelectOption,
+        onMessageReceived: _handleOptionSelect,
       );
 
     _subscription = streamController.stream.listen(_handleStreamEvent);

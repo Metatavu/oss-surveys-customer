@@ -83,7 +83,7 @@ class HTMLController {
       } else if (dataComponent == "question") {
         _handleQuestionElement(
           child,
-          options,
+          page,
         );
       }
       updatedChildren.add(child);
@@ -95,20 +95,53 @@ class HTMLController {
   /// Adds options to question element
   static void _handleQuestionElement(
     Element element,
-    List<surveys_api.PageQuestionOption>? options,
+    surveys_api.DeviceSurveyPageData page,
   ) {
-    if (options == null) return;
+    if (page.question?.options == null) return;
 
-    element.children.addAll(options.map((e) {
-      Element optionElement = Element.html(
-          "<button class='option' style='margin-bottom: 2rem;'>${e.questionOptionValue}</button>");
-      optionElement.attributes["onClick"] = '''(function () {
-        ${SurveyScreen.selectOptionChannel}.postMessage("${e.id}");
+    element.children.addAll(page.question!.options.map((e) {
+      switch (page.question!.type) {
+        case surveys_api.PageQuestionType.SINGLE_SELECT:
+          return _createSingleSelect(e);
+        case surveys_api.PageQuestionType.MULTI_SELECT:
+          return _createMultiSelect(e);
+        default:
+          return Element.tag("span");
+      }
+    }));
+  }
+
+  /// Creates a single select [option]
+  static Element _createSingleSelect(surveys_api.PageQuestionOption option) {
+    Element optionElement = Element.html(
+        "<button class='option' style='margin-bottom: 2rem;'>${option.questionOptionValue}</button>");
+    optionElement.attributes["onClick"] = '''(function () {
+        ${SurveyScreen.selectOptionChannel}.postMessage("${option.id}");
       })();
       return false;''';
 
-      return optionElement;
-    }));
+    return optionElement;
+  }
+
+  /// Creates a multi select [option]
+  static Element _createMultiSelect(surveys_api.PageQuestionOption option) {
+    Element optionElement = Element.html('''
+        <div id="${option.id}" class="multi-option">${option.questionOptionValue}</div>
+      ''');
+    optionElement.attributes["onClick"] = '''(function () {
+      var el = document.getElementById("${option.id}");
+      if (el.classList.contains("multi-option")) {
+        el.classList.remove("multi-option");
+        el.classList.add("multi-option-selected");
+      } else {
+        el.classList.add("multi-option");
+        el.classList.remove("multi-option-selected");
+      }
+        ${SurveyScreen.selectOptionChannel}.postMessage("${option.id}");
+      })();
+      return false;''';
+
+    return optionElement;
   }
 
   /// Serializes HTML from [document] into a String
@@ -232,8 +265,30 @@ class HTMLController {
               font-size: 2rem;
               transition: background-color 0.2s ease-in-out;
             }
-            .next-button:active, option:active {
+            .next-button:focus, option:focus {
               background-color: rgba(0, 0, 0, 0.1);
+            }
+            .multi-option {
+              width: 100%;
+              height: 80px;
+              font-size: 2rem;
+              font-family: 'SBonusText-Bold';
+              text-align: center;
+              margin-bottom: 2rem;
+              color: #fff;
+              background: transparent;
+              border: 4px solid #fff;
+            }
+            .multi-option-selected {
+              width: 100%;
+              height: 80px;
+              font-size: 2rem;
+              font-family: 'SBonusText-Bold';
+              text-align: center;
+              margin-bottom: 2rem;
+              color: #000;
+              background: transparent;
+              border: 4px solid #000;
             }
           </style>
         </head>
