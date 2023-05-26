@@ -7,33 +7,34 @@ jobs:
   build:
     runs-on: ubuntu-latest
     environment: develop
+    env:
+      APP_UPDATES_BASE_URL: ${{ secrets.APP_UPDATES_BASE_URL }}
+      MQTT_CLIENT_ID: ${{ secrets.MQTT_CLIENT_ID }}
+      MQTT_PASSWORD: ${{ secrets.MQTT_PASSWORD }}
+      MQTT_PORT: ${{ secrets.MQTT_PORT }}
+      MQTT_URL: ${{ secrets.MQTT_URL }}
+      MQTT_USERNAME: ${{ secrets.MQTT_USERNAME }}
+      SURVEYS_API_BASE_PATH: ${{ secrets.SURVEYS_API_BASE_PATH }}
+      SIGN_KEYSTORE: ${{ secrets.SIGN_KEYSTORE }}
+      KEY_PROPERTIES: ${{ secrets.KEY_PROPERTIES }}
+      ENVIRONMENT: ${{ secrets.ENVIRONMENT }}
+      FONT_URL: ${{ secrets.FONT_URL }}
+      PLATFORM: ${{ secrets.PLATFORM }}
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: true
-      - uses: subosito/flutter-action@v2
+      - name: Build APK
+        uses: subosito/flutter-action@v2
         with:
           flutter-version: "3.7.12"
           channel: "stable"
-        env:
-          APP_UPDATES_BASE_URL: ${{ secrets.APP_UPDATES_BASE_URL }}
-          MQTT_CLIENT_ID: ${{ secrets.MQTT_CLIENT_ID }}
-          MQTT_PASSWORD: ${{ secrets.MQTT_PASSWORD }}
-          MQTT_PORT: ${{ secrets.MQTT_PORT }}
-          MQTT_URL: ${{ secrets.MQTT_URL }}
-          MQTT_USERNAME: ${{ secrets.MQTT_USERNAME }}
-          SURVEYS_API_BASE_PATH: ${{ secrets.SURVEYS_API_BASE_PATH }}
-          SIGN_KEYSTORE: ${{ secrets.SIGN_KEYSTORE }}
-          KEY_PROPERTIES: ${{ secrets.KEY_PROPERTIES }}
-          ENVIRONMENT: ${{ secrets.ENVIRONMENT }}
-          FONT_URL: ${{ secrets.FONT_URL }}
-          PLATFORM: ${{ secrets.PLATFORM }}
       - run: |
           echo $ENVIRONMENT
           echo $SIGN_KEYSTORE > upload-keystore.b64 && base64 -d -i upload-keystore.b64 > upload-keystore.jks
           echo $KEY_PROPERTIES > key.properties
           ls -lha
           touch .env
-          flutter pub get
-          flutter pub run build_runner build --delete-conflicting-outputs
-          flutter build apk --split-per-abi
+          # flutter pub get
+          # flutter pub run build_runner build --delete-conflicting-outputs
+          # flutter build apk --split-per-abi
