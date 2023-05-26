@@ -40,21 +40,10 @@ jobs:
           flutter pub get
           flutter pub run build_runner build --delete-conflicting-outputs
           flutter build apk --split-per-abi
-      - name: Upload APK metadata
-        uses: hkusu/s3-upload-action@v2
+      - name: Upload APK
+        uses: shallwefootball/s3-upload-action@master
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
-          aws-bucket: ${{ secrets.UPDATES_BUCKET }}
-          file-path: build/app/outputs/apk/release/app-arm64-v8a-release.apk
-          public: true
-      - name: Upload APK metadata
-        uses: hkusu/s3-upload-action@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
-          aws-bucket: ${{ secrets.UPDATES_BUCKET }}
-          file-path: build/app/outputs/apk/release/output-metadata.json
-          public: true
+          aws_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_bucket: ${{ secrets.UPDATES_BUCKET }}
+          source_dir: build/app/outputs/apk/release/
