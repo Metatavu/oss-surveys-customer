@@ -29,12 +29,30 @@ late final String deviceSerialNumber;
 
 void main() async {
   _configureLogger();
+
+  SimpleLogger().info("Starting OSS Surveys Customer App...");
+
   await dotenv.load(fileName: ".env");
   environment = dotenv.env["ENVIRONMENT"]!;
+  SimpleLogger().info("Running in $environment environment");
+  SimpleLogger().info("Connecting to MQTT Broker...");
   mqttClient.connect().then((_) => _setupMqttListeners());
+
   deviceSerialNumber = await _getDeviceSerialNumber();
+  SimpleLogger().info("Device serial number: $deviceSerialNumber");
+
+  SimpleLogger().info("Loading offlined font...");
   await loadOfflinedFont();
+
+  SimpleLogger().info("Checking if device is approved...");
   isDeviceApproved = await keysDao.isDeviceApproved();
+
+  if (isDeviceApproved) {
+    SimpleLogger().info("Device is approved!");
+  } else {
+    SimpleLogger().info("Device is not approved!");
+  }
+
   WidgetsFlutterBinding.ensureInitialized();
 
   if (isDeviceApproved) {

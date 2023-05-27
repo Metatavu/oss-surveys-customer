@@ -7,20 +7,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     environment: develop
-    env:
-      APP_UPDATES_BASE_URL: ${{ secrets.APP_UPDATES_BASE_URL }}
-      MQTT_CLIENT_ID: ${{ secrets.MQTT_CLIENT_ID }}
-      MQTT_PASSWORD: ${{ secrets.MQTT_PASSWORD }}
-      MQTT_PORT: ${{ secrets.MQTT_PORT }}
-      MQTT_URL: ${{ secrets.MQTT_URL }}
-      MQTT_USERNAME: ${{ secrets.MQTT_USERNAME }}
-      SURVEYS_API_BASE_PATH: ${{ secrets.SURVEYS_API_BASE_PATH }}
-      SIGN_KEYSTORE: ${{ secrets.SIGN_KEYSTORE }}
-      SIGN_STORE_PASSWORD: ${{ secrets.SIGN_STORE_PASSWORD }}
-      SIGN_KEY_PASSWORD: ${{ secrets.SIGN_KEY_PASSWORD }}
-      ENVIRONMENT: ${{ secrets.ENVIRONMENT }}
-      FONT_URL: ${{ secrets.FONT_URL }}
-      PLATFORM: ${{ secrets.PLATFORM }}
     steps:
       - uses: actions/checkout@v3
         with:
@@ -55,7 +41,16 @@ jobs:
           echo keyPassword=$SIGN_KEY_PASSWORD >> android/key.properties
           echo keyAlias=upload >> android/key.properties
           echo storeFile=/tmp/upload-keystore.jks >> android/key.properties
-          touch .env
+          echo ${{ secrets.APP_UPDATES_BASE_URL }} >> .env
+          echo ${{ secrets.MQTT_CLIENT_ID }} >> .env
+          echo ${{ secrets.MQTT_PASSWORD }} >> .env
+          echo ${{ secrets.MQTT_PORT }} >> .env
+          echo ${{ secrets.MQTT_URL }} >> .env
+          echo ${{ secrets.MQTT_USERNAME }} >> .env
+          echo ${{ secrets.SURVEYS_API_BASE_PATH }} >> .env
+          echo ${{ secrets.ENVIRONMENT }} >> .env
+          echo ${{ secrets.FONT_URL }} >> .env
+          echo ${{ secrets.PLATFORM }} >> .env
           flutter pub get
           flutter pub run build_runner build --delete-conflicting-outputs
           flutter build apk --split-per-abi
