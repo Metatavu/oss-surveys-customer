@@ -54,14 +54,6 @@ jobs:
           flutter pub get
           flutter pub run build_runner build --delete-conflicting-outputs
           flutter build apk --split-per-abi
-      - name: Upload workspace
-        uses: shallwefootball/s3-upload-action@master
-        with:
-          aws_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_bucket: ${{ secrets.UPDATES_BUCKET }}
-          source_dir: "./"
-          destination_dir: "workspace"
       - name: Upload APK
         uses: shallwefootball/s3-upload-action@master
         with:
