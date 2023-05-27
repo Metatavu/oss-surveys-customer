@@ -41,17 +41,16 @@ jobs:
           echo keyPassword=${{ secrets.SIGN_KEY_PASSWORD }} >> android/key.properties
           echo keyAlias=upload >> android/key.properties
           echo storeFile=/tmp/upload-keystore.jks >> android/key.properties
-          echo ${{ secrets.APP_UPDATES_BASE_URL }} >> .env
-          echo ${{ secrets.MQTT_CLIENT_ID }} >> .env
-          echo ${{ secrets.MQTT_PASSWORD }} >> .env
-          echo ${{ secrets.MQTT_PORT }} >> .env
-          echo ${{ secrets.MQTT_URL }} >> .env
-          echo ${{ secrets.MQTT_USERNAME }} >> .env
-          echo ${{ secrets.SURVEYS_API_BASE_PATH }} >> .env
-          echo ${{ secrets.ENVIRONMENT }} >> .env
-          echo ${{ secrets.FONT_URL }} >> .env
-          echo ${{ secrets.PLATFORM }} >> .env
-          cat .env|grep -v PASS
+          echo APP_UPDATES_BASE_URL=${{ secrets.APP_UPDATES_BASE_URL }} >> .env
+          echo MQTT_CLIENT_ID=${{ secrets.MQTT_CLIENT_ID }} >> .env
+          echo MQTT_PASSWORD=${{ secrets.MQTT_PASSWORD }} >> .env
+          echo MQTT_PORT=${{ secrets.MQTT_PORT }} >> .env
+          echo MQTT_URL=${{ secrets.MQTT_URL }} >> .env
+          echo MQTT_USERNAME=${{ secrets.MQTT_USERNAME }} >> .env
+          echo SURVEYS_API_BASE_PATH=${{ secrets.SURVEYS_API_BASE_PATH }} >> .env
+          echo ENVIRONMENT=${{ secrets.ENVIRONMENT }} >> .env
+          echo FONT_URL=${{ secrets.FONT_URL }} >> .env
+          echo PLATFORM=${{ secrets.PLATFORM }} >> .env
           flutter pub get
           flutter pub run build_runner build --delete-conflicting-outputs
           flutter build apk --split-per-abi
