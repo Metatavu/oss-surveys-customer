@@ -2,7 +2,6 @@ import "dart:async";
 import "dart:convert";
 import "package:async/async.dart";
 import "package:flutter/material.dart";
-import "package:indexed/indexed.dart";
 import "package:list_ext/list_ext.dart";
 import "package:oss_surveys_customer/database/dao/pages_dao.dart";
 import "package:oss_surveys_customer/database/dao/surveys_dao.dart";
@@ -221,51 +220,41 @@ class _SurveyScreenState extends State<SurveyScreen> {
       backgroundColor: Theme.of(context).primaryColor,
       body: Stack(
         children: [
-          Indexer(
-            children: [
-              Indexed(
-                index: 1000,
-                child: Positioned(
-                  left: 0,
-                  top: 0,
-                  child: SizedBox(
-                      width: 200,
-                      height: 200,
-                      child: TextButton(
-                          onPressed: _handleManagementButton,
-                          style: TextButton.styleFrom(
-                            splashFactory: NoSplash.splashFactory,
-                          ),
-                          child: const SizedBox())),
-                ),
-              ),
-              Indexed(
-                index: 100,
-                child: Center(
-                  child: _loading
-                      ? SizedBox(
-                          width: MediaQuery.of(context).size.width / 2,
-                          height: MediaQuery.of(context).size.width / 2,
-                          child: Column(
-                            children: [
-                              const CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 20,
-                              ),
-                              Text(
-                                AppLocalizations.of(context)!.loadingSurvey,
-                                style: const TextStyle(
-                                    fontFamily: "S-Bonus-Regular",
-                                    color: Color(0xffffffff),
-                                    fontSize: 30),
-                              )
-                            ],
-                          ),
+          Center(
+            child: _loading
+                ? SizedBox(
+                    width: MediaQuery.of(context).size.width / 2,
+                    height: MediaQuery.of(context).size.width / 2,
+                    child: Column(
+                      children: [
+                        const CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 20,
+                        ),
+                        Text(
+                          AppLocalizations.of(context)!.loadingSurvey,
+                          style: const TextStyle(
+                              fontFamily: "S-Bonus-Regular",
+                              color: Color(0xffffffff),
+                              fontSize: 30),
                         )
-                      : WebViewWidget(controller: _controller),
-                ),
-              ),
-            ],
+                      ],
+                    ),
+                  )
+                : WebViewWidget(controller: _controller),
+          ),
+          Positioned(
+            left: 0,
+            top: 0,
+            child: SizedBox(
+                width: 200,
+                height: 100,
+                child: TextButton(
+                    onPressed: _handleManagementButton,
+                    style: TextButton.styleFrom(
+                      splashFactory: NoSplash.splashFactory,
+                    ),
+                    child: const SizedBox())),
           ),
         ],
       ),
