@@ -16,7 +16,7 @@ import "package:oss_surveys_customer/theme/theme.dart";
 import "package:oss_surveys_customer/utils/surveys_controller.dart";
 import "package:responsive_framework/responsive_framework.dart";
 import "package:simple_logger/simple_logger.dart";
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import "package:flutter_gen/gen_l10n/app_localizations.dart";
 
 final logger = SimpleLogger();
 final apiFactory = ApiFactory();
@@ -165,12 +165,9 @@ Future<void> _getSurveys() async {
       return;
     }
     List<surveys_api.DeviceSurveyData> surveys = [];
-    deviceDataApi
+    await deviceDataApi
         .listDeviceDataSurveys(deviceId: deviceId)
         .then((deviceDataSurveys) => surveys.addAll(deviceDataSurveys.data!));
-
-    surveys.retainWhere(
-        (survey) => survey.status == surveys_api.DeviceSurveyStatus.PUBLISHED);
 
     logger.info("Received ${surveys.length} surveys!");
 
