@@ -1,7 +1,7 @@
 import "dart:io";
 import "package:flutter/services.dart";
 import "package:flutter_dotenv/flutter_dotenv.dart";
-import 'package:oss_surveys_customer/utils/offline_file_controller.dart';
+import "package:oss_surveys_customer/utils/offline_file_controller.dart";
 import "package:oss_surveys_customer/main.dart";
 import "package:path_provider/path_provider.dart";
 import "package:typed_data/typed_data.dart";

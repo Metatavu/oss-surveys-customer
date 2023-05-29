@@ -2,11 +2,13 @@ import "dart:async";
 import "dart:convert";
 import "package:async/async.dart";
 import "package:flutter/material.dart";
+import "package:indexed/indexed.dart";
 import "package:list_ext/list_ext.dart";
 import "package:oss_surveys_customer/database/dao/pages_dao.dart";
 import "package:oss_surveys_customer/database/dao/surveys_dao.dart";
 import "package:oss_surveys_customer/database/database.dart" as database;
 import "package:oss_surveys_customer/main.dart";
+import "package:oss_surveys_customer/screens/management_screen.dart";
 import "package:oss_surveys_customer/utils/answer_controller.dart";
 import "package:webview_flutter/webview_flutter.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
@@ -38,6 +40,8 @@ class _SurveyScreenState extends State<SurveyScreen> {
   final List<String> _selectedOptions = [];
   late WebViewController _controller;
   late RestartableTimer _timeoutTimer;
+  int _clicks = 0;
+  Timer? _surveyNavigationTimer;
 
   /// Navigates the survey to next page
   void _navigateToPage(int pageNumber) {
@@ -169,6 +173,13 @@ class _SurveyScreenState extends State<SurveyScreen> {
     }
   }
 
+  void _setupTimers() {
+    _timeoutTimer = RestartableTimer(
+      Duration(seconds: widget.survey.timeout),
+      _handleTimeout,
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -184,40 +195,79 @@ class _SurveyScreenState extends State<SurveyScreen> {
       );
 
     _subscription = streamController.stream.listen(_handleStreamEvent);
-    _timeoutTimer = RestartableTimer(
-      Duration(seconds: widget.survey.timeout),
-      _handleTimeout,
-    );
+    _setupTimers();
     _loadPages();
     logger.info("Survey screen init ${widget.survey.title}");
+  }
+
+  void _handleManagementButton() {
+    if (_clicks >= 10) {
+      _surveyNavigationTimer?.cancel();
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const ManagementScreen()),
+      ).then((_) => _setupTimers());
+    }
+
+    Timer(const Duration(seconds: 5), () {
+      setState(() => _clicks = 0);
+    });
+    setState(() => _clicks++);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).primaryColor,
-      body: Center(
-        child: _loading
-            ? SizedBox(
-                width: MediaQuery.of(context).size.width / 2,
-                height: MediaQuery.of(context).size.width / 2,
-                child: Column(
-                  children: [
-                    const CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 20,
-                    ),
-                    Text(
-                      AppLocalizations.of(context)!.loadingSurvey,
-                      style: const TextStyle(
-                          fontFamily: "S-Bonus-Regular",
-                          color: Color(0xffffffff),
-                          fontSize: 30),
-                    )
-                  ],
+      body: Stack(
+        children: [
+          Indexer(
+            children: [
+              Indexed(
+                index: 1000,
+                child: Positioned(
+                  left: 0,
+                  top: 0,
+                  child: SizedBox(
+                      width: 200,
+                      height: 200,
+                      child: TextButton(
+                          onPressed: _handleManagementButton,
+                          style: TextButton.styleFrom(
+                            splashFactory: NoSplash.splashFactory,
+                          ),
+                          child: const SizedBox())),
                 ),
-              )
-            : WebViewWidget(controller: _controller),
+              ),
+              Indexed(
+                index: 100,
+                child: Center(
+                  child: _loading
+                      ? SizedBox(
+                          width: MediaQuery.of(context).size.width / 2,
+                          height: MediaQuery.of(context).size.width / 2,
+                          child: Column(
+                            children: [
+                              const CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 20,
+                              ),
+                              Text(
+                                AppLocalizations.of(context)!.loadingSurvey,
+                                style: const TextStyle(
+                                    fontFamily: "S-Bonus-Regular",
+                                    color: Color(0xffffffff),
+                                    fontSize: 30),
+                              )
+                            ],
+                          ),
+                        )
+                      : WebViewWidget(controller: _controller),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

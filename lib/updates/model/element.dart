@@ -1,6 +1,5 @@
-import 'package:json_annotation/json_annotation.dart';
-
-import 'filter.dart';
+import "package:json_annotation/json_annotation.dart";
+import "filter.dart";
 
 part "element.g.dart";
 

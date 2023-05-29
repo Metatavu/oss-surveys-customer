@@ -1,6 +1,6 @@
-import 'package:json_annotation/json_annotation.dart';
-import 'package:oss_surveys_customer/updates/model/artifact_type.dart';
-import 'package:oss_surveys_customer/updates/model/element.dart';
+import "package:json_annotation/json_annotation.dart";
+import "package:oss_surveys_customer/updates/model/artifact_type.dart";
+import "package:oss_surveys_customer/updates/model/element.dart";
 
 part "version_metadata.g.dart";
 
