@@ -72,6 +72,10 @@ class HTMLController {
       var dataComponent = child.attributes["data-component"];
 
       if (dataComponent == "next-button") {
+        bool nextButtonVisible = page.nextButtonVisible ?? false;
+        if (!nextButtonVisible) {
+          child.attributes["style"] = "display: none;";
+        }
         child.attributes["onClick"] = '''(function () {
           ${SurveyScreen.nextButtonMessageChannel}.postMessage($pageNumber + 1);
         })();
@@ -79,7 +83,7 @@ class HTMLController {
       } else if (dataComponent == "question") {
         _handleQuestionElement(
           child,
-          options,
+          page,
         );
       }
       updatedChildren.add(child);
@@ -91,16 +95,53 @@ class HTMLController {
   /// Adds options to question element
   static void _handleQuestionElement(
     Element element,
-    List<surveys_api.PageQuestionOption>? options,
+    surveys_api.DeviceSurveyPageData page,
   ) {
-    if (options == null) return;
+    if (page.question?.options == null) return;
 
-    element.attributes["style"] =
-        "width: 100%; display:flex; flex:1; flex-direction: column; gap: 6rem; justify-content: center; margin-top: 10%;";
-    element.children.addAll(
-      options.map((e) => Element.html(
-          "<button style='margin-bottom: 3rem; width: 100%; height: 150px; font-size: 2.5rem; color: #fff; background: transparent; border: 20px solid #fff; font-family: SBonusText-Bold;'>${e.questionOptionValue}</button>")),
-    );
+    element.children.addAll(page.question!.options.map((e) {
+      switch (page.question!.type) {
+        case surveys_api.PageQuestionType.SINGLE_SELECT:
+          return _createSingleSelect(e);
+        case surveys_api.PageQuestionType.MULTI_SELECT:
+          return _createMultiSelect(e);
+        default:
+          return Element.tag("span");
+      }
+    }));
+  }
+
+  /// Creates a single select [option]
+  static Element _createSingleSelect(surveys_api.PageQuestionOption option) {
+    Element optionElement = Element.html(
+        "<button class='option'>${option.questionOptionValue}</button>");
+    optionElement.attributes["onClick"] = '''(function () {
+        ${SurveyScreen.selectOptionChannel}.postMessage("${option.id}");
+      })();
+      return false;''';
+
+    return optionElement;
+  }
+
+  /// Creates a multi select [option]
+  static Element _createMultiSelect(surveys_api.PageQuestionOption option) {
+    Element optionElement = Element.html('''
+        <div id="${option.id}" class="option">${option.questionOptionValue}</div>
+      ''');
+    optionElement.attributes["onClick"] = '''(function () {
+      var el = document.getElementById("${option.id}");
+      if (el.classList.contains("option")) {
+        el.classList.remove("option");
+        el.classList.add("multi-option-selected");
+      } else {
+        el.classList.add("option");
+        el.classList.remove("multi-option-selected");
+      }
+        ${SurveyScreen.selectOptionChannel}.postMessage("${option.id}");
+      })();
+      return false;''';
+
+    return optionElement;
   }
 
   /// Serializes HTML from [document] into a String
@@ -119,18 +160,13 @@ class HTMLController {
 
     switch (layoutVariable.type) {
       case surveys_api.LayoutVariableType.TEXT:
-        var styles = element.attributes["style"];
-        if (element.localName == "h1") {
-          element.attributes["style"] = "$styles font-size: 7rem;";
-        } else if (element.localName == "p") {
-          element.attributes["style"] = "$styles font-size: 4rem;";
-        }
         element.text = pageProperty.value.toString();
 
         return element;
       case surveys_api.LayoutVariableType.IMAGE_URL:
         if (element.localName == "img") {
-          element.attributes["src"] = mediaFilesMap[pageProperty.key] ?? "";
+          element.attributes["src"] =
+              "file://${mediaFilesMap[pageProperty.key] ?? ""}";
         } else if (element.localName == "div") {
           var styles = element.attributes["style"];
           element.attributes["style"] =
@@ -160,6 +196,95 @@ class HTMLController {
             body {
               margin: 0;
               padding: 0;
+              user-select: none;
+              touch-action: none;
+            }
+            .page {
+              height: 100vh;
+              width: 100vw;
+              background-color: #00AA46;
+              color: #ffffff;
+              display: flex;
+              flex: 1;
+              flex-direction: column;
+              padding: 10%;
+              box-sizing: border-box;
+            }
+            .content {
+              display: flex;
+              flex: 1;
+              flex-direction: column;
+            }
+            h1 {
+              margin: 0;
+              padding: 0;
+              text-transform: uppercase;
+              font-family: SBonusDisplay-Black;
+            }
+            h1.sm {
+              font-size: 4rem;
+            }
+            h1.md {
+              font-size: 5rem;
+            }
+            h1.lg {
+              font-size: 6rem;
+            }
+            p {
+              font-family: SBonusDisplay-Regular;
+              font-size: 4rem;
+              line-height: 150%;
+            }
+            .options {
+              display: flex;
+              flex: 1;
+              flex-direction: column;
+              gap: 2rem;
+              margin-top: 10%;
+              justify-content: center;
+            }
+            .option {
+              width: 100%;
+              padding: "30px 20px";
+              font-size: 2.5rem;
+              font-family: 'SBonusText-Bold';
+              text-align: center;
+              color: #fff;
+              background: transparent;
+              border: 4px solid #fff;
+              transition: background-color 0.2s ease-in-out;
+              margin-bottom: 2rem;
+            }
+            .next-button {
+              background-color: transparent;
+              border: none;
+              color: #ffffff;
+              height: 80px;
+              font-family: SBonusText-Bold;
+              font-size: 2.5rem;
+              transition: background-color 0.2s ease-in-out;
+            }
+            .next-button:focus, option:focus {
+              background-color: rgba(0, 0, 0, 0.1);
+            }
+            .multi-option-selected {
+              width: 100%;
+              padding: "30px 20px";
+              font-size: 2.5rem;
+              font-family: 'SBonusText-Bold';
+              text-align: center;
+              color: #000;
+              background: transparent;
+              border: 4px solid #000;
+              transition: background-color 0.2s ease-in-out;
+              margin-bottom: 2rem;
+            }
+            .img-wrapper {
+              display: flex;
+              flex: 1;
+              justify-content: center;
+              margin-top: 10%;
+              width: 100%;
             }
           </style>
         </head>

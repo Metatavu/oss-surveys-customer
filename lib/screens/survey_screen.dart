@@ -1,4 +1,5 @@
 import "dart:async";
+import "dart:convert";
 import "package:async/async.dart";
 import "package:flutter/material.dart";
 import "package:list_ext/list_ext.dart";
@@ -6,9 +7,11 @@ import "package:oss_surveys_customer/database/dao/pages_dao.dart";
 import "package:oss_surveys_customer/database/dao/surveys_dao.dart";
 import "package:oss_surveys_customer/database/database.dart" as database;
 import "package:oss_surveys_customer/main.dart";
+import "package:oss_surveys_customer/utils/answer_controller.dart";
 import "package:webview_flutter/webview_flutter.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
 import "default_screen.dart";
+import "package:oss_surveys_api/oss_surveys_api.dart" as surveys_api;
 
 /// Survey screen
 class SurveyScreen extends StatefulWidget {
@@ -17,7 +20,7 @@ class SurveyScreen extends StatefulWidget {
   final database.Survey survey;
 
   static const nextButtonMessageChannel = "NextButton";
-  static const singleSelectOptionChannel = "SingleSelect";
+  static const selectOptionChannel = "SelectOption";
 
   @override
   State<SurveyScreen> createState() => _SurveyScreenState();
@@ -32,25 +35,70 @@ class _SurveyScreenState extends State<SurveyScreen> {
   late database.Survey _survey;
   int _currentPageNumber = 1;
   List<database.Page> _pages = [];
+  final List<String> _selectedOptions = [];
   late WebViewController _controller;
   late RestartableTimer _timeoutTimer;
 
+  /// Navigates the survey to next page
+  void _navigateToPage(int pageNumber) {
+    setState(() {
+      _currentPageNumber =
+          pageNumber > _pages.maxOf((element) => element.pageNumber)
+              ? 1
+              : pageNumber;
+      _controller
+          .loadHtmlString(_getPage()?.html ?? "No page found")
+          .then((_) => logger.info("Loaded page $_currentPageNumber"));
+    });
+    _timeoutTimer.reset();
+  }
+
   /// Callback function for handling next page button click [message] from the WebView
-  void _handleNextPage(JavaScriptMessage message) {
-    if (int.tryParse(message.message) != null) {
-      setState(() {
-        if (_currentPageNumber ==
-            _pages.maxOf((element) => element.pageNumber)) {
-          _currentPageNumber = 1;
-        } else {
-          _currentPageNumber++;
-        }
-        _controller
-            .loadHtmlString(_getPage()?.html ?? "No page found")
-            .then((_) => logger.info("Loaded page $_currentPageNumber"));
-      });
-      _timeoutTimer.reset();
+  void _handleNextPageButton(JavaScriptMessage message) async {
+    database.Page? page = _getPage();
+    if (page!.questionType == surveys_api.PageQuestionType.MULTI_SELECT.name) {
+      _navigateToPage(_currentPageNumber + 1);
+      AnswerController.submitAnswer(
+        jsonEncode(_selectedOptions),
+        page,
+        _survey.externalId,
+      );
     }
+    if (int.tryParse(message.message) != null) {
+      _navigateToPage(int.parse(message.message));
+    }
+  }
+
+  /// Callback function for handling option select [message] from the WebView
+  void _handleOptionSelect(JavaScriptMessage message) async {
+    switch (_getPage()?.questionType) {
+      case "SINGLE_SELECT":
+        _handleSingleSelectOption(message.message);
+        break;
+      case "MULTI_SELECT":
+        _handleMultiSelectOption(message.message);
+        break;
+    }
+  }
+
+  /// Callback function for handling multi select option clicking [message] from the WebView
+  void _handleMultiSelectOption(String optionId) async {
+    if (_selectedOptions.contains(optionId)) {
+      _selectedOptions.retainWhere((element) => element != optionId);
+    } else {
+      _selectedOptions.add(optionId);
+    }
+  }
+
+  /// Callback function for handling single select option clicking [message] from the WebView
+  void _handleSingleSelectOption(String optionId) async {
+    database.Page page = _getPage()!;
+    _navigateToPage(_currentPageNumber + 1);
+    AnswerController.submitAnswer(
+      optionId,
+      page,
+      _survey.externalId,
+    );
   }
 
   /// Gets current page from [_pages] list
@@ -128,7 +176,11 @@ class _SurveyScreenState extends State<SurveyScreen> {
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..addJavaScriptChannel(
         SurveyScreen.nextButtonMessageChannel,
-        onMessageReceived: _handleNextPage,
+        onMessageReceived: _handleNextPageButton,
+      )
+      ..addJavaScriptChannel(
+        SurveyScreen.selectOptionChannel,
+        onMessageReceived: _handleOptionSelect,
       );
 
     _subscription = streamController.stream.listen(_handleStreamEvent);

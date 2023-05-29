@@ -192,7 +192,7 @@ class OfflineFileController {
   /// Returns null if Content-Type header is not present.
   String? _getFileExtFromHeaders(HttpClientResponse response) {
     String? contentTypeHeader = response.headers.value("Content-Type");
-    logger.info("Content-Type header: $contentTypeHeader");
+
     if (contentTypeHeader == null) {
       return null;
     }
