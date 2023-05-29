@@ -3,6 +3,7 @@ import "package:flutter_dotenv/flutter_dotenv.dart";
 import "dart:core";
 import "package:oss_surveys_customer/updates/updater.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
+import "package:oss_surveys_customer/utils/extensions.dart";
 
 /// Management Screen
 ///
@@ -19,7 +20,6 @@ class _ManagementScreenState extends State<ManagementScreen> {
   String _currentVersion = "";
   String _serverVersion = "";
   bool _loading = true;
-  bool _updateAvailable = false;
 
   /// On click handler for button
   Future _handleUpdate() async {
@@ -34,7 +34,6 @@ class _ManagementScreenState extends State<ManagementScreen> {
 
   /// Checks applications current and available version numbers
   Future _checkVersions() async {
-    bool updateAvailable = false;
     String currentVersion = await Updater.getCurrentVersion();
     String serverVersion = (await Updater.checkVersion())
         .elements
@@ -42,19 +41,9 @@ class _ManagementScreenState extends State<ManagementScreen> {
             (element) => element.filters.first.value == dotenv.env["PLATFORM"]!)
         .versionName;
 
-    int? currentVersionNumber = int.tryParse(
-        currentVersion.split(".").map((n) => int.tryParse(n)).join());
-    int? serverVersionNumber = int.tryParse(
-        serverVersion.split(".").map((n) => int.tryParse(n)).join());
-
-    if (currentVersionNumber != null && serverVersionNumber != null) {
-      updateAvailable = serverVersionNumber > currentVersionNumber;
-    }
-
     setState(() {
       _currentVersion = currentVersion;
       _serverVersion = serverVersion;
-      _updateAvailable = updateAvailable;
       _loading = false;
     });
   }
@@ -108,7 +97,7 @@ class _ManagementScreenState extends State<ManagementScreen> {
                           ),
                         ),
                       ),
-                      onPressed: _updateAvailable ? _handleUpdate : null,
+                      onPressed: _handleUpdate,
                       child: Text(
                         AppLocalizations.of(context)!.installVersionButton,
                         style: const TextStyle(fontSize: 50),
