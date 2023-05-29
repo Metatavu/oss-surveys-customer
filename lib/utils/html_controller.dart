@@ -160,10 +160,6 @@ class HTMLController {
 
     switch (layoutVariable.type) {
       case surveys_api.LayoutVariableType.TEXT:
-        // Grow title texts size until layouts are finished.
-        element.classes.remove("md");
-        element.classes.add("lg");
-
         element.text = pageProperty.value.toString();
 
         return element;
