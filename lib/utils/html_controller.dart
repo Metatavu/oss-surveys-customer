@@ -114,7 +114,7 @@ class HTMLController {
   /// Creates a single select [option]
   static Element _createSingleSelect(surveys_api.PageQuestionOption option) {
     Element optionElement = Element.html(
-        "<button class='option' style='margin-bottom: 2rem;'>${option.questionOptionValue}</button>");
+        "<button class='option'>${option.questionOptionValue}</button>");
     optionElement.attributes["onClick"] = '''(function () {
         ${SurveyScreen.selectOptionChannel}.postMessage("${option.id}");
       })();
@@ -126,15 +126,15 @@ class HTMLController {
   /// Creates a multi select [option]
   static Element _createMultiSelect(surveys_api.PageQuestionOption option) {
     Element optionElement = Element.html('''
-        <div id="${option.id}" class="multi-option">${option.questionOptionValue}</div>
+        <div id="${option.id}" class="option">${option.questionOptionValue}</div>
       ''');
     optionElement.attributes["onClick"] = '''(function () {
       var el = document.getElementById("${option.id}");
-      if (el.classList.contains("multi-option")) {
-        el.classList.remove("multi-option");
+      if (el.classList.contains("option")) {
+        el.classList.remove("option");
         el.classList.add("multi-option-selected");
       } else {
-        el.classList.add("multi-option");
+        el.classList.add("option");
         el.classList.remove("multi-option-selected");
       }
         ${SurveyScreen.selectOptionChannel}.postMessage("${option.id}");
@@ -169,7 +169,8 @@ class HTMLController {
         return element;
       case surveys_api.LayoutVariableType.IMAGE_URL:
         if (element.localName == "img") {
-          element.attributes["src"] = mediaFilesMap[pageProperty.key] ?? "";
+          element.attributes["src"] =
+              "file://${mediaFilesMap[pageProperty.key] ?? ""}";
         } else if (element.localName == "div") {
           var styles = element.attributes["style"];
           element.attributes["style"] =
@@ -225,17 +226,17 @@ class HTMLController {
               font-family: SBonusDisplay-Black;
             }
             h1.sm {
-              font-size: 2rem;
+              font-size: 4rem;
             }
             h1.md {
-              font-size: 4rem;
+              font-size: 5rem;
             }
             h1.lg {
               font-size: 6rem;
             }
             p {
               font-family: SBonusDisplay-Regular;
-              font-size: 2rem;
+              font-size: 4rem;
               line-height: 150%;
             }
             .options {
@@ -248,13 +249,15 @@ class HTMLController {
             }
             .option {
               width: 100%;
-              height: 80px;
-              font-size: 2rem;
+              padding: "30px 20px";
+              font-size: 2.5rem;
               font-family: 'SBonusText-Bold';
+              text-align: center;
               color: #fff;
               background: transparent;
               border: 4px solid #fff;
               transition: background-color 0.2s ease-in-out;
+              margin-bottom: 2rem;
             }
             .next-button {
               background-color: transparent;
@@ -262,33 +265,30 @@ class HTMLController {
               color: #ffffff;
               height: 80px;
               font-family: SBonusText-Bold;
-              font-size: 2rem;
+              font-size: 2.5rem;
               transition: background-color 0.2s ease-in-out;
             }
             .next-button:focus, option:focus {
               background-color: rgba(0, 0, 0, 0.1);
             }
-            .multi-option {
-              width: 100%;
-              height: 80px;
-              font-size: 2rem;
-              font-family: 'SBonusText-Bold';
-              text-align: center;
-              margin-bottom: 2rem;
-              color: #fff;
-              background: transparent;
-              border: 4px solid #fff;
-            }
             .multi-option-selected {
               width: 100%;
-              height: 80px;
-              font-size: 2rem;
+              padding: "30px 20px";
+              font-size: 2.5rem;
               font-family: 'SBonusText-Bold';
               text-align: center;
-              margin-bottom: 2rem;
               color: #000;
               background: transparent;
               border: 4px solid #000;
+              transition: background-color 0.2s ease-in-out;
+              margin-bottom: 2rem;
+            }
+            .img-wrapper {
+              display: flex;
+              flex: 1;
+              justify-content: center;
+              margin-top: 10%;
+              width: 100%;
             }
           </style>
         </head>
