@@ -61,11 +61,14 @@ class _SurveyScreenState extends State<SurveyScreen> {
     database.Page? page = _getPage();
     if (page!.questionType == surveys_api.PageQuestionType.MULTI_SELECT.name) {
       _navigateToPage(_currentPageNumber + 1);
-      AnswerController.submitAnswer(
-        jsonEncode(_selectedOptions),
-        page,
-        _survey.externalId,
-      );
+      if (_selectedOptions.isNotEmpty) {
+        AnswerController.submitAnswer(
+          jsonEncode(_selectedOptions),
+          page,
+          _survey.externalId,
+        );
+        _selectedOptions.clear();
+      }
     }
     if (int.tryParse(message.message) != null) {
       _navigateToPage(int.parse(message.message));
@@ -88,9 +91,12 @@ class _SurveyScreenState extends State<SurveyScreen> {
   void _handleMultiSelectOption(String optionId) async {
     if (_selectedOptions.contains(optionId)) {
       _selectedOptions.retainWhere((element) => element != optionId);
+      logger.info("Removed option $optionId from multi select options");
     } else {
       _selectedOptions.add(optionId);
+      logger.info("Added option $optionId to multi select options");
     }
+    logger.info("Selected options: $_selectedOptions");
   }
 
   /// Callback function for handling single select option clicking [message] from the WebView

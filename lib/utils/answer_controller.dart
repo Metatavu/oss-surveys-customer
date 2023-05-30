@@ -32,6 +32,11 @@ class AnswerController {
         pageId: page.externalId,
         devicePageSurveyAnswer: builder.build(),
       );
+      logger.info("Answer submitted successfully!");
+      logger.info("Device ID: $deviceId");
+      logger.info("Device Survey ID: $deviceSurveyId");
+      logger.info("Page ID: ${page.externalId}");
+      logger.info("Answer: $answer");
     } catch (error) {
       logger.shout(
         "Error while answering single select question, persisting for later...: $error",
