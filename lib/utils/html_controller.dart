@@ -245,7 +245,7 @@ class HTMLController {
             }
             .option {
               width: 100%;
-              padding: "30px 20px";
+              padding: 30px 20px;
               font-size: 2.5rem;
               font-family: 'SBonusText-Bold';
               text-align: center;
@@ -269,13 +269,13 @@ class HTMLController {
             }
             .multi-option-selected {
               width: 100%;
-              padding: "30px 20px";
+              padding: 30px 20px;
               font-size: 2.5rem;
               font-family: 'SBonusText-Bold';
               text-align: center;
-              color: #000;
-              background: transparent;
-              border: 4px solid #000;
+              color: #00AA46;
+              background-color: #fff;
+              border: 4px solid #fff;
               transition: background-color 0.2s ease-in-out;
               margin-bottom: 2rem;
             }
