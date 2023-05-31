@@ -9,5 +9,6 @@ class Pages extends Table {
   TextColumn get html => text()();
   IntColumn get pageNumber => integer()();
   IntColumn get surveyId => integer().references(Surveys, #id)();
+  TextColumn get questionType => text().nullable()();
   DateTimeColumn get modifiedAt => dateTime()();
 }

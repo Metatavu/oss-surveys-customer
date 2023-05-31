@@ -16,7 +16,7 @@ import "package:oss_surveys_customer/theme/theme.dart";
 import "package:oss_surveys_customer/utils/surveys_controller.dart";
 import "package:responsive_framework/responsive_framework.dart";
 import "package:simple_logger/simple_logger.dart";
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import "package:flutter_gen/gen_l10n/app_localizations.dart";
 
 final logger = SimpleLogger();
 final apiFactory = ApiFactory();
@@ -29,12 +29,30 @@ late final String deviceSerialNumber;
 
 void main() async {
   _configureLogger();
+
+  SimpleLogger().info("Starting OSS Surveys Customer App...");
+
   await dotenv.load(fileName: ".env");
   environment = dotenv.env["ENVIRONMENT"]!;
+  SimpleLogger().info("Running in $environment environment");
+  SimpleLogger().info("Connecting to MQTT Broker...");
   mqttClient.connect().then((_) => _setupMqttListeners());
+
   deviceSerialNumber = await _getDeviceSerialNumber();
+  SimpleLogger().info("Device serial number: $deviceSerialNumber");
+
+  SimpleLogger().info("Loading offlined font...");
   await loadOfflinedFont();
+
+  SimpleLogger().info("Checking if device is approved...");
   isDeviceApproved = await keysDao.isDeviceApproved();
+
+  if (isDeviceApproved) {
+    SimpleLogger().info("Device is approved!");
+  } else {
+    SimpleLogger().info("Device is not approved!");
+  }
+
   WidgetsFlutterBinding.ensureInitialized();
 
   if (isDeviceApproved) {
@@ -147,12 +165,9 @@ Future<void> _getSurveys() async {
       return;
     }
     List<surveys_api.DeviceSurveyData> surveys = [];
-    deviceDataApi
+    await deviceDataApi
         .listDeviceDataSurveys(deviceId: deviceId)
         .then((deviceDataSurveys) => surveys.addAll(deviceDataSurveys.data!));
-
-    surveys.retainWhere(
-        (survey) => survey.status == surveys_api.DeviceSurveyStatus.PUBLISHED);
 
     logger.info("Received ${surveys.length} surveys!");
 

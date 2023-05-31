@@ -118,8 +118,11 @@ class MqttClient {
   }
 
   /// Handler for disconnection event.
+  ///
+  /// Attempts to reconnect the client.
   void onDisconnected() {
     logger.info("Disconnected");
+    _reconnect();
   }
 
   /// Handler for subscribed to topic events.

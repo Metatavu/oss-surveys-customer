@@ -2,6 +2,7 @@ import "dart:io";
 import "package:drift/drift.dart";
 import "package:drift/native.dart";
 import "package:oss_surveys_customer/database/model/key.dart";
+import "package:oss_surveys_customer/database/model/answer.dart";
 import "package:oss_surveys_customer/database/model/survey.dart";
 import "package:oss_surveys_customer/database/model/page.dart";
 import "package:path_provider/path_provider.dart";
@@ -17,6 +18,7 @@ part "database.g.dart";
   Surveys,
   Keys,
   Pages,
+  Answers,
 ], include: {
   "tables.drift"
 })
@@ -24,7 +26,7 @@ class Database extends _$Database {
   Database() : super(_openConnection());
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration {
@@ -51,13 +53,23 @@ class Database extends _$Database {
               return;
             }
           case 4:
-            await migrator.drop(surveys);
-            await migrator.drop(pages);
-            await migrator.create(surveys);
-            await migrator.create(pages);
-            await migrator.alterTable(TableMigration(pages));
+            {
+              await migrator.drop(surveys);
+              await migrator.drop(pages);
+              await migrator.create(surveys);
+              await migrator.create(pages);
+              await migrator.alterTable(TableMigration(pages));
 
-            return;
+              return;
+            }
+          case 5:
+            {
+              await migrator.drop(pages);
+              await migrator.create(pages);
+              await migrator.alterTable(TableMigration(pages));
+              await migrator.create(answers);
+              await migrator.alterTable(TableMigration(answers));
+            }
         }
       }
     });

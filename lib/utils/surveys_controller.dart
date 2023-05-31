@@ -1,10 +1,10 @@
-import 'package:drift/drift.dart';
-import 'package:oss_surveys_customer/database/dao/surveys_dao.dart';
-import 'package:oss_surveys_customer/database/database.dart' as database;
+import "package:drift/drift.dart";
+import "package:oss_surveys_customer/database/dao/surveys_dao.dart";
+import "package:oss_surveys_customer/database/database.dart" as database;
 import "package:oss_surveys_api/oss_surveys_api.dart" as surveys_api;
-import 'package:oss_surveys_customer/main.dart';
-import 'package:oss_surveys_customer/utils/pages_controller.dart';
-import '../database/dao/pages_dao.dart';
+import "package:oss_surveys_customer/main.dart";
+import "package:oss_surveys_customer/utils/pages_controller.dart";
+import "../database/dao/pages_dao.dart";
 
 /// Surveys Controller class
 class SurveysController {
