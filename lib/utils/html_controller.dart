@@ -126,16 +126,14 @@ class HTMLController {
   /// Creates a multi select [option]
   static Element _createMultiSelect(surveys_api.PageQuestionOption option) {
     Element optionElement = Element.html('''
-        <div id="${option.id}" class="option">${option.questionOptionValue}</div>
+        <div id="${option.id}" class="multi-option">${option.questionOptionValue}</div>
       ''');
     optionElement.attributes["onClick"] = '''(function () {
       var el = document.getElementById("${option.id}");
-      if (el.classList.contains("option")) {
-        el.classList.remove("option");
-        el.classList.add("multi-option-selected");
+      if (el.classList.contains("selected")) {
+        el.classList.remove("selected");
       } else {
-        el.classList.add("option");
-        el.classList.remove("multi-option-selected");
+        el.classList.add("selected");
       }
         ${SurveyScreen.selectOptionChannel}.postMessage("${option.id}");
       })();
@@ -239,12 +237,19 @@ class HTMLController {
               display: flex;
               flex: 1;
               flex-direction: column;
-              gap: 2rem;
-              margin-top: 10%;
+              gap: 5%;
               justify-content: center;
+            }
+            .img-wrapper {
+              display: flex;
+              flex: 1;
+              justify-content: center;
+              margin-top: 10%;
+              width: 100%;
             }
             .option {
               width: 100%;
+              box-sizing: border-box;
               padding: 30px 20px;
               font-size: 2.5rem;
               font-family: 'SBonusText-Bold';
@@ -253,38 +258,55 @@ class HTMLController {
               background: transparent;
               border: 4px solid #fff;
               transition: background-color 0.2s ease-in-out;
-              margin-bottom: 2rem;
+              margin-bottom: 5%;
+            }
+            .multi-option {
+              position: relative;
+              width: 100%;
+              padding: 20px 0 20px 130px;
+              box-sizing: border-box;
+              font-size: 2.5rem;
+              line-height: 150%;
+              font-family: 'SBonusText-Bold';
+              color: #fff;
+              background: transparent;
+              transition: background-color 0.2s ease-in-out;
+              margin-bottom: 5%;
+            }
+            .multi-option:before {
+              content: "";
+              position: absolute;
+              left: 0;
+              top: 50%;
+              transform: translateY(-50%);
+              height: 80px;
+              width: 80px;
+              border: 4px solid #fff;
+              transition: background-color 0.2s ease-in-out;
+            }
+            .multi-option.selected:before {
+              background-color: #fff
+            }
+            .multi-option.selected:after {
+              content: "✓";
+              position: absolute;
+              left: 26px;
+              top: 50%;
+              color: #00AA46;
+              transform: translateY(-50%);
             }
             .next-button {
               background-color: transparent;
               border: none;
               color: #ffffff;
-              height: 80px;
+              padding: 30px 20px;
               font-family: SBonusText-Bold;
               font-size: 2.5rem;
+              border: 4px solid #fff;
               transition: background-color 0.2s ease-in-out;
             }
             .next-button:focus, option:focus {
               background-color: rgba(0, 0, 0, 0.1);
-            }
-            .multi-option-selected {
-              width: 100%;
-              padding: 30px 20px;
-              font-size: 2.5rem;
-              font-family: 'SBonusText-Bold';
-              text-align: center;
-              color: #00AA46;
-              background-color: #fff;
-              border: 4px solid #fff;
-              transition: background-color 0.2s ease-in-out;
-              margin-bottom: 2rem;
-            }
-            .img-wrapper {
-              display: flex;
-              flex: 1;
-              justify-content: center;
-              margin-top: 10%;
-              width: 100%;
             }
           </style>
         </head>
