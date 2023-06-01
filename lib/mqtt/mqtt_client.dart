@@ -11,10 +11,11 @@ import "../main.dart";
 
 /// MQTT Client
 class MqttClient {
-  late final MqttServerClient _client;
+  String? _deviceId;
+  MqttServerClient? _client;
 
   Future<String> get _statusTopic async {
-    String? deviceId = await keysDao.getDeviceId();
+    var deviceId = _deviceId;
 
     if (deviceId == null) {
       logger.warning("Device ID not found, cannot get status topic.");
@@ -30,22 +31,14 @@ class MqttClient {
 
   Map<String, Function(String)> listeners = {};
 
-  /// Public constructor.
-  ///
-  /// Initializes [MqttServerClient]
-  MqttClient() {
-    var mqttBasePath = dotenv.env["MQTT_URL"];
-    var mqttClientId = dotenv.env["MQTT_CLIENT_ID"];
-    var mqttPort = int.tryParse(dotenv.env["MQTT_PORT"] ?? "");
-    _client =
-        MqttServerClient.withPort(mqttBasePath!, mqttClientId!, mqttPort!);
-  }
+  /// Connects MQTT server using [deviceId] as client id if not already connected.
+  Future<void> connect(String deviceId) async {
+    _deviceId = deviceId;
+    var client = _initializeClient(deviceId);
 
-  /// Connects MQTT Client if not already connected.
-  Future<void> connect() async {
     var mqttUsername = dotenv.env["MQTT_USERNAME"];
     var mqttPassword = dotenv.env["MQTT_PASSWORD"];
-    if (_client.connectionStatus!.state == MqttConnectionState.connected) {
+    if (client.connectionStatus!.state == MqttConnectionState.connected) {
       logger.info("MQTT Client already connected");
 
       return;
@@ -57,12 +50,12 @@ class MqttClient {
       return;
     }
 
-    _client.logging(on: false);
-    _client.onConnected = onConnected;
-    _client.onDisconnected = onDisconnected;
-    _client.onUnsubscribed = onUnsubscribed;
-    _client.onSubscribed = onSubscribed;
-    _client.onSubscribeFail = onSubscribeFail;
+    client.logging(on: false);
+    client.onConnected = onConnected;
+    client.onDisconnected = onDisconnected;
+    client.onUnsubscribed = onUnsubscribed;
+    client.onSubscribed = onSubscribed;
+    client.onSubscribeFail = onSubscribeFail;
 
     final connMessage = MqttConnectMessage()
         .keepAliveFor(60)
@@ -71,18 +64,18 @@ class MqttClient {
         .authenticateAs(mqttUsername, mqttPassword)
         .startClean()
         .withWillQos(MqttQos.atLeastOnce);
-    _client.connectionMessage = connMessage;
+    client.connectionMessage = connMessage;
     try {
-      await _client.connect(
+      await client.connect(
         mqttUsername,
         mqttPassword,
       );
     } catch (e) {
       logger.shout("Exception: $e");
-      _client.disconnect();
+      client.disconnect();
     }
 
-    _client.updates?.listen((List<MqttReceivedMessage<MqttMessage>> messages) {
+    client.updates?.listen((List<MqttReceivedMessage<MqttMessage>> messages) {
       if (messages.isEmpty) {
         return;
       }
@@ -143,19 +136,19 @@ class MqttClient {
   /// Disconnects MQTT Client
   void disconnect() {
     logger.info("Disconnecting...");
-    _client.disconnect();
+    _client?.disconnect();
   }
 
   /// Publishes given MQTT [message] to given [topic].
   ///
   /// If client is not connected, attempts to reconnect.
   void publishMessage(String topic, Uint8Buffer message) async {
-    if (_client.connectionStatus == null) return;
+    if (_client?.connectionStatus == null) return;
     if (_getClientConnectionStatus() != MqttConnectionState.connected.name) {
       await _reconnect();
     }
 
-    _client.publishMessage(topic, MqttQos.atLeastOnce, message);
+    _client?.publishMessage(topic, MqttQos.atLeastOnce, message);
   }
 
   /// Creates MQTT Message payload from [payload]
@@ -171,7 +164,7 @@ class MqttClient {
   ///
   /// Quality of Service (QoS) defaults to [MqttQos.atLeastOnce] (1)
   void subscribeToTopic(String topic, {qos = MqttQos.atLeastOnce}) {
-    _client.subscribe(topic, qos);
+    _client?.subscribe(topic, qos);
   }
 
   /// Subscribes to topics listed in [newListeners] and adds topic:callback pairs to [listeners] for further callback invocation.
@@ -201,11 +194,26 @@ class MqttClient {
     logger.info("Sent status message to topic: $statusTopic");
   }
 
+  /// Initializes MQTT Client using [deviceId] as client ID.
+  ///
+  /// Returns initialized MQTT Client.
+  MqttServerClient _initializeClient(String deviceId) {
+    if (_client != null) {
+      return _client!;
+    }
+
+    var mqttBasePath = dotenv.env["MQTT_URL"];
+    var mqttPort = int.tryParse(dotenv.env["MQTT_PORT"] ?? "");
+    _client = MqttServerClient.withPort(mqttBasePath!, deviceId, mqttPort!);
+
+    return _client!;
+  }
+
   /// Builds [StatusMessage]
   Future<StatusMessage?> _buildStatusMessage(
     bool status,
   ) async {
-    String? deviceId = await keysDao.getDeviceId();
+    String? deviceId = _deviceId;
 
     if (deviceId == null) {
       logger.warning("Device ID not found, cannot send status message.");
@@ -227,7 +235,7 @@ class MqttClient {
   Future<void> _reconnect({retryAttempts = 3}) async {
     logger.info("Attempting to reconnect MQTT Client ($retryAttempts)...");
     try {
-      await _client.connect();
+      await _client?.connect();
     } catch (e) {
       if (retryAttempts > 0) {
         _reconnect(retryAttempts: retryAttempts - 1);
@@ -239,11 +247,16 @@ class MqttClient {
 
   /// Gets MQTT Client connection status string.
   String _getClientConnectionStatus() {
-    if (_client.connectionStatus == null) {
+    var client = _client;
+    if (client == null) {
+      return MqttConnectionState.disconnected.name;
+    }
+
+    if (client.connectionStatus == null) {
       return MqttConnectionState.faulted.name;
     }
 
-    return _client.connectionStatus!.state.name;
+    return client.connectionStatus!.state.name;
   }
 }
 
