@@ -31,25 +31,10 @@ class MqttClient {
 
   Map<String, Function(String)> listeners = {};
 
-  /// Initializes MQTT Client using [deviceId] as client ID.
-  ///
-  /// Returns initialized MQTT Client.
-  MqttServerClient initializeClient(String deviceId) {
-    if (_client != null) {
-      return _client!;
-    }
-
-    var mqttBasePath = dotenv.env["MQTT_URL"];
-    var mqttPort = int.tryParse(dotenv.env["MQTT_PORT"] ?? "");
-    _client = MqttServerClient.withPort(mqttBasePath!, deviceId, mqttPort!);
-
-    return _client!;
-  }
-
   /// Connects MQTT server using [deviceId] as client id if not already connected.
   Future<void> connect(String deviceId) async {
     _deviceId = deviceId;
-    var client = initializeClient(deviceId);
+    var client = _initializeClient(deviceId);
 
     var mqttUsername = dotenv.env["MQTT_USERNAME"];
     var mqttPassword = dotenv.env["MQTT_PASSWORD"];
@@ -204,6 +189,21 @@ class MqttClient {
       createMessagePayload(jsonEncode(statusMessage)),
     );
     logger.info("Sent status message to topic: $statusTopic");
+  }
+
+  /// Initializes MQTT Client using [deviceId] as client ID.
+  ///
+  /// Returns initialized MQTT Client.
+  MqttServerClient _initializeClient(String deviceId) {
+    if (_client != null) {
+      return _client!;
+    }
+
+    var mqttBasePath = dotenv.env["MQTT_URL"];
+    var mqttPort = int.tryParse(dotenv.env["MQTT_PORT"] ?? "");
+    _client = MqttServerClient.withPort(mqttBasePath!, deviceId, mqttPort!);
+
+    return _client!;
   }
 
   /// Builds [StatusMessage]
