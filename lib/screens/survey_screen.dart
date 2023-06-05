@@ -257,8 +257,9 @@ class _SurveyScreenState extends State<SurveyScreen> {
                 height: 100,
                 child: TextButton(
                     onPressed: _handleManagementButton,
-                    style: TextButton.styleFrom(
-                      splashFactory: NoSplash.splashFactory,
+                    style: ButtonStyle(
+                      overlayColor:
+                          MaterialStateProperty.all(Colors.transparent),
                     ),
                     child: const SizedBox())),
           ),
