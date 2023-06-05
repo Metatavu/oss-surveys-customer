@@ -297,8 +297,6 @@ class HTMLController {
             }
             .page.text-shadow .multi-option {
               text-shadow: 0px 0px 30px rgba(0, 0, 0, 0.25);
-              box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.25);
-              background: rgba(0,0,0,0.1);
             }
             .multi-option:before {
               content: "";
@@ -310,6 +308,9 @@ class HTMLController {
               width: 80px;
               border: 4px solid #fff;
               transition: background-color 0.2s ease-in-out;
+            }
+            .page.text-shadow .multi-option:before {
+              background-color: rgba(0, 0, 0, 0.1);
             }
             .multi-option.selected:before {
               background-color: #fff
