@@ -207,6 +207,7 @@ class HTMLController {
               flex-direction: column;
               padding: 10% 215px 215px 10%;
               box-sizing: border-box;
+              background-size: cover;
             }
             .page.text-shadow {
               text-shadow: 0px 0px 10px rgba(0, 0, 0, 0.25);
