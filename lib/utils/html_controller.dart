@@ -210,7 +210,7 @@ class HTMLController {
               background-size: cover;
             }
             .page.text-shadow {
-              text-shadow: 0px 0px 10px rgba(0, 0, 0, 0.25);
+              text-shadow: 0px 0px 30px rgba(0, 0, 0, 0.25);
             }
             .logo-container {
               position: absolute;
@@ -277,6 +277,11 @@ class HTMLController {
               transition: background-color 0.2s ease-in-out;
               margin-bottom: 5%;
             }
+            .page.text-shadow .option {
+              text-shadow: 0px 0px 30px rgba(0, 0, 0, 0.25);
+              box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.25);
+              background: rgba(0,0,0,0.1);
+            }
             .multi-option {
               position: relative;
               width: 100%;
@@ -289,6 +294,11 @@ class HTMLController {
               background: transparent;
               transition: background-color 0.2s ease-in-out;
               margin-bottom: 5%;
+            }
+            .page.text-shadow .multi-option {
+              text-shadow: 0px 0px 30px rgba(0, 0, 0, 0.25);
+              box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.25);
+              background: rgba(0,0,0,0.1);
             }
             .multi-option:before {
               content: "";
