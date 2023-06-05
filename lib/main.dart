@@ -35,8 +35,14 @@ void main() async {
   await dotenv.load(fileName: ".env");
   environment = dotenv.env["ENVIRONMENT"]!;
   SimpleLogger().info("Running in $environment environment");
-  SimpleLogger().info("Connecting to MQTT Broker...");
-  mqttClient.connect().then((_) => _setupMqttListeners());
+
+  String? deviceId = await keysDao.getDeviceId();
+  if (deviceId != null) {
+    SimpleLogger().info("Connecting to MQTT Broker...");
+    mqttClient.connect(deviceId).then((_) => _setupMqttListeners());
+  } else {
+    SimpleLogger().info("Device ID not found, cannot connect to MQTT.");
+  }
 
   deviceSerialNumber = await _getDeviceSerialNumber();
   SimpleLogger().info("Device serial number: $deviceSerialNumber");
@@ -114,7 +120,7 @@ Future<void> _pollDeviceApprovalStatus(Timer timer) async {
 
         if (!mqttClient.isConnected) {
           logger.info("MQTT client is not connected, attempting to connect");
-          await mqttClient.connect();
+          await mqttClient.connect(deviceRequest.id!);
           _setupMqttListeners();
         }
       }

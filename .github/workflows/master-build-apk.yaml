@@ -44,7 +44,6 @@ jobs:
           echo keyAlias=upload >> android/key.properties
           echo storeFile=/tmp/upload-keystore.jks >> android/key.properties
           echo APP_UPDATES_BASE_URL=${{ secrets.APP_UPDATES_BASE_URL }} >> .env
-          echo MQTT_CLIENT_ID=${{ secrets.MQTT_CLIENT_ID }} >> .env
           echo MQTT_PASSWORD=${{ secrets.MQTT_PASSWORD }} >> .env
           echo MQTT_PORT=${{ secrets.MQTT_PORT }} >> .env
           echo MQTT_URL=${{ secrets.MQTT_URL }} >> .env
