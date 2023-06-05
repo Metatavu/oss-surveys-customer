@@ -312,7 +312,7 @@ class HTMLController {
             .page.text-shadow .multi-option:before {
               background-color: rgba(0, 0, 0, 0.1);
             }
-            .multi-option.selected:before {
+            .multi-option.selected:before, .page.text-shadow .multi-option.selected:before {
               background-color: #fff
             }
             .multi-option.selected:after {
@@ -320,7 +320,7 @@ class HTMLController {
               position: absolute;
               left: 26px;
               top: 50%;
-              color: #00AA46;
+              color: #fff;
               transform: translateY(-50%);
             }
             .next-button {
