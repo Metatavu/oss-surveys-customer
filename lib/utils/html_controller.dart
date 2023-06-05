@@ -320,7 +320,7 @@ class HTMLController {
               position: absolute;
               left: 26px;
               top: 50%;
-              color: #fff;
+              color: #00AA46;
               transform: translateY(-50%);
             }
             .next-button {
