@@ -254,8 +254,8 @@ class _SurveyScreenState extends State<SurveyScreen> {
               left: 0,
               top: 0,
               child: SizedBox(
-                width: 200,
-                height: 100,
+                width: 20,
+                height: 20,
                 child: TextButton(
                   onPressed: _handleManagementButton,
                   style: ButtonStyle(
