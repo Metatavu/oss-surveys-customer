@@ -70,9 +70,7 @@ class _ManagementScreenState extends State<ManagementScreen> {
       ),
       body: Center(
         child: _loading
-            ? CircularProgressIndicator(
-                color: Theme.of(context).primaryColor,
-              )
+            ? CircularProgressIndicator(color: Theme.of(context).primaryColor)
             : Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
