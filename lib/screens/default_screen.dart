@@ -105,9 +105,25 @@ class _DefaultScreenState extends State<DefaultScreen> {
               // When the child is tapped, show a snackbar.
               onTap: _handleManagementButton,
               // The custom button
-              child: const SizedBox(
+              child: Container(
+                color: Colors.transparent,
                 width: 200,
                 height: 200,
+              ),
+            ),
+          ),
+          Positioned(
+            right: 0,
+            top: 0,
+            child: SizedBox(
+              width: 200,
+              height: 200,
+              child: TextButton(
+                onPressed: _handleManagementButton,
+                style: TextButton.styleFrom(
+                  splashFactory: NoSplash.splashFactory,
+                ),
+                child: const SizedBox(),
               ),
             ),
           ),
