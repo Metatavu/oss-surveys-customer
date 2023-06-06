@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - develop
-      - feature-48-new-template-css
 jobs:
   build:
     runs-on: ubuntu-latest
