@@ -101,15 +101,13 @@ class _DefaultScreenState extends State<DefaultScreen> {
           Positioned(
             left: 0,
             top: 0,
-            child: SizedBox(
-              width: 200,
-              height: 200,
-              child: TextButton(
-                onPressed: _handleManagementButton,
-                style: TextButton.styleFrom(
-                  splashFactory: NoSplash.splashFactory,
-                ),
-                child: const SizedBox(),
+            child: GestureDetector(
+              // When the child is tapped, show a snackbar.
+              onTap: _handleManagementButton,
+              // The custom button
+              child: const SizedBox(
+                width: 200,
+                height: 200,
               ),
             ),
           ),

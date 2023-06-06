@@ -77,6 +77,15 @@ class HTMLController {
           child.attributes["style"] = "display: none;";
         }
         child.attributes["ontouchstart"] = '''(function () {
+          var latestTouchEvent = window.latestTouchEvent || 0;
+          var currentTime = new Date().getTime();
+
+          if (currentTime - latestTouchEvent < 500) {
+            return false;
+          }
+
+          latestTouchEvent = currentTime;
+
           ${SurveyScreen.nextButtonMessageChannel}.postMessage($pageNumber + 1);
         })();
         return false;''';
@@ -116,6 +125,15 @@ class HTMLController {
     Element optionElement = Element.html(
         "<button class='option'>${option.questionOptionValue}</button>");
     optionElement.attributes["ontouchstart"] = '''(function () {
+        var latestTouchEvent = window.latestTouchEvent || 0;
+        var currentTime = new Date().getTime();
+
+        if (currentTime - latestTouchEvent < 500) {
+          return false;
+        }
+
+        latestTouchEvent = currentTime;
+
         ${SurveyScreen.selectOptionChannel}.postMessage("${option.id}");
       })();
       return false;''';
@@ -129,6 +147,15 @@ class HTMLController {
         <div id="${option.id}" class="multi-option">${option.questionOptionValue}</div>
       ''');
     optionElement.attributes["ontouchstart"] = '''(function () {
+      var latestTouchEvent = window.latestTouchEvent || 0;
+      var currentTime = new Date().getTime();
+
+      if (currentTime - latestTouchEvent < 500) {
+        return false;
+      }
+
+      latestTouchEvent = currentTime;
+
       var el = document.getElementById("${option.id}");
       if (el.classList.contains("selected")) {
         el.classList.remove("selected");
