@@ -250,18 +250,33 @@ class _SurveyScreenState extends State<SurveyScreen> {
                 : WebViewWidget(controller: _controller),
           ),
           Positioned(
-            left: 0,
+            right: 0,
             top: 0,
             child: SizedBox(
+              width: 300,
+              height: 100,
+              child: TextButton(
+                onPressed: _handleManagementButton,
+                style: ButtonStyle(
+                  overlayColor: MaterialStateProperty.all(Colors.transparent),
+                ),
+                child: const SizedBox(),
+              ),
+            ),
+          ),
+          Positioned(
+            left: 0,
+            top: 0,
+            child: GestureDetector(
+              // When the child is tapped, show a snackbar.
+              onTap: _handleManagementButton,
+              // The custom button
+              child: Container(
+                color: Colors.transparent,
                 width: 200,
-                height: 100,
-                child: TextButton(
-                    onPressed: _handleManagementButton,
-                    style: ButtonStyle(
-                      overlayColor:
-                          MaterialStateProperty.all(Colors.transparent),
-                    ),
-                    child: const SizedBox())),
+                height: 200,
+              ),
+            ),
           ),
         ],
       ),
