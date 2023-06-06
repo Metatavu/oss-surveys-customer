@@ -135,13 +135,14 @@ class _SurveyScreenState extends State<SurveyScreen> {
         database.Survey? foundSurvey =
             await surveysDao.findSurveyByExternalId(event.externalId);
         var foundPages = await pagesDao.listPagesBySurveyId(foundSurvey!.id);
-        await _controller.loadHtmlString(_getPage()?.html ?? "No page found");
-        logger.info("Loaded page 1");
         setState(() {
           _currentPageNumber = 1;
           _survey = foundSurvey;
           _pages = foundPages;
           _loading = false;
+          _controller
+              .loadHtmlString(_getPage()?.html ?? "No page found")
+              .then((_) => logger.info("Loaded page 1"));
         });
       }
     }
@@ -154,11 +155,12 @@ class _SurveyScreenState extends State<SurveyScreen> {
   /// Loads pages from database, sets them in state and loads the first page in the WebView
   Future _loadPages() async {
     var foundPages = await pagesDao.listPagesBySurveyId(widget.survey.id);
-    await _controller.loadHtmlString(_getPage()?.html ?? "No page found");
-    logger.info("Loaded page 1");
     setState(() {
       _survey = widget.survey;
       _pages = foundPages;
+      _controller
+          .loadHtmlString(_getPage()?.html ?? "No page found")
+          .then((_) => logger.info("Loaded page 1"));
       _loading = false;
     });
   }
@@ -247,35 +249,21 @@ class _SurveyScreenState extends State<SurveyScreen> {
                   )
                 : WebViewWidget(controller: _controller),
           ),
-          Positioned(
-            right: 0,
-            top: 0,
-            child: SizedBox(
-              width: 300,
-              height: 100,
-              child: TextButton(
-                onPressed: _handleManagementButton,
-                style: ButtonStyle(
-                  overlayColor: MaterialStateProperty.all(Colors.transparent),
-                ),
-                child: const SizedBox(),
-              ),
+          if (!_loading)
+            Positioned(
+              left: 0,
+              top: 0,
+              child: SizedBox(
+                  width: 200,
+                  height: 100,
+                  child: TextButton(
+                      onPressed: _handleManagementButton,
+                      style: ButtonStyle(
+                        overlayColor:
+                            MaterialStateProperty.all(Colors.transparent),
+                      ),
+                      child: const SizedBox())),
             ),
-          ),
-          Positioned(
-            left: 0,
-            top: 0,
-            child: GestureDetector(
-              // When the child is tapped, show a snackbar.
-              onTap: _handleManagementButton,
-              // The custom button
-              child: Container(
-                color: Colors.transparent,
-                width: 200,
-                height: 200,
-              ),
-            ),
-          ),
         ],
       ),
     );
