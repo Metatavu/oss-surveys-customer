@@ -254,15 +254,16 @@ class _SurveyScreenState extends State<SurveyScreen> {
               left: 0,
               top: 0,
               child: SizedBox(
-                  width: 200,
-                  height: 100,
-                  child: TextButton(
-                      onPressed: _handleManagementButton,
-                      style: ButtonStyle(
-                        overlayColor:
-                            MaterialStateProperty.all(Colors.transparent),
-                      ),
-                      child: const SizedBox())),
+                width: 200,
+                height: 100,
+                child: TextButton(
+                  onPressed: _handleManagementButton,
+                  style: ButtonStyle(
+                    overlayColor: MaterialStateProperty.all(Colors.transparent),
+                  ),
+                  child: const SizedBox(),
+                ),
+              ),
             ),
         ],
       ),

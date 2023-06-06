@@ -101,27 +101,13 @@ class _DefaultScreenState extends State<DefaultScreen> {
           Positioned(
             left: 0,
             top: 0,
-            child: GestureDetector(
-              // When the child is tapped, show a snackbar.
-              onTap: _handleManagementButton,
-              // The custom button
-              child: Container(
-                color: Colors.transparent,
-                width: 200,
-                height: 200,
-              ),
-            ),
-          ),
-          Positioned(
-            right: 0,
-            top: 0,
             child: SizedBox(
               width: 200,
-              height: 200,
+              height: 100,
               child: TextButton(
                 onPressed: _handleManagementButton,
-                style: TextButton.styleFrom(
-                  splashFactory: NoSplash.splashFactory,
+                style: ButtonStyle(
+                  overlayColor: MaterialStateProperty.all(Colors.transparent),
                 ),
                 child: const SizedBox(),
               ),
