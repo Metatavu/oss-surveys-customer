@@ -103,11 +103,11 @@ class _DefaultScreenState extends State<DefaultScreen> {
             top: 0,
             child: SizedBox(
               width: 200,
-              height: 200,
+              height: 100,
               child: TextButton(
                 onPressed: _handleManagementButton,
-                style: TextButton.styleFrom(
-                  splashFactory: NoSplash.splashFactory,
+                style: ButtonStyle(
+                  overlayColor: MaterialStateProperty.all(Colors.transparent),
                 ),
                 child: const SizedBox(),
               ),

@@ -47,7 +47,9 @@ class Updater {
     logger.info("Installing the new .apk file...");
 
     await FlutterAppInstaller.installApk(
-        filePath: apkFile.path, silently: false);
+      filePath: apkFile.path,
+      silently: false,
+    );
     logger.info("Installed!");
   }
 

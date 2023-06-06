@@ -249,19 +249,22 @@ class _SurveyScreenState extends State<SurveyScreen> {
                   )
                 : WebViewWidget(controller: _controller),
           ),
-          Positioned(
-            left: 0,
-            top: 0,
-            child: SizedBox(
+          if (!_loading)
+            Positioned(
+              left: 0,
+              top: 0,
+              child: SizedBox(
                 width: 200,
                 height: 100,
                 child: TextButton(
-                    onPressed: _handleManagementButton,
-                    style: TextButton.styleFrom(
-                      splashFactory: NoSplash.splashFactory,
-                    ),
-                    child: const SizedBox())),
-          ),
+                  onPressed: _handleManagementButton,
+                  style: ButtonStyle(
+                    overlayColor: MaterialStateProperty.all(Colors.transparent),
+                  ),
+                  child: const SizedBox(),
+                ),
+              ),
+            ),
         ],
       ),
     );

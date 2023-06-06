@@ -76,7 +76,16 @@ class HTMLController {
         if (!nextButtonVisible) {
           child.attributes["style"] = "display: none;";
         }
-        child.attributes["onClick"] = '''(function () {
+        child.attributes["ontouchstart"] = '''(function () {
+          var latestTouchEvent = window.latestTouchEvent || 0;
+          var currentTime = new Date().getTime();
+
+          if (currentTime - latestTouchEvent < 500) {
+            return false;
+          }
+
+          latestTouchEvent = currentTime;
+
           ${SurveyScreen.nextButtonMessageChannel}.postMessage($pageNumber + 1);
         })();
         return false;''';
@@ -115,7 +124,16 @@ class HTMLController {
   static Element _createSingleSelect(surveys_api.PageQuestionOption option) {
     Element optionElement = Element.html(
         "<button class='option'>${option.questionOptionValue}</button>");
-    optionElement.attributes["onClick"] = '''(function () {
+    optionElement.attributes["ontouchstart"] = '''(function () {
+        var latestTouchEvent = window.latestTouchEvent || 0;
+        var currentTime = new Date().getTime();
+
+        if (currentTime - latestTouchEvent < 500) {
+          return false;
+        }
+
+        latestTouchEvent = currentTime;
+
         ${SurveyScreen.selectOptionChannel}.postMessage("${option.id}");
       })();
       return false;''';
@@ -128,7 +146,16 @@ class HTMLController {
     Element optionElement = Element.html('''
         <div id="${option.id}" class="multi-option">${option.questionOptionValue}</div>
       ''');
-    optionElement.attributes["onClick"] = '''(function () {
+    optionElement.attributes["ontouchstart"] = '''(function () {
+      var latestTouchEvent = window.latestTouchEvent || 0;
+      var currentTime = new Date().getTime();
+
+      if (currentTime - latestTouchEvent < 500) {
+        return false;
+      }
+
+      latestTouchEvent = currentTime;
+
       var el = document.getElementById("${option.id}");
       if (el.classList.contains("selected")) {
         el.classList.remove("selected");
@@ -205,8 +232,25 @@ class HTMLController {
               display: flex;
               flex: 1;
               flex-direction: column;
-              padding: 10%;
+              padding: 10% 215px 215px 10%;
               box-sizing: border-box;
+              background-size: cover;
+            }
+            .page.text-shadow {
+              text-shadow: 0px 0px 15px rgba(0, 0, 0, 0.75);
+            }
+            .logo-container {
+              position: absolute;
+              bottom: 0;
+              right: 0;
+              left: 0;
+              height: 215px;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+            }
+            svg.logo {
+              height: 140px;
             }
             .content {
               display: flex;
@@ -260,6 +304,11 @@ class HTMLController {
               transition: background-color 0.2s ease-in-out;
               margin-bottom: 5%;
             }
+            .page.text-shadow .option {
+              text-shadow: 0px 0px 15px rgba(0, 0, 0, 0.75);
+              box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.25);
+              background: rgba(0,0,0,0.1);
+            }
             .multi-option {
               position: relative;
               width: 100%;
@@ -273,6 +322,9 @@ class HTMLController {
               transition: background-color 0.2s ease-in-out;
               margin-bottom: 5%;
             }
+            .page.text-shadow .multi-option {
+              text-shadow: 0px 0px 15px rgba(0, 0, 0, 0.75);
+            }
             .multi-option:before {
               content: "";
               position: absolute;
@@ -284,29 +336,38 @@ class HTMLController {
               border: 4px solid #fff;
               transition: background-color 0.2s ease-in-out;
             }
-            .multi-option.selected:before {
-              background-color: #fff
+            .page.text-shadow .multi-option:before {
+              background-color: rgba(0, 0, 0, 0.1);
+            }
+            .multi-option.selected:before, .page.text-shadow .multi-option.selected:before {
+              background-color: rgba(0, 0, 0, 0.2);
             }
             .multi-option.selected:after {
               content: "✓";
               position: absolute;
               left: 26px;
               top: 50%;
-              color: #00AA46;
+              color: #fff;
               transform: translateY(-50%);
             }
             .next-button {
               background-color: transparent;
               border: none;
               color: #ffffff;
-              padding: 30px 20px;
-              font-family: SBonusText-Bold;
-              font-size: 2.5rem;
-              border: 4px solid #fff;
+              height: 100%;
+              width: 215px;
+              position: absolute;
+              top: 0;
+              right: 0;
               transition: background-color 0.2s ease-in-out;
             }
-            .next-button:focus, option:focus {
+            .next-button:focus, option:focus, .next-button:active, option:active {
               background-color: rgba(0, 0, 0, 0.1);
+            }
+            svg.next-icon {
+              margin-top: 600px;
+              height: 100px;
+              width: 100px;
             }
           </style>
         </head>
