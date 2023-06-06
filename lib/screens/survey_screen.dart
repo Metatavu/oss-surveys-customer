@@ -43,28 +43,24 @@ class _SurveyScreenState extends State<SurveyScreen> {
   Timer? _surveyNavigationTimer;
 
   /// Navigates the survey to next page
-  Future<void> _navigateToPage(int pageNumber) async {
-    final updatedPageNumber =
-        pageNumber > _pages.maxOf((element) => element.pageNumber)
-            ? 1
-            : pageNumber;
-
-    await _controller.loadHtmlString(
-      _getPage(_currentPageNumber)?.html ?? "No page found",
-    );
-
-    logger.info("Loaded page $_currentPageNumber");
-
-    setState(() => _currentPageNumber = updatedPageNumber);
-
+  void _navigateToPage(int pageNumber) {
+    setState(() {
+      _currentPageNumber =
+          pageNumber > _pages.maxOf((element) => element.pageNumber)
+              ? 1
+              : pageNumber;
+      _controller
+          .loadHtmlString(_getPage()?.html ?? "No page found")
+          .then((_) => logger.info("Loaded page $_currentPageNumber"));
+    });
     _timeoutTimer.reset();
   }
 
   /// Callback function for handling next page button click [message] from the WebView
   void _handleNextPageButton(JavaScriptMessage message) async {
-    database.Page? page = _getPage(_currentPageNumber);
+    database.Page? page = _getPage();
     if (page!.questionType == surveys_api.PageQuestionType.MULTI_SELECT.name) {
-      await _navigateToPage(_currentPageNumber + 1);
+      _navigateToPage(_currentPageNumber + 1);
       if (_selectedOptions.isNotEmpty) {
         AnswerController.submitAnswer(
           jsonEncode(_selectedOptions),
@@ -75,13 +71,13 @@ class _SurveyScreenState extends State<SurveyScreen> {
       }
     }
     if (int.tryParse(message.message) != null) {
-      await _navigateToPage(int.parse(message.message));
+      _navigateToPage(int.parse(message.message));
     }
   }
 
   /// Callback function for handling option select [message] from the WebView
   void _handleOptionSelect(JavaScriptMessage message) async {
-    switch (_getPage(_currentPageNumber)?.questionType) {
+    switch (_getPage()?.questionType) {
       case "SINGLE_SELECT":
         _handleSingleSelectOption(message.message);
         break;
@@ -105,8 +101,8 @@ class _SurveyScreenState extends State<SurveyScreen> {
 
   /// Callback function for handling single select option clicking [message] from the WebView
   void _handleSingleSelectOption(String optionId) async {
-    database.Page page = _getPage(_currentPageNumber)!;
-    await _navigateToPage(_currentPageNumber + 1);
+    database.Page page = _getPage()!;
+    _navigateToPage(_currentPageNumber + 1);
     AnswerController.submitAnswer(
       optionId,
       page,
@@ -115,9 +111,9 @@ class _SurveyScreenState extends State<SurveyScreen> {
   }
 
   /// Gets current page from [_pages] list
-  database.Page? _getPage(int pageNumber) {
-    return _pages
-        .firstWhereOrNull((element) => element.pageNumber == pageNumber);
+  database.Page? _getPage() {
+    return _pages.firstWhereOrNull(
+        (element) => element.pageNumber == _currentPageNumber);
   }
 
   /// Navigates back to default screen
@@ -139,11 +135,8 @@ class _SurveyScreenState extends State<SurveyScreen> {
         database.Survey? foundSurvey =
             await surveysDao.findSurveyByExternalId(event.externalId);
         var foundPages = await pagesDao.listPagesBySurveyId(foundSurvey!.id);
-        await _controller.loadHtmlString(
-          _getPage(_currentPageNumber)?.html ?? "No page found",
-        );
+        await _controller.loadHtmlString(_getPage()?.html ?? "No page found");
         logger.info("Loaded page 1");
-
         setState(() {
           _currentPageNumber = 1;
           _survey = foundSurvey;
@@ -161,12 +154,8 @@ class _SurveyScreenState extends State<SurveyScreen> {
   /// Loads pages from database, sets them in state and loads the first page in the WebView
   Future _loadPages() async {
     var foundPages = await pagesDao.listPagesBySurveyId(widget.survey.id);
-    await _controller.loadHtmlString(
-      _getPage(_currentPageNumber)?.html ?? "No page found",
-    );
-
+    await _controller.loadHtmlString(_getPage()?.html ?? "No page found");
     logger.info("Loaded page 1");
-
     setState(() {
       _survey = widget.survey;
       _pages = foundPages;
@@ -182,7 +171,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
     if (_currentPageNumber != 1) {
       setState(() => _currentPageNumber = 1);
       _controller
-          .loadHtmlString(_getPage(_currentPageNumber)?.html ?? "No page found")
+          .loadHtmlString(_getPage()?.html ?? "No page found")
           .then((_) => logger.info("Loaded page 1"));
     }
   }
