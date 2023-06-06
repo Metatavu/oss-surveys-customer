@@ -76,7 +76,7 @@ class HTMLController {
         if (!nextButtonVisible) {
           child.attributes["style"] = "display: none;";
         }
-        child.attributes["onClick"] = '''(function () {
+        child.attributes["ontouchstart"] = '''(function () {
           ${SurveyScreen.nextButtonMessageChannel}.postMessage($pageNumber + 1);
         })();
         return false;''';
@@ -115,7 +115,7 @@ class HTMLController {
   static Element _createSingleSelect(surveys_api.PageQuestionOption option) {
     Element optionElement = Element.html(
         "<button class='option'>${option.questionOptionValue}</button>");
-    optionElement.attributes["onClick"] = '''(function () {
+    optionElement.attributes["ontouchstart"] = '''(function () {
         ${SurveyScreen.selectOptionChannel}.postMessage("${option.id}");
       })();
       return false;''';
@@ -128,7 +128,7 @@ class HTMLController {
     Element optionElement = Element.html('''
         <div id="${option.id}" class="multi-option">${option.questionOptionValue}</div>
       ''');
-    optionElement.attributes["onClick"] = '''(function () {
+    optionElement.attributes["ontouchstart"] = '''(function () {
       var el = document.getElementById("${option.id}");
       if (el.classList.contains("selected")) {
         el.classList.remove("selected");
