@@ -76,19 +76,20 @@ class HTMLController {
         if (!nextButtonVisible) {
           child.attributes["style"] = "display: none;";
         }
-        child.attributes["ontouchstart"] = '''(function () {
-          var latestTouchEvent = window.latestTouchEvent || 0;
-          var currentTime = new Date().getTime();
+        child.attributes["ontouchstart"] = '''
+          (function () {
+            var latestTouchEvent = window.latestTouchEvent || 0;
+            var currentTime = new Date().getTime();
 
-          if (currentTime - latestTouchEvent < 500) {
-            return false;
-          }
+            if (currentTime - latestTouchEvent < 500) {
+              return false;
+            }
 
-          latestTouchEvent = currentTime;
+            latestTouchEvent = currentTime;
 
-          ${SurveyScreen.nextButtonMessageChannel}.postMessage($pageNumber + 1);
-        })();
-        return false;''';
+            ${SurveyScreen.nextButtonMessageChannel}.postMessage($pageNumber + 1);
+          })();
+        ''';
       } else if (dataComponent == "question") {
         _handleQuestionElement(
           child,
@@ -124,7 +125,8 @@ class HTMLController {
   static Element _createSingleSelect(surveys_api.PageQuestionOption option) {
     Element optionElement = Element.html(
         "<button class='option'>${option.questionOptionValue}</button>");
-    optionElement.attributes["ontouchstart"] = '''(function () {
+    optionElement.attributes["ontouchstart"] = '''
+      (function () {
         var latestTouchEvent = window.latestTouchEvent || 0;
         var currentTime = new Date().getTime();
 
@@ -136,7 +138,7 @@ class HTMLController {
 
         ${SurveyScreen.selectOptionChannel}.postMessage("${option.id}");
       })();
-      return false;''';
+    ''';
 
     return optionElement;
   }
@@ -146,25 +148,28 @@ class HTMLController {
     Element optionElement = Element.html('''
         <div id="${option.id}" class="multi-option">${option.questionOptionValue}</div>
       ''');
-    optionElement.attributes["ontouchstart"] = '''(function () {
-      var latestTouchEvent = window.latestTouchEvent || 0;
-      var currentTime = new Date().getTime();
+    optionElement.attributes["ontouchstart"] = '''
+      (function () {
+        var latestTouchEvent = window.latestTouchEvent || 0;
+        var currentTime = new Date().getTime();
 
-      if (currentTime - latestTouchEvent < 500) {
-        return false;
-      }
+        if (currentTime - latestTouchEvent < 500) {
+          return false;
+        }
 
-      latestTouchEvent = currentTime;
+        latestTouchEvent = currentTime;
 
-      var el = document.getElementById("${option.id}");
-      if (el.classList.contains("selected")) {
-        el.classList.remove("selected");
-      } else {
-        el.classList.add("selected");
-      }
+        var el = document.getElementById("${option.id}");
+
+        if (el.classList.contains("selected")) {
+          el.classList.remove("selected");
+        } else {
+          el.classList.add("selected");
+        }
+
         ${SurveyScreen.selectOptionChannel}.postMessage("${option.id}");
       })();
-      return false;''';
+    ''';
 
     return optionElement;
   }
@@ -206,8 +211,7 @@ class HTMLController {
 
   /// Wraps given [html] inside a wrapper
   static Document _wrapTemplate(String html) {
-    return parse(
-      '''
+    return parse('''
       <!DOCTYPE html>
       <html lang="en">
         <head>
@@ -375,7 +379,6 @@ class HTMLController {
           $html
         </body>
       </html>
-    ''',
-    );
+    ''');
   }
 }
