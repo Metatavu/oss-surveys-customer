@@ -113,9 +113,9 @@ class HTMLController {
 
   /// Creates a single select [option]
   static Element _createSingleSelect(surveys_api.PageQuestionOption option) {
-    Element optionElement = Element.html(
-      "<button class='option'>${option.questionOptionValue}</button>",
-    );
+    Element optionElement = Element.html('''
+      <button class="option">${option.questionOptionValue}</button>
+    ''');
 
     optionElement.attributes["ontouchstart"] = "addActive(this)";
     optionElement.attributes["ontouchend"] =
@@ -266,7 +266,7 @@ class HTMLController {
               font-family: 'SBonusText-Bold';
               text-align: center;
               color: #fff;
-              background-color: rgba(0, 0, 0, 0.25);
+              background-color: transparent;
               border: 4px solid #fff;
               transition: background-color 0.2s ease-in-out;
               margin-bottom: 5%;
@@ -332,7 +332,7 @@ class HTMLController {
               outline: none;
             }
             .next-button.active, .option.active {
-              background-color: rgba(0, 0, 0, 1);
+              background-color: rgba(0, 0, 0, 0.1);
             }
             svg.next-icon {
               margin-top: 600px;
@@ -383,8 +383,7 @@ class HTMLController {
           function selectMultiOption(optionId) {
             if (throttleTouch()) return false;
 
-            var element = document.getElementById(optionId);
-            element.classList.toggle('selected');
+            document.getElementById(optionId).classList.toggle('selected');
 
             ${SurveyScreen.selectOptionChannel}.postMessage(optionId);
           }
