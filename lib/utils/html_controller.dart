@@ -78,8 +78,16 @@ class HTMLController {
           child.attributes["style"] = "display: none;";
         }
 
+        child.attributes["ontouchstart"] = '''
+          (function () {
+            this.classList.add("active");
+          })();
+        ''';
+
         child.attributes["ontouchend"] = '''
           (function () {
+            this.classList.remove("active");
+
             var latestTouchEvent = window.latestTouchEvent || 0;
             var currentTime = new Date().getTime();
 
@@ -129,8 +137,16 @@ class HTMLController {
       "<button class='option'>${option.questionOptionValue}</button>",
     );
 
+    optionElement.attributes["ontouchstart"] = '''
+      (function () {
+        this.classList.add("active");
+      })();
+    ''';
+
     optionElement.attributes["ontouchend"] = '''
       (function () {
+        this.classList.remove("active");
+
         var latestTouchEvent = window.latestTouchEvent || 0;
         var currentTime = new Date().getTime();
 
@@ -165,12 +181,7 @@ class HTMLController {
         latestTouchEvent = currentTime;
 
         var el = document.getElementById("${option.id}");
-
-        if (el.classList.contains("selected")) {
-          el.classList.remove("selected");
-        } else {
-          el.classList.add("selected");
-        }
+        el.classList.toggle("selected");
 
         ${SurveyScreen.selectOptionChannel}.postMessage("${option.id}");
       })();
@@ -371,7 +382,10 @@ class HTMLController {
               right: 0;
               transition: background-color 0.2s ease-in-out;
             }
-            .next-button:focus, option:focus, .next-button:active, option:active {
+            .next-button:focus, option:focus {
+              outline: none;
+            }
+            .next-button.active, option.active {
               background-color: rgba(0, 0, 0, 0.1);
             }
             svg.next-icon {
