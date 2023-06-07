@@ -355,16 +355,12 @@ class HTMLController {
           }
 
           function nextPage(element, pageNumber) {
-            removeActive(element);
-
             if (throttleTouch()) return false;
 
             ${SurveyScreen.nextButtonMessageChannel}.postMessage(pageNumber + 1);
           }
 
           function selectSingleOption(element, optionId) {
-            removeActive(element);
-
             if (throttleTouch()) return false;
 
             ${SurveyScreen.selectOptionChannel}.postMessage(optionId);
