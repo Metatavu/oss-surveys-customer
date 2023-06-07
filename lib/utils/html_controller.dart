@@ -73,10 +73,12 @@ class HTMLController {
 
       if (dataComponent == "next-button") {
         bool nextButtonVisible = page.nextButtonVisible ?? false;
+
         if (!nextButtonVisible) {
           child.attributes["style"] = "display: none;";
         }
-        child.attributes["ontouchstart"] = '''
+
+        child.attributes["ontouchend"] = '''
           (function () {
             var latestTouchEvent = window.latestTouchEvent || 0;
             var currentTime = new Date().getTime();
@@ -124,8 +126,10 @@ class HTMLController {
   /// Creates a single select [option]
   static Element _createSingleSelect(surveys_api.PageQuestionOption option) {
     Element optionElement = Element.html(
-        "<button class='option'>${option.questionOptionValue}</button>");
-    optionElement.attributes["ontouchstart"] = '''
+      "<button class='option'>${option.questionOptionValue}</button>",
+    );
+
+    optionElement.attributes["ontouchend"] = '''
       (function () {
         var latestTouchEvent = window.latestTouchEvent || 0;
         var currentTime = new Date().getTime();
@@ -146,9 +150,10 @@ class HTMLController {
   /// Creates a multi select [option]
   static Element _createMultiSelect(surveys_api.PageQuestionOption option) {
     Element optionElement = Element.html('''
-        <div id="${option.id}" class="multi-option">${option.questionOptionValue}</div>
-      ''');
-    optionElement.attributes["ontouchstart"] = '''
+      <div id="${option.id}" class="multi-option">${option.questionOptionValue}</div>
+    ''');
+
+    optionElement.attributes["ontouchend"] = '''
       (function () {
         var latestTouchEvent = window.latestTouchEvent || 0;
         var currentTime = new Date().getTime();
@@ -199,8 +204,9 @@ class HTMLController {
               "file://${mediaFilesMap[pageProperty.key] ?? ""}";
         } else if (element.localName == "div") {
           var styles = element.attributes["style"];
-          element.attributes["style"] =
-              "${styles ?? ""}background-image: url('file://${mediaFilesMap[pageProperty.key]}')";
+          element.attributes["style"] = '''
+            ${styles ?? ""}background-image: url('file://${mediaFilesMap[pageProperty.key]}')
+          ''';
         }
 
         return element;
