@@ -78,28 +78,8 @@ class HTMLController {
           child.attributes["style"] = "display: none;";
         }
 
-        child.attributes["ontouchstart"] = '''
-          (function () {
-            this.classList.add("active");
-          })();
-        ''';
-
-        child.attributes["ontouchend"] = '''
-          (function () {
-            this.classList.remove("active");
-
-            var latestTouchEvent = window.latestTouchEvent || 0;
-            var currentTime = new Date().getTime();
-
-            if (currentTime - latestTouchEvent < 500) {
-              return false;
-            }
-
-            latestTouchEvent = currentTime;
-
-            ${SurveyScreen.nextButtonMessageChannel}.postMessage($pageNumber + 1);
-          })();
-        ''';
+        child.attributes["ontouchstart"] = "addActive(this)";
+        child.attributes["ontouchend"] = "nextPage(this, $pageNumber)";
       } else if (dataComponent == "question") {
         _handleQuestionElement(
           child,
@@ -137,28 +117,9 @@ class HTMLController {
       "<button class='option'>${option.questionOptionValue}</button>",
     );
 
-    optionElement.attributes["ontouchstart"] = '''
-      (function () {
-        this.classList.add("active");
-      })();
-    ''';
-
-    optionElement.attributes["ontouchend"] = '''
-      (function () {
-        this.classList.remove("active");
-
-        var latestTouchEvent = window.latestTouchEvent || 0;
-        var currentTime = new Date().getTime();
-
-        if (currentTime - latestTouchEvent < 500) {
-          return false;
-        }
-
-        latestTouchEvent = currentTime;
-
-        ${SurveyScreen.selectOptionChannel}.postMessage("${option.id}");
-      })();
-    ''';
+    optionElement.attributes["ontouchstart"] = "addActive(this)";
+    optionElement.attributes["ontouchend"] =
+        "selectSingleOption(this, '${option.id}')";
 
     return optionElement;
   }
@@ -169,23 +130,8 @@ class HTMLController {
       <div id="${option.id}" class="multi-option">${option.questionOptionValue}</div>
     ''');
 
-    optionElement.attributes["ontouchend"] = '''
-      (function () {
-        var latestTouchEvent = window.latestTouchEvent || 0;
-        var currentTime = new Date().getTime();
-
-        if (currentTime - latestTouchEvent < 500) {
-          return false;
-        }
-
-        latestTouchEvent = currentTime;
-
-        var el = document.getElementById("${option.id}");
-        el.classList.toggle("selected");
-
-        ${SurveyScreen.selectOptionChannel}.postMessage("${option.id}");
-      })();
-    ''';
+    optionElement.attributes["ontouchend"] =
+        "selectMultiOption('${option.id}')";
 
     return optionElement;
   }
@@ -382,10 +328,10 @@ class HTMLController {
               right: 0;
               transition: background-color 0.2s ease-in-out;
             }
-            .next-button:focus, option:focus {
+            .next-button:focus, .option:focus {
               outline: none;
             }
-            .next-button.active, option.active {
+            .next-button.active, .option.active {
               background-color: rgba(0, 0, 0, 0.1);
             }
             svg.next-icon {
@@ -398,6 +344,51 @@ class HTMLController {
         <body>
           $html
         </body>
+        <script>
+          var latestTouchEvent;
+
+          function addActive(element) {
+            element.classList.add('active');
+          }
+
+          function removeActive(element) {
+            element.classList.remove('active');
+          }
+
+          function throttleTouch() {
+            var currentTime = new Date().getTime();
+
+            if (currentTime - (latestTouchEvent || 0) < 500) return true;
+
+            latestTouchEvent = currentTime;
+            return false;
+          }
+
+          function nextPage(element, pageNumber) {
+            removeActive(element);
+
+            if (throttleTouch()) return false;
+
+            ${SurveyScreen.nextButtonMessageChannel}.postMessage(pageNumber + 1);
+          }
+
+          function selectSingleOption(element, optionId) {
+            removeActive(element);
+
+            if (throttleTouch()) return false;
+
+            ${SurveyScreen.selectOptionChannel}.postMessage(optionId);
+          }
+
+          function selectMultiOption(optionId) {
+            if (throttleTouch()) return false;
+
+            var element = document.getElementById(optionId);
+            element.classList.toggle('selected');
+
+            ${SurveyScreen.selectOptionChannel}.postMessage(optionId);
+          }
+        </script>
       </html>
     ''');
   }
