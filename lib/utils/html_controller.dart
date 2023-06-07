@@ -78,7 +78,6 @@ class HTMLController {
           child.attributes["style"] = "display: none;";
         }
 
-        child.attributes["ontouchstart"] = "addActive(this)";
         child.attributes["ontouchend"] = "nextPage(this, $pageNumber)";
       } else if (dataComponent == "question") {
         _handleQuestionElement(
@@ -117,7 +116,6 @@ class HTMLController {
       "<button class='option'>${option.questionOptionValue}</button>",
     );
 
-    optionElement.attributes["ontouchstart"] = "addActive(this)";
     optionElement.attributes["ontouchend"] =
         "selectSingleOption(this, '${option.id}')";
 
@@ -326,13 +324,13 @@ class HTMLController {
               position: absolute;
               top: 0;
               right: 0;
-              transition: background-color 0.2s ease-in-out;
+              transition: background 0.2s ease-in-out;
             }
             .next-button:focus, .option:focus {
               outline: none;
             }
-            .next-button.active, .option.active {
-              background-color: rgba(0, 0, 0, 0.1);
+            .next-button:active, .option:active {
+              background: rgba(0, 0, 0, 0.25);
             }
             svg.next-icon {
               margin-top: 600px;
@@ -346,14 +344,6 @@ class HTMLController {
         </body>
         <script>
           var latestTouchEvent;
-
-          function addActive(element) {
-            element.classList.add('active');
-          }
-
-          function removeActive(element) {
-            element.classList.remove('active');
-          }
 
           function throttleTouch() {
             var currentTime = new Date().getTime();
