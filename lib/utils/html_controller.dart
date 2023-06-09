@@ -73,22 +73,13 @@ class HTMLController {
 
       if (dataComponent == "next-button") {
         bool nextButtonVisible = page.nextButtonVisible ?? false;
+
         if (!nextButtonVisible) {
           child.attributes["style"] = "display: none;";
         }
-        child.attributes["ontouchstart"] = '''(function () {
-          var latestTouchEvent = window.latestTouchEvent || 0;
-          var currentTime = new Date().getTime();
 
-          if (currentTime - latestTouchEvent < 500) {
-            return false;
-          }
-
-          latestTouchEvent = currentTime;
-
-          ${SurveyScreen.nextButtonMessageChannel}.postMessage($pageNumber + 1);
-        })();
-        return false;''';
+        child.attributes["ontouchstart"] = "addActive(this)";
+        child.attributes["ontouchend"] = "nextPage(this, $pageNumber)";
       } else if (dataComponent == "question") {
         _handleQuestionElement(
           child,
@@ -122,21 +113,13 @@ class HTMLController {
 
   /// Creates a single select [option]
   static Element _createSingleSelect(surveys_api.PageQuestionOption option) {
-    Element optionElement = Element.html(
-        "<button class='option'>${option.questionOptionValue}</button>");
-    optionElement.attributes["ontouchstart"] = '''(function () {
-        var latestTouchEvent = window.latestTouchEvent || 0;
-        var currentTime = new Date().getTime();
+    Element optionElement = Element.html('''
+      <button class="option">${option.questionOptionValue}</button>
+    ''');
 
-        if (currentTime - latestTouchEvent < 500) {
-          return false;
-        }
-
-        latestTouchEvent = currentTime;
-
-        ${SurveyScreen.selectOptionChannel}.postMessage("${option.id}");
-      })();
-      return false;''';
+    optionElement.attributes["ontouchstart"] = "addActive(this)";
+    optionElement.attributes["ontouchend"] =
+        "selectSingleOption(this, '${option.id}')";
 
     return optionElement;
   }
@@ -144,27 +127,11 @@ class HTMLController {
   /// Creates a multi select [option]
   static Element _createMultiSelect(surveys_api.PageQuestionOption option) {
     Element optionElement = Element.html('''
-        <div id="${option.id}" class="multi-option">${option.questionOptionValue}</div>
-      ''');
-    optionElement.attributes["ontouchstart"] = '''(function () {
-      var latestTouchEvent = window.latestTouchEvent || 0;
-      var currentTime = new Date().getTime();
+      <div id="${option.id}" class="multi-option">${option.questionOptionValue}</div>
+    ''');
 
-      if (currentTime - latestTouchEvent < 500) {
-        return false;
-      }
-
-      latestTouchEvent = currentTime;
-
-      var el = document.getElementById("${option.id}");
-      if (el.classList.contains("selected")) {
-        el.classList.remove("selected");
-      } else {
-        el.classList.add("selected");
-      }
-        ${SurveyScreen.selectOptionChannel}.postMessage("${option.id}");
-      })();
-      return false;''';
+    optionElement.attributes["ontouchend"] =
+        "selectMultiOption('${option.id}')";
 
     return optionElement;
   }
@@ -194,8 +161,9 @@ class HTMLController {
               "file://${mediaFilesMap[pageProperty.key] ?? ""}";
         } else if (element.localName == "div") {
           var styles = element.attributes["style"];
-          element.attributes["style"] =
-              "${styles ?? ""}background-image: url('file://${mediaFilesMap[pageProperty.key]}')";
+          element.attributes["style"] = '''
+            ${styles ?? ""}background-image: url('file://${mediaFilesMap[pageProperty.key]}')
+          ''';
         }
 
         return element;
@@ -206,8 +174,7 @@ class HTMLController {
 
   /// Wraps given [html] inside a wrapper
   static Document _wrapTemplate(String html) {
-    return parse(
-      '''
+    return parse('''
       <!DOCTYPE html>
       <html lang="en">
         <head>
@@ -235,8 +202,6 @@ class HTMLController {
               padding: 10% 215px 215px 10%;
               box-sizing: border-box;
               background-size: cover;
-            }
-            .page.text-shadow {
               text-shadow: 0px 0px 15px rgba(0, 0, 0, 0.75);
             }
             .logo-container {
@@ -299,15 +264,11 @@ class HTMLController {
               font-family: 'SBonusText-Bold';
               text-align: center;
               color: #fff;
-              background: transparent;
               border: 4px solid #fff;
-              transition: background-color 0.2s ease-in-out;
               margin-bottom: 5%;
-            }
-            .page.text-shadow .option {
               text-shadow: 0px 0px 15px rgba(0, 0, 0, 0.75);
               box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.25);
-              background: rgba(0,0,0,0.1);
+              background-color: rgba(0,0,0,0.1);
             }
             .multi-option {
               position: relative;
@@ -318,11 +279,9 @@ class HTMLController {
               line-height: 150%;
               font-family: 'SBonusText-Bold';
               color: #fff;
-              background: transparent;
+              background-color: transparent;
               transition: background-color 0.2s ease-in-out;
               margin-bottom: 5%;
-            }
-            .page.text-shadow .multi-option {
               text-shadow: 0px 0px 15px rgba(0, 0, 0, 0.75);
             }
             .multi-option:before {
@@ -335,11 +294,9 @@ class HTMLController {
               width: 80px;
               border: 4px solid #fff;
               transition: background-color 0.2s ease-in-out;
-            }
-            .page.text-shadow .multi-option:before {
               background-color: rgba(0, 0, 0, 0.1);
             }
-            .multi-option.selected:before, .page.text-shadow .multi-option.selected:before {
+            .multi-option.selected:before {
               background-color: rgba(0, 0, 0, 0.2);
             }
             .multi-option.selected:after {
@@ -359,10 +316,15 @@ class HTMLController {
               position: absolute;
               top: 0;
               right: 0;
-              transition: background-color 0.2s ease-in-out;
             }
-            .next-button:focus, option:focus, .next-button:active, option:active {
+            .next-button:focus, .option:focus {
+              outline: none;
+            }
+            .next-button.active {
               background-color: rgba(0, 0, 0, 0.1);
+            }
+            .option.active {
+              background-color: rgba(0, 0, 0, 0.2);
             }
             svg.next-icon {
               margin-top: 600px;
@@ -374,8 +336,51 @@ class HTMLController {
         <body>
           $html
         </body>
+        <script>
+          var latestTouchEvent;
+
+          function addActive(element) {
+            element.classList.add('active');
+          }
+
+          function removeActive(element) {
+            element.classList.remove('active');
+          }
+
+          function throttleTouch() {
+            var currentTime = new Date().getTime();
+
+            if (currentTime - (latestTouchEvent || 0) < 500) return true;
+
+            latestTouchEvent = currentTime;
+            return false;
+          }
+
+          function nextPage(element, pageNumber) {
+            removeActive(element);
+
+            if (throttleTouch()) return false;
+
+            ${SurveyScreen.nextButtonMessageChannel}.postMessage(pageNumber + 1);
+          }
+
+          function selectSingleOption(element, optionId) {
+            removeActive(element);
+
+            if (throttleTouch()) return false;
+
+            ${SurveyScreen.selectOptionChannel}.postMessage(optionId);
+          }
+
+          function selectMultiOption(optionId) {
+            if (throttleTouch()) return false;
+
+            document.getElementById(optionId).classList.toggle('selected');
+
+            ${SurveyScreen.selectOptionChannel}.postMessage(optionId);
+          }
+        </script>
       </html>
-    ''',
-    );
+    ''');
   }
 }
