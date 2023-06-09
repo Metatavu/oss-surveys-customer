@@ -188,8 +188,6 @@ class HTMLController {
             body {
               margin: 0;
               padding: 0;
-              user-select: none;
-              touch-action: none;
             }
             .page {
               height: 100vh;
