@@ -188,6 +188,7 @@ class HTMLController {
             body {
               margin: 0;
               padding: 0;
+              touch-action: none;
             }
             .page {
               height: 100vh;
@@ -263,7 +264,6 @@ class HTMLController {
               text-align: center;
               color: #fff;
               border: 4px solid #fff;
-              transition: background-color 0.2s ease-in-out;
               margin-bottom: 5%;
               text-shadow: 0px 0px 15px rgba(0, 0, 0, 0.75);
               box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.25);
@@ -315,7 +315,6 @@ class HTMLController {
               position: absolute;
               top: 0;
               right: 0;
-              transition: background-color 0.2s ease-in-out;
             }
             .next-button:focus, .option:focus {
               outline: none;
