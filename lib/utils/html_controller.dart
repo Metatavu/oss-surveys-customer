@@ -202,8 +202,6 @@ class HTMLController {
               padding: 10% 215px 215px 10%;
               box-sizing: border-box;
               background-size: cover;
-            }
-            .page.text-shadow {
               text-shadow: 0px 0px 15px rgba(0, 0, 0, 0.75);
             }
             .logo-container {
@@ -266,15 +264,12 @@ class HTMLController {
               font-family: 'SBonusText-Bold';
               text-align: center;
               color: #fff;
-              background-color: transparent;
               border: 4px solid #fff;
               transition: background-color 0.2s ease-in-out;
               margin-bottom: 5%;
-            }
-            .page.text-shadow .option {
               text-shadow: 0px 0px 15px rgba(0, 0, 0, 0.75);
               box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.25);
-              background: rgba(0,0,0,0.1);
+              background-color: rgba(0,0,0,0.1);
             }
             .multi-option {
               position: relative;
@@ -288,8 +283,6 @@ class HTMLController {
               background-color: transparent;
               transition: background-color 0.2s ease-in-out;
               margin-bottom: 5%;
-            }
-            .page.text-shadow .multi-option {
               text-shadow: 0px 0px 15px rgba(0, 0, 0, 0.75);
             }
             .multi-option:before {
@@ -302,11 +295,9 @@ class HTMLController {
               width: 80px;
               border: 4px solid #fff;
               transition: background-color 0.2s ease-in-out;
-            }
-            .page.text-shadow .multi-option:before {
               background-color: rgba(0, 0, 0, 0.1);
             }
-            .multi-option.selected:before, .page.text-shadow .multi-option.selected:before {
+            .multi-option.selected:before {
               background-color: rgba(0, 0, 0, 0.2);
             }
             .multi-option.selected:after {
@@ -331,8 +322,11 @@ class HTMLController {
             .next-button:focus, .option:focus {
               outline: none;
             }
-            .next-button.active, .option.active {
+            .next-button.active {
               background-color: rgba(0, 0, 0, 0.1);
+            }
+            .option.active {
+              background-color: rgba(0, 0, 0, 0.2);
             }
             svg.next-icon {
               margin-top: 600px;
