@@ -223,7 +223,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).primaryColor,
+      backgroundColor: Colors.black,
       body: Stack(
         children: [
           Center(
@@ -254,12 +254,17 @@ class _SurveyScreenState extends State<SurveyScreen> {
               left: 0,
               top: 0,
               child: SizedBox(
-                width: 20,
-                height: 20,
+                width: MediaQuery.of(context).size.width,
+                height: 50,
                 child: TextButton(
                   onPressed: _handleManagementButton,
                   style: ButtonStyle(
-                    overlayColor: MaterialStateProperty.all(Colors.transparent),
+                    backgroundColor: MaterialStateProperty.all(
+                      Colors.transparent,
+                    ),
+                    overlayColor: MaterialStateProperty.all(
+                      Colors.transparent,
+                    ),
                   ),
                   child: const SizedBox(),
                 ),
