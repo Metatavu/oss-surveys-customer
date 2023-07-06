@@ -22,8 +22,10 @@ class SurveysListener extends AbstractMqttListener<DeviceSurveyMessage> {
             .persistSurvey(deviceSurveyData)
             .then((value) => streamController.sink.add(value));
       }
-    } catch (e) {
-      logger.shout("Couldn't handle create survey message ${e.toString()}");
+    } catch (exception, stackTrace) {
+      logger.shout(
+          "Couldn't handle create survey message ${exception.toString()}");
+      await reportError(exception, stackTrace);
     }
   }
 
@@ -39,8 +41,10 @@ class SurveysListener extends AbstractMqttListener<DeviceSurveyMessage> {
             .persistSurvey(deviceSurveyData)
             .then((value) => streamController.sink.add(value));
       }
-    } catch (e) {
-      logger.shout("Couldn't handle update survey message ${e.toString()}");
+    } catch (exception, stackTrace) {
+      logger.shout(
+          "Couldn't handle update survey message ${exception.toString()}");
+      await reportError(exception, stackTrace);
     }
   }
 
@@ -52,8 +56,10 @@ class SurveysListener extends AbstractMqttListener<DeviceSurveyMessage> {
       surveysController
           .deleteSurvey(deserializedMessage.deviceSurveyId)
           .then((_) => streamController.sink.add(null));
-    } catch (e) {
-      logger.shout("Couldn't handle update survey message ${e.toString()}");
+    } catch (exception, stackTrace) {
+      logger.shout(
+          "Couldn't handle update survey message ${exception.toString()}");
+      await reportError(exception, stackTrace);
     }
   }
 

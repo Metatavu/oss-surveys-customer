@@ -7,14 +7,17 @@ import "package:flutter_dotenv/flutter_dotenv.dart";
 import "package:openapi_generator_annotations/openapi_generator_annotations.dart";
 import "package:oss_surveys_api/oss_surveys_api.dart" as surveys_api;
 import "package:oss_surveys_customer/api/api_factory.dart";
+import "package:oss_surveys_customer/config/configuration.dart";
 import "package:oss_surveys_customer/database/dao/keys_dao.dart";
 import "package:oss_surveys_customer/mqtt/listeners/surveys_listener.dart";
 import "package:oss_surveys_customer/mqtt/mqtt_client.dart";
 import "package:oss_surveys_customer/screens/default_screen.dart";
 import "package:oss_surveys_customer/theme/font.dart";
 import "package:oss_surveys_customer/theme/theme.dart";
+import "package:oss_surveys_customer/updates/updater.dart";
 import "package:oss_surveys_customer/utils/surveys_controller.dart";
 import "package:responsive_framework/responsive_framework.dart";
+import "package:sentry_flutter/sentry_flutter.dart";
 import "package:simple_logger/simple_logger.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
 
@@ -24,16 +27,21 @@ final StreamController streamController =
     StreamController.broadcast(sync: true);
 
 late final String environment;
-late bool isDeviceApproved;
 late final String deviceSerialNumber;
+late final Configuration configuration;
+late bool isDeviceApproved;
 
 void main() async {
   _configureLogger();
 
   SimpleLogger().info("Starting OSS Surveys Customer App...");
 
+  SimpleLogger().info("Loading .env file...");
   await dotenv.load(fileName: ".env");
-  environment = dotenv.env["ENVIRONMENT"]!;
+  SimpleLogger().info("Validating environment variables...");
+  configuration = Configuration();
+
+  environment = configuration.getEnvironment();
   SimpleLogger().info("Running in $environment environment");
 
   String? deviceId = await keysDao.getDeviceId();
@@ -47,6 +55,11 @@ void main() async {
   deviceSerialNumber = await _getDeviceSerialNumber();
   SimpleLogger().info("Device serial number: $deviceSerialNumber");
 
+  WidgetsFlutterBinding.ensureInitialized();
+
+  SimpleLogger().info("Starting Sentry...");
+  await _initializeSentryAndRunApp();
+
   SimpleLogger().info("Loading offlined font...");
   await loadOfflinedFont();
 
@@ -59,15 +72,11 @@ void main() async {
     SimpleLogger().info("Device is not approved!");
   }
 
-  WidgetsFlutterBinding.ensureInitialized();
-
   if (isDeviceApproved) {
     _getSurveys();
   }
 
   _setupTimers();
-
-  runApp(const MyApp());
 }
 
 /// Configures logger to use [logLevel] and formats log messages to be cleaner than by default.
@@ -137,8 +146,8 @@ Future<void> _pollDeviceApprovalStatus(Timer timer) async {
         timer.cancel();
       }
     }
-  } catch (e) {
-    logger.info("Error: $e");
+  } catch (exception) {
+    logger.info("Error: $exception");
   }
 }
 
@@ -182,9 +191,34 @@ Future<void> _getSurveys() async {
     }
 
     logger.info("Finished persisting surveys!");
-  } catch (e) {
-    logger.shout("Error while getting Surveys: $e");
+  } catch (exception, stackTrace) {
+    logger.shout("Error while getting Surveys: $exception");
+    await reportError(exception, stackTrace);
   }
+}
+
+/// Initializes Sentry and runs the app
+Future<void> _initializeSentryAndRunApp() async {
+  await SentryFlutter.init((options) {
+    options.dsn = configuration.getSentryDsn();
+    options.tracesSampleRate = 1.0;
+    options.environment = configuration.getEnvironment();
+  }, appRunner: () {
+    SimpleLogger().info("Running app...");
+    runApp(
+      const MyApp(),
+    );
+  });
+  await Sentry.configureScope((scope) async {
+    scope.setTag("version", await Updater.getCurrentVersion());
+    scope.setTag("serialNumber", deviceSerialNumber);
+    scope.setTag("deviceId", await keysDao.getDeviceId() ?? "");
+  });
+}
+
+/// Sends [exception] to Sentry with optional [stackTrace]
+Future<void> reportError(dynamic exception, StackTrace? stackTrace) async {
+  await Sentry.captureException(exception, stackTrace: stackTrace);
 }
 
 class MyApp extends StatelessWidget {

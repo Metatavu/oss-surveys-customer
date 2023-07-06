@@ -51,6 +51,7 @@ jobs:
           echo FONT_URL=${{ secrets.FONT_URL }} >> .env
           echo PLATFORM=${{ secrets.PLATFORM }} >> .env
           echo IMAGE_BASE_URL=${{ secrets.IMAGE_BASE_URL }} >> .env
+          echo SENTRY_DSN=${{ secrets.SENTRY_DSN }} >> .env
           flutter pub get
           flutter pub run build_runner build --delete-conflicting-outputs
           flutter build apk --split-per-abi

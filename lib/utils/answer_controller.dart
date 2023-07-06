@@ -37,10 +37,11 @@ class AnswerController {
       logger.info("Device Survey ID: $deviceSurveyId");
       logger.info("Page ID: ${page.externalId}");
       logger.info("Answer: $answer");
-    } catch (error) {
+    } catch (exception, stackTrace) {
       logger.shout(
-        "Error while answering single select question, persisting for later...: $error",
+        "Error while answering single select question, persisting for later...: $exception",
       );
+      await reportError(exception, stackTrace);
       await answersDao.createAnswer(
         database.AnswersCompanion.insert(
           pageExternalId: page.externalId,

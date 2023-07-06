@@ -1,7 +1,6 @@
 import "dart:convert";
 import "dart:io";
 import "package:flutter_app_installer/flutter_app_installer.dart";
-import "package:flutter_dotenv/flutter_dotenv.dart";
 import "package:oss_surveys_customer/updates/model/version_metadata.dart";
 import "package:package_info_plus/package_info_plus.dart";
 import "package:path_provider/path_provider.dart";
@@ -55,7 +54,7 @@ class Updater {
 
   /// Does HTTP request to given [url] and return the response as ByteArray
   static Future<Int8Buffer> _doRequest(String url) async {
-    String appUpdatesBaseUrl = dotenv.env["APP_UPDATES_BASE_URL"]!;
+    String appUpdatesBaseUrl = configuration.getAppUpdatesBaseUrl();
     HttpClient httpClient = HttpClient();
     HttpClientRequest request =
         await httpClient.getUrl(Uri.parse(appUpdatesBaseUrl + url));
