@@ -1,6 +1,5 @@
 import "dart:convert";
 import "package:flutter/foundation.dart";
-import "package:flutter_dotenv/flutter_dotenv.dart";
 import "package:mqtt_client/mqtt_client.dart";
 import "package:mqtt_client/mqtt_server_client.dart";
 import "package:oss_surveys_api/oss_surveys_api.dart" as surveys_api;
@@ -36,8 +35,8 @@ class MqttClient {
     _deviceId = deviceId;
     var client = _initializeClient(deviceId);
 
-    var mqttUsername = dotenv.env["MQTT_USERNAME"];
-    var mqttPassword = dotenv.env["MQTT_PASSWORD"];
+    var mqttUsername = configuration.getMqttUsername();
+    var mqttPassword = configuration.getMqttPassword();
     if (client.connectionStatus!.state == MqttConnectionState.connected) {
       logger.info("MQTT Client already connected");
 
@@ -202,9 +201,9 @@ class MqttClient {
       return _client!;
     }
 
-    var mqttBasePath = dotenv.env["MQTT_URL"];
-    var mqttPort = int.tryParse(dotenv.env["MQTT_PORT"] ?? "");
-    _client = MqttServerClient.withPort(mqttBasePath!, deviceId, mqttPort!);
+    var mqttBasePath = configuration.getMqttUrl();
+    var mqttPort = int.tryParse(configuration.getMqttPort());
+    _client = MqttServerClient.withPort(mqttBasePath, deviceId, mqttPort!);
 
     return _client!;
   }
@@ -236,10 +235,11 @@ class MqttClient {
     logger.info("Attempting to reconnect MQTT Client ($retryAttempts)...");
     try {
       await _client?.connect();
-    } catch (e) {
+    } catch (e, stackTrace) {
       if (retryAttempts > 0) {
         _reconnect(retryAttempts: retryAttempts - 1);
       } else {
+        await reportError(e, stackTrace);
         throw Exception("Couldn't reconnect MQTT Client.");
       }
     }

@@ -1,9 +1,8 @@
 import "package:flutter/material.dart";
-import "package:flutter_dotenv/flutter_dotenv.dart";
+import "package:oss_surveys_customer/main.dart";
 import "dart:core";
 import "package:oss_surveys_customer/updates/updater.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
-import "package:oss_surveys_customer/utils/extensions.dart";
 
 /// Management Screen
 ///
@@ -26,7 +25,7 @@ class _ManagementScreenState extends State<ManagementScreen> {
     setState(() {
       _loading = true;
     });
-    await Updater.updateVersion(dotenv.env["PLATFORM"]!);
+    await Updater.updateVersion(configuration.getPlatform());
     setState(() {
       _loading = false;
     });
@@ -37,8 +36,8 @@ class _ManagementScreenState extends State<ManagementScreen> {
     String currentVersion = await Updater.getCurrentVersion();
     String serverVersion = (await Updater.checkVersion())
         .elements
-        .firstWhere(
-            (element) => element.filters.first.value == dotenv.env["PLATFORM"]!)
+        .firstWhere((element) =>
+            element.filters.first.value == configuration.getPlatform())
         .versionName;
 
     setState(() {
