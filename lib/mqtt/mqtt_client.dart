@@ -69,8 +69,8 @@ class MqttClient {
         mqttUsername,
         mqttPassword,
       );
-    } catch (e) {
-      logger.shout("Exception: $e");
+    } catch (exception) {
+      logger.shout("Exception: $exception");
       client.disconnect();
     }
 
@@ -235,11 +235,11 @@ class MqttClient {
     logger.info("Attempting to reconnect MQTT Client ($retryAttempts)...");
     try {
       await _client?.connect();
-    } catch (e, stackTrace) {
+    } catch (exception, stackTrace) {
       if (retryAttempts > 0) {
         _reconnect(retryAttempts: retryAttempts - 1);
       } else {
-        await reportError(e, stackTrace);
+        await reportError(exception, stackTrace);
         throw Exception("Couldn't reconnect MQTT Client.");
       }
     }

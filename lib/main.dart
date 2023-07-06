@@ -7,7 +7,7 @@ import "package:flutter_dotenv/flutter_dotenv.dart";
 import "package:openapi_generator_annotations/openapi_generator_annotations.dart";
 import "package:oss_surveys_api/oss_surveys_api.dart" as surveys_api;
 import "package:oss_surveys_customer/api/api_factory.dart";
-import 'package:oss_surveys_customer/config/configuration.dart';
+import "package:oss_surveys_customer/config/configuration.dart";
 import "package:oss_surveys_customer/database/dao/keys_dao.dart";
 import "package:oss_surveys_customer/mqtt/listeners/surveys_listener.dart";
 import "package:oss_surveys_customer/mqtt/mqtt_client.dart";
@@ -146,8 +146,8 @@ Future<void> _pollDeviceApprovalStatus(Timer timer) async {
         timer.cancel();
       }
     }
-  } catch (e) {
-    logger.info("Error: $e");
+  } catch (exception) {
+    logger.info("Error: $exception");
   }
 }
 
@@ -191,9 +191,9 @@ Future<void> _getSurveys() async {
     }
 
     logger.info("Finished persisting surveys!");
-  } catch (e, stackTrace) {
-    logger.shout("Error while getting Surveys: $e");
-    await reportError(e, stackTrace);
+  } catch (exception, stackTrace) {
+    logger.shout("Error while getting Surveys: $exception");
+    await reportError(exception, stackTrace);
   }
 }
 

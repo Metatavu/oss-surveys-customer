@@ -27,7 +27,7 @@ class OfflineFileController {
 
         return null;
       }
-    } catch (e) {
+    } catch (exception) {
       logger.shout("Couldn't download file from $url");
 
       return null;
@@ -182,7 +182,7 @@ class OfflineFileController {
                       fileName &&
                   p.extension(fileSystemEntity.path) == fileExt))
           .path);
-    } catch (e) {
+    } catch (exception) {
       logger.warning("Couldn't find File $fileName$fileExt in $directoryPath");
 
       return null;
