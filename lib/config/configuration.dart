@@ -11,7 +11,6 @@ class Configuration {
   static const String MQTT_PORT = "MQTT_PORT";
   static const String MQTT_USERNAME = "MQTT_USERNAME";
   static const String MQTT_PASSWORD = "MQTT_PASSWORD";
-  static const String MQTT_CLIENT_ID = "MQTT_CLIENT_ID";
   static const String ENVIRONMENT = "ENVIRONMENT";
   static const String FONT_URL = "FONT_URL";
   static const String PLATFORM = "PLATFORM";
@@ -35,7 +34,6 @@ class Configuration {
       MQTT_PORT,
       MQTT_USERNAME,
       MQTT_PASSWORD,
-      MQTT_CLIENT_ID,
       ENVIRONMENT,
       FONT_URL,
       PLATFORM,
@@ -64,7 +62,6 @@ class Configuration {
   String getMqttPort() => dotenv.env[MQTT_PORT]!;
   String getMqttUsername() => dotenv.env[MQTT_USERNAME]!;
   String getMqttPassword() => dotenv.env[MQTT_PASSWORD]!;
-  String getMqttClientId() => dotenv.env[MQTT_CLIENT_ID]!;
   String getEnvironment() => dotenv.env[ENVIRONMENT]!;
   String getFontUrl() => dotenv.env[FONT_URL]!;
   String getPlatform() => dotenv.env[PLATFORM]!;
