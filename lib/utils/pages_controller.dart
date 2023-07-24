@@ -1,6 +1,5 @@
 import "dart:io";
 import "package:drift/drift.dart";
-import "package:flutter_dotenv/flutter_dotenv.dart";
 import "package:list_ext/list_ext.dart";
 import "package:oss_surveys_api/oss_surveys_api.dart" as surveys_api;
 import "package:oss_surveys_customer/database/dao/pages_dao.dart";
@@ -74,7 +73,7 @@ class PagesController {
     List<surveys_api.PageProperty> pageProperties,
     List<surveys_api.LayoutVariable> layoutVariables,
   ) async {
-    String imageBaseUrl = dotenv.env["IMAGE_BASE_URL"]!;
+    String imageBaseUrl = configuration.getImageBaseUrl();
     Map<String, String> mediaFilesMap = {};
     layoutVariables.retainWhere((variable) =>
         variable.type == surveys_api.LayoutVariableType.IMAGE_URL);

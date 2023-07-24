@@ -1,6 +1,5 @@
 import "dart:io";
 import "package:flutter/services.dart";
-import "package:flutter_dotenv/flutter_dotenv.dart";
 import "package:oss_surveys_customer/utils/offline_file_controller.dart";
 import "package:oss_surveys_customer/main.dart";
 import "package:path_provider/path_provider.dart";
@@ -32,7 +31,7 @@ Future<ByteData> getOfflinedFont() async {
 
   logger.info("Didn't find offlined font, downloading...");
   HttpClient client = HttpClient();
-  Uri uri = Uri.parse(dotenv.env["FONT_URL"]!);
+  Uri uri = Uri.parse(configuration.getFontUrl());
   HttpClientResponse response =
       await client.getUrl(uri).then((request) => request.close());
   Int8Buffer byteBuffer =
