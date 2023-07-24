@@ -18,9 +18,6 @@ Another option is to have `flutter pub run build_runner watch` running in the ba
 3. Add new migration to database.dart [reference](https://drift.simonbinder.eu/docs/advanced-features/migrations/#basics)
 4. Run code generation described earlier.
 
-#### Dart Code Metrics
-1. Run Dart Code Metrics analyzer with `flutter pub run dart_code_metrics:metrics lib`
-
 #### Building
 Build with `flutter build apk --split-per-abi`
 
