@@ -1,6 +1,7 @@
 import "dart:convert";
 import "dart:io";
 import "package:flutter_app_installer/flutter_app_installer.dart";
+import "package:list_ext/list_ext.dart";
 import "package:oss_surveys_customer/updates/model/version_metadata.dart";
 import "package:package_info_plus/package_info_plus.dart";
 import "package:path_provider/path_provider.dart";
@@ -17,12 +18,23 @@ class Updater {
     return packageInfo.version;
   }
 
-  /// Checks latest version from the server
-  static Future<VersionMetadata> checkVersion() async {
-    logger.info("Checking version...");
-    Int8Buffer fileContent = await _doRequest("output-metadata.json");
+  /// Gets latest version from the server
+  static Future<String?> getServerVersion(String platform) async {
+    try {
+      logger.info("Checking version...");
+      Int8Buffer fileContent = await _doRequest("output-metadata.json");
+      VersionMetadata versionMetadata =
+          VersionMetadata.fromJson(jsonDecode(utf8.decode(fileContent)));
+      String? foundVersion = versionMetadata.elements
+          .firstWhereOrNull((element) =>
+              element.filters.first.value == configuration.getPlatform())
+          ?.versionName;
 
-    return VersionMetadata.fromJson(jsonDecode(utf8.decode(fileContent)));
+      return foundVersion;
+    } catch (exception) {
+      logger.warning("Couldn't get version from server: $exception");
+      return null;
+    }
   }
 
   /// Updates the app to the latest version by [platform]

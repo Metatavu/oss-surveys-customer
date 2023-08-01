@@ -1,5 +1,5 @@
 import "dart:convert";
-import "package:flutter/foundation.dart";
+import "dart:typed_data";
 import "package:mqtt_client/mqtt_client.dart";
 import "package:mqtt_client/mqtt_server_client.dart";
 import "package:oss_surveys_api/oss_surveys_api.dart" as surveys_api;
@@ -105,7 +105,7 @@ class MqttClient {
     logger.info("Connected, sending status message...");
     publishMessage(
       await _statusTopic,
-      createMessagePayload(statusMessage.toJson().toString()),
+      createMessagePayload(jsonEncode(statusMessage)),
     );
   }
 
@@ -230,19 +230,23 @@ class MqttClient {
 
   /// Reconnects MQTT Client.
   ///
-  /// In case of failing to connect, retries for 3 times.
-  Future<void> _reconnect({retryAttempts = 3}) async {
-    logger.info("Attempting to reconnect MQTT Client ($retryAttempts)...");
+  /// Reports Sentry issue every 100th failure.
+  Future<void> _reconnect({failureCount = 0}) async {
+    logger.info("Attempting to reconnect MQTT Client...");
     try {
       await _client?.connect();
     } catch (exception, stackTrace) {
-      if (retryAttempts > 0) {
-        _reconnect(retryAttempts: retryAttempts - 1);
-      } else {
+      if (failureCount % 100 == 0) {
         await reportError(exception, stackTrace);
-        throw Exception("Couldn't reconnect MQTT Client.");
       }
+      await _awaitDelay(30);
+      _reconnect(failureCount: failureCount + 1);
     }
+  }
+
+  /// Delays for given [delay] seconds.
+  Future<void> _awaitDelay(int delay) async {
+    return Future.delayed(Duration(seconds: delay));
   }
 
   /// Gets MQTT Client connection status string.
