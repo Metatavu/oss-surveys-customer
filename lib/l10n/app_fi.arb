@@ -3,5 +3,6 @@
   "loadingSurvey": "Ladataan kyselyä...",
   "currentVersion": "Laitteen versio: {currentVersion}",
   "availableVersion": "Palvelimella oleva versio: {availableVersion}",
-  "installVersionButton": "Asenna uusin versio"
+  "installVersionButton": "Asenna uusin versio",
+  "mqttClientConnectionStatus": "MQTT yhteyden tila: {status}"
 }

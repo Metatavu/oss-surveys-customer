@@ -26,9 +26,19 @@
   "installVersionButton": "Install new version",
   "@installVersionButton": {
     "description": "Install new version buttons text"
-    },
+  },
   "loadingSurvey": "Survey is being loaded...",
   "@loadingSurvey": {
     "description": "Currently active survey is being loaded from database."
+  },
+  "mqttClientConnectionStatus": "MQTT client connection status: {status}",
+  "@mqttClientConnectionStatus": {
+    "description": "MQTT clients connection status.",
+    "placeholders": {
+      "status": {
+        "type": "String",
+        "example": "Online"
+      }
+    }
   }
 }
