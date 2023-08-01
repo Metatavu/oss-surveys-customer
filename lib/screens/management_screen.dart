@@ -20,7 +20,7 @@ class ManagementScreen extends StatefulWidget {
 class _ManagementScreenState extends State<ManagementScreen> {
   String _currentVersion = "";
   String _serverVersion = "";
-  bool _error = false;
+  bool _serverVersionResolvingError = false;
   bool _loading = true;
   bool _isMqttConnected = false;
 
@@ -46,7 +46,7 @@ class _ManagementScreenState extends State<ManagementScreen> {
       _currentVersion = currentVersion;
       _serverVersion = serverVersion ?? "Verkkovirhe";
       _loading = false;
-      _error = serverVersion == null;
+      _serverVersionResolvingError = serverVersion == null;
     });
   }
 
@@ -102,7 +102,8 @@ class _ManagementScreenState extends State<ManagementScreen> {
                           ),
                         ),
                       ),
-                      onPressed: _error ? null : _handleUpdate,
+                      onPressed:
+                          _serverVersionResolvingError ? null : _handleUpdate,
                       child: Text(
                         AppLocalizations.of(context)!.installVersionButton,
                         style: const TextStyle(fontSize: 50),
