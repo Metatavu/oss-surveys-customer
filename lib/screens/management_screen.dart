@@ -1,5 +1,7 @@
+import "dart:async";
 import "package:flutter/material.dart";
 import "package:oss_surveys_customer/main.dart";
+import "package:oss_surveys_customer/mqtt/mqtt_client.dart";
 import "dart:core";
 import "package:oss_surveys_customer/updates/updater.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
@@ -18,7 +20,9 @@ class ManagementScreen extends StatefulWidget {
 class _ManagementScreenState extends State<ManagementScreen> {
   String _currentVersion = "";
   String _serverVersion = "";
+  bool _serverVersionResolvingError = false;
   bool _loading = true;
+  bool _isMqttConnected = false;
 
   /// On click handler for button
   Future _handleUpdate() async {
@@ -34,16 +38,15 @@ class _ManagementScreenState extends State<ManagementScreen> {
   /// Checks applications current and available version numbers
   Future _checkVersions() async {
     String currentVersion = await Updater.getCurrentVersion();
-    String serverVersion = (await Updater.checkVersion())
-        .elements
-        .firstWhere((element) =>
-            element.filters.first.value == configuration.getPlatform())
-        .versionName;
+    String? serverVersion = (await Updater.getServerVersion(
+      configuration.getPlatform(),
+    ));
 
     setState(() {
       _currentVersion = currentVersion;
-      _serverVersion = serverVersion;
+      _serverVersion = serverVersion ?? "Verkkovirhe";
       _loading = false;
+      _serverVersionResolvingError = serverVersion == null;
     });
   }
 
@@ -51,6 +54,11 @@ class _ManagementScreenState extends State<ManagementScreen> {
   void initState() {
     super.initState();
     _checkVersions();
+    setState(() => _isMqttConnected = mqttClient.isConnected);
+    Timer.periodic(
+      const Duration(seconds: 1),
+      (_) => setState(() => _isMqttConnected = mqttClient.isConnected),
+    );
   }
 
   @override
@@ -94,13 +102,23 @@ class _ManagementScreenState extends State<ManagementScreen> {
                           ),
                         ),
                       ),
-                      onPressed: _handleUpdate,
+                      onPressed:
+                          _serverVersionResolvingError ? null : _handleUpdate,
                       child: Text(
                         AppLocalizations.of(context)!.installVersionButton,
                         style: const TextStyle(fontSize: 50),
                       ),
                     ),
-                  )
+                  ),
+                  Container(
+                    margin: const EdgeInsets.only(top: 10),
+                    child: Text(
+                      AppLocalizations.of(context)!.mqttClientConnectionStatus(
+                        _isMqttConnected ? "online" : "offline",
+                      ),
+                      style: const TextStyle(fontSize: 50),
+                    ),
+                  ),
                 ],
               ),
       ),
