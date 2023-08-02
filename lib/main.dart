@@ -179,12 +179,21 @@ Future<void> _getSurveys() async {
 
       return;
     }
+
     List<surveys_api.DeviceSurveyData> surveys = [];
     await deviceDataApi
         .listDeviceDataSurveys(deviceId: deviceId)
         .then((deviceDataSurveys) => surveys.addAll(deviceDataSurveys.data!));
 
-    logger.info("Received ${surveys.length} surveys!");
+    var removedSurveys = (await surveysController.listSurveys()).where(
+        (existingSurvey) =>
+            !surveys.any((survey) => survey.id == existingSurvey.externalId));
+
+    for (var removedSurvey in removedSurveys) {
+      logger.info(
+          "Removed survey ${removedSurvey.externalId} (${removedSurvey.title}) from the device!");
+      surveysController.deleteSurvey(removedSurvey.externalId);
+    }
 
     for (var survey in surveys) {
       surveysController.persistSurvey(survey);
