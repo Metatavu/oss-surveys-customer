@@ -15,7 +15,6 @@ import "package:oss_surveys_customer/screens/default_screen.dart";
 import "package:oss_surveys_customer/theme/font.dart";
 import "package:oss_surveys_customer/theme/theme.dart";
 import "package:oss_surveys_customer/updates/updater.dart";
-import "package:oss_surveys_customer/utils/extensions.dart";
 import "package:oss_surveys_customer/utils/surveys_controller.dart";
 import "package:responsive_framework/responsive_framework.dart";
 import "package:sentry_flutter/sentry_flutter.dart";
@@ -186,7 +185,7 @@ Future<void> _getSurveys() async {
         .listDeviceDataSurveys(deviceId: deviceId)
         .then((deviceDataSurveys) => surveys.addAll(deviceDataSurveys.data!));
 
-    var removedSurveys = (await surveysController.listSurveys()).filter(
+    var removedSurveys = (await surveysController.listSurveys()).where(
         (existingSurvey) =>
             !surveys.any((survey) => survey.id == existingSurvey.externalId));
 
