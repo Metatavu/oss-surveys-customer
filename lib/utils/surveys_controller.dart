@@ -5,6 +5,7 @@ import "package:oss_surveys_api/oss_surveys_api.dart" as surveys_api;
 import "package:oss_surveys_customer/main.dart";
 import "package:oss_surveys_customer/utils/pages_controller.dart";
 import "../database/dao/pages_dao.dart";
+import "package:oss_surveys_customer/database/database.dart";
 
 /// Surveys Controller class
 class SurveysController {
@@ -44,6 +45,11 @@ class SurveysController {
 
       return updatedSurvey;
     }
+  }
+
+  /// Lists all surveys from local database
+  Future<List<Survey>> listSurveys() async {
+    return surveysDao.listSurveys();
   }
 
   /// Deletes Survey and associated pages by [externalId]
