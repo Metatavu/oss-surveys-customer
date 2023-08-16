@@ -9,7 +9,6 @@ import "package:oss_surveys_api/oss_surveys_api.dart" as surveys_api;
 import "package:oss_surveys_customer/api/api_factory.dart";
 import "package:oss_surveys_customer/config/configuration.dart";
 import "package:oss_surveys_customer/database/dao/keys_dao.dart";
-import "package:oss_surveys_customer/mqtt/listeners/surveys_listener.dart";
 import "package:oss_surveys_customer/mqtt/mqtt_client.dart";
 import "package:oss_surveys_customer/screens/default_screen.dart";
 import "package:oss_surveys_customer/theme/font.dart";
@@ -47,7 +46,7 @@ void main() async {
   String? deviceId = await keysDao.getDeviceId();
   if (deviceId != null) {
     SimpleLogger().info("Connecting to MQTT Broker...");
-    mqttClient.connect(deviceId).then((_) => _setupMqttListeners());
+    await mqttClient.connect(deviceId);
   } else {
     SimpleLogger().info("Device ID not found, cannot connect to MQTT.");
   }
@@ -86,15 +85,6 @@ void _configureLogger({logLevel = Level.INFO}) {
       "[${info.time}] -- ${info.callerFrame ?? "NO CALLER INFO"} - ${info.message}");
 }
 
-/// Setups MQTT Listeners
-void _setupMqttListeners() {
-  if (mqttClient.isConnected) {
-    SurveysListener();
-  } else {
-    logger.warning("MQTT Client not connected, cannot setup listeners!");
-  }
-}
-
 /// Setups timers for background tasks ran on interval.
 ///
 /// Consider investigating https://docs.flutter.dev/packages-and-plugins/background-processes at some point
@@ -103,6 +93,14 @@ void _setupTimers() async {
     Timer.periodic(const Duration(seconds: 30),
         (timer) => _pollDeviceApprovalStatus(timer));
   }
+  Timer.periodic(
+    const Duration(minutes: 5),
+    (timer) async {
+      if (isDeviceApproved) {
+        await _getSurveys();
+      }
+    },
+  );
 
   Timer.periodic(const Duration(minutes: 1), (_) {
     if (mqttClient.isConnected) {
@@ -130,7 +128,6 @@ Future<void> _pollDeviceApprovalStatus(Timer timer) async {
         if (!mqttClient.isConnected) {
           logger.info("MQTT client is not connected, attempting to connect");
           await mqttClient.connect(deviceRequest.id!);
-          _setupMqttListeners();
         }
       }
     } else {
@@ -191,7 +188,8 @@ Future<void> _getSurveys() async {
 
     for (var removedSurvey in removedSurveys) {
       logger.info(
-          "Removed survey ${removedSurvey.externalId} (${removedSurvey.title}) from the device!");
+        "Removed survey ${removedSurvey.externalId} (${removedSurvey.title}) from the device!",
+      );
       surveysController.deleteSurvey(removedSurvey.externalId);
     }
 

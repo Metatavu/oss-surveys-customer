@@ -7,6 +7,7 @@ import "package:oss_surveys_customer/database/dao/keys_dao.dart";
 import "package:oss_surveys_customer/mqtt/model/status_message.dart";
 import "package:typed_data/typed_buffers.dart";
 import "../main.dart";
+import "listeners/surveys_listener.dart";
 
 /// MQTT Client
 class MqttClient {
@@ -107,6 +108,8 @@ class MqttClient {
       await _statusTopic,
       createMessagePayload(jsonEncode(statusMessage)),
     );
+    logger.info("Setting up listeners...");
+    // _setupMqttListeners();
   }
 
   /// Handler for disconnection event.
@@ -168,6 +171,7 @@ class MqttClient {
 
   /// Subscribes to topics listed in [newListeners] and adds topic:callback pairs to [listeners] for further callback invocation.
   void addListeners(Map<String, Function(String)> newListeners) {
+    listeners.removeWhere((key, _) => newListeners.containsKey(key));
     for (var listener in newListeners.entries) {
       subscribeToTopic(listener.key);
       listeners[listener.key] = listener.value;
@@ -240,7 +244,7 @@ class MqttClient {
         await reportError(exception, stackTrace);
       }
       await _awaitDelay(30);
-      _reconnect(failureCount: failureCount + 1);
+      await _reconnect(failureCount: failureCount + 1);
     }
   }
 
@@ -261,6 +265,15 @@ class MqttClient {
     }
 
     return client.connectionStatus!.state.name;
+  }
+
+  /// Setups MQTT Listeners
+  void _setupMqttListeners() {
+    if (mqttClient.isConnected) {
+      SurveysListener();
+    } else {
+      logger.warning("MQTT Client not connected, cannot setup listeners!");
+    }
   }
 }
 
