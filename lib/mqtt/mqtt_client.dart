@@ -109,7 +109,7 @@ class MqttClient {
       createMessagePayload(jsonEncode(statusMessage)),
     );
     logger.info("Setting up listeners...");
-    // _setupMqttListeners();
+    _setupMqttListeners();
   }
 
   /// Handler for disconnection event.
