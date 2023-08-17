@@ -9,6 +9,7 @@ import "package:oss_surveys_api/oss_surveys_api.dart" as surveys_api;
 import "package:oss_surveys_customer/api/api_factory.dart";
 import "package:oss_surveys_customer/config/configuration.dart";
 import "package:oss_surveys_customer/database/dao/keys_dao.dart";
+import "package:oss_surveys_customer/database/dao/surveys_dao.dart";
 import "package:oss_surveys_customer/mqtt/mqtt_client.dart";
 import "package:oss_surveys_customer/screens/default_screen.dart";
 import "package:oss_surveys_customer/theme/font.dart";
@@ -19,6 +20,7 @@ import "package:responsive_framework/responsive_framework.dart";
 import "package:sentry_flutter/sentry_flutter.dart";
 import "package:simple_logger/simple_logger.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
+import "database/database.dart";
 
 final logger = SimpleLogger();
 final apiFactory = ApiFactory();
@@ -94,10 +96,10 @@ void _setupTimers() async {
         (timer) => _pollDeviceApprovalStatus(timer));
   }
   Timer.periodic(
-    const Duration(minutes: 5),
+    const Duration(minutes: 2),
     (timer) async {
       if (isDeviceApproved) {
-        await _getSurveys();
+        await _checkActiveSurvey();
       }
     },
   );
@@ -163,6 +165,29 @@ Future<String> _getDeviceSerialNumber() async {
   throw Exception("Unsupported operating system!");
 }
 
+Future<void> _checkActiveSurvey() async {
+  Survey? activeSurvey = await surveysDao.findActiveSurvey();
+  logger.info("Active survey is ${activeSurvey?.id} ${activeSurvey?.title}");
+  await _getSurveys();
+  Survey? newActiveSurvey = await surveysDao.findActiveSurvey();
+  logger.info(
+    "New active survey is ${newActiveSurvey?.id} ${newActiveSurvey?.title}",
+  );
+  logger.info("Checked surveys!");
+  if (activeSurvey?.id != newActiveSurvey?.id) {
+    logger.info("New active survey is different from the old one!");
+    if (newActiveSurvey != null) {
+      logger.info("New active survey is not null, pushing to stream!");
+      streamController.sink.add(newActiveSurvey);
+    } else {
+      logger.info("New active survey is null, pushing to stream!");
+      streamController.sink.add(null);
+    }
+  } else {
+    logger.info("New survey is same won't do anything");
+  }
+}
+
 /// Gets all Surveys assigned to this device
 ///
 /// Retains published surveys (should be only one) and creates a new [Survey] for each of them.
@@ -190,11 +215,11 @@ Future<void> _getSurveys() async {
       logger.info(
         "Removed survey ${removedSurvey.externalId} (${removedSurvey.title}) from the device!",
       );
-      surveysController.deleteSurvey(removedSurvey.externalId);
+      await surveysController.deleteSurvey(removedSurvey.externalId);
     }
 
     for (var survey in surveys) {
-      surveysController.persistSurvey(survey);
+      await surveysController.persistSurvey(survey);
     }
 
     logger.info("Finished persisting surveys!");
