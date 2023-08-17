@@ -165,15 +165,11 @@ Future<String> _getDeviceSerialNumber() async {
   throw Exception("Unsupported operating system!");
 }
 
+/// Checks if active survey has changed and pushes it to the stream if it has.
 Future<void> _checkActiveSurvey() async {
   Survey? activeSurvey = await surveysDao.findActiveSurvey();
-  logger.info("Active survey is ${activeSurvey?.id} ${activeSurvey?.title}");
   await _getSurveys();
   Survey? newActiveSurvey = await surveysDao.findActiveSurvey();
-  logger.info(
-    "New active survey is ${newActiveSurvey?.id} ${newActiveSurvey?.title}",
-  );
-  logger.info("Checked surveys!");
   if (activeSurvey?.id != newActiveSurvey?.id) {
     logger.info("New active survey is different from the old one!");
     if (newActiveSurvey != null) {
