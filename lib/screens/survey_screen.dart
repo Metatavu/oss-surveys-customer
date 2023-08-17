@@ -130,10 +130,11 @@ class _SurveyScreenState extends State<SurveyScreen> {
   Future _handleStreamEvent(dynamic event) async {
     logger.info("Received stream event.");
     if (event is database.Survey) {
-      if (event.id == widget.survey.id) {
+      if (event.externalId != widget.survey.externalId) {
         setState(() => _loading = true);
         database.Survey? foundSurvey =
             await surveysDao.findSurveyByExternalId(event.externalId);
+        logger.info("Found survey with externalId ${foundSurvey?.externalId}");
         var foundPages = await pagesDao.listPagesBySurveyId(foundSurvey!.id);
         setState(() {
           _currentPageNumber = 1;
@@ -145,8 +146,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
               .then((_) => logger.info("Loaded page 1"));
         });
       }
-    }
-    if (event == null) {
+    } else if (event == null) {
       logger.info("Received null event, going to default screen...");
       _navigateBack();
     }
