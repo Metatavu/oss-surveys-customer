@@ -9,7 +9,7 @@ import "package:oss_surveys_api/oss_surveys_api.dart" as surveys_api;
 import "package:oss_surveys_customer/api/api_factory.dart";
 import "package:oss_surveys_customer/config/configuration.dart";
 import "package:oss_surveys_customer/database/dao/keys_dao.dart";
-import "package:oss_surveys_customer/mqtt/listeners/surveys_listener.dart";
+import "package:oss_surveys_customer/database/dao/surveys_dao.dart";
 import "package:oss_surveys_customer/mqtt/mqtt_client.dart";
 import "package:oss_surveys_customer/screens/default_screen.dart";
 import "package:oss_surveys_customer/theme/font.dart";
@@ -20,6 +20,7 @@ import "package:responsive_framework/responsive_framework.dart";
 import "package:sentry_flutter/sentry_flutter.dart";
 import "package:simple_logger/simple_logger.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
+import "database/database.dart";
 
 final logger = SimpleLogger();
 final apiFactory = ApiFactory();
@@ -47,7 +48,7 @@ void main() async {
   String? deviceId = await keysDao.getDeviceId();
   if (deviceId != null) {
     SimpleLogger().info("Connecting to MQTT Broker...");
-    mqttClient.connect(deviceId).then((_) => _setupMqttListeners());
+    await mqttClient.connect(deviceId);
   } else {
     SimpleLogger().info("Device ID not found, cannot connect to MQTT.");
   }
@@ -86,15 +87,6 @@ void _configureLogger({logLevel = Level.INFO}) {
       "[${info.time}] -- ${info.callerFrame ?? "NO CALLER INFO"} - ${info.message}");
 }
 
-/// Setups MQTT Listeners
-void _setupMqttListeners() {
-  if (mqttClient.isConnected) {
-    SurveysListener();
-  } else {
-    logger.warning("MQTT Client not connected, cannot setup listeners!");
-  }
-}
-
 /// Setups timers for background tasks ran on interval.
 ///
 /// Consider investigating https://docs.flutter.dev/packages-and-plugins/background-processes at some point
@@ -103,6 +95,14 @@ void _setupTimers() async {
     Timer.periodic(const Duration(seconds: 30),
         (timer) => _pollDeviceApprovalStatus(timer));
   }
+  Timer.periodic(
+    const Duration(minutes: 2),
+    (timer) async {
+      if (isDeviceApproved) {
+        await _checkActiveSurvey();
+      }
+    },
+  );
 
   Timer.periodic(const Duration(minutes: 1), (_) {
     if (mqttClient.isConnected) {
@@ -130,7 +130,6 @@ Future<void> _pollDeviceApprovalStatus(Timer timer) async {
         if (!mqttClient.isConnected) {
           logger.info("MQTT client is not connected, attempting to connect");
           await mqttClient.connect(deviceRequest.id!);
-          _setupMqttListeners();
         }
       }
     } else {
@@ -166,6 +165,25 @@ Future<String> _getDeviceSerialNumber() async {
   throw Exception("Unsupported operating system!");
 }
 
+/// Checks if active survey has changed and pushes it to the stream if it has.
+Future<void> _checkActiveSurvey() async {
+  Survey? activeSurvey = await surveysDao.findActiveSurvey();
+  await _getSurveys();
+  Survey? newActiveSurvey = await surveysDao.findActiveSurvey();
+  if (activeSurvey?.id != newActiveSurvey?.id) {
+    logger.info("New active survey is different from the old one!");
+    if (newActiveSurvey != null) {
+      logger.info("New active survey is not null, pushing to stream!");
+      streamController.sink.add(newActiveSurvey);
+    } else {
+      logger.info("New active survey is null, pushing to stream!");
+      streamController.sink.add(null);
+    }
+  } else {
+    logger.info("New survey is same won't do anything");
+  }
+}
+
 /// Gets all Surveys assigned to this device
 ///
 /// Retains published surveys (should be only one) and creates a new [Survey] for each of them.
@@ -191,12 +209,13 @@ Future<void> _getSurveys() async {
 
     for (var removedSurvey in removedSurveys) {
       logger.info(
-          "Removed survey ${removedSurvey.externalId} (${removedSurvey.title}) from the device!");
-      surveysController.deleteSurvey(removedSurvey.externalId);
+        "Removed survey ${removedSurvey.externalId} (${removedSurvey.title}) from the device!",
+      );
+      await surveysController.deleteSurvey(removedSurvey.externalId);
     }
 
     for (var survey in surveys) {
-      surveysController.persistSurvey(survey);
+      await surveysController.persistSurvey(survey);
     }
 
     logger.info("Finished persisting surveys!");
