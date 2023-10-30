@@ -57,8 +57,14 @@ class HTMLController {
       surveys_api.LayoutVariable? layoutVariable = page.layoutVariables
           ?.firstWhereOrNull((variable) => variable.key == child.id);
 
-      child.replaceWith(_insertPageProperty(
-          child, foundProperty, layoutVariable, mediaFilesMap));
+      child.replaceWith(
+        _insertPageProperty(
+          child,
+          foundProperty,
+          layoutVariable,
+          mediaFilesMap,
+        ),
+      );
       child.children.addAll(
         _handleChildren(
           child.children,
@@ -102,7 +108,7 @@ class HTMLController {
     element.children.addAll(page.question!.options.map((e) {
       switch (page.question!.type) {
         case surveys_api.PageQuestionType.SINGLE_SELECT:
-          return _createSingleSelect(e);
+          return _createSingleSelect(element, e);
         case surveys_api.PageQuestionType.MULTI_SELECT:
           return _createMultiSelect(e);
         default:
@@ -112,7 +118,10 @@ class HTMLController {
   }
 
   /// Creates a single select [option]
-  static Element _createSingleSelect(surveys_api.PageQuestionOption option) {
+  static Element _createSingleSelect(
+    Element element,
+    surveys_api.PageQuestionOption option,
+  ) {
     Element optionElement = Element.html('''
       <button class="option">${option.questionOptionValue}</button>
     ''');
@@ -152,7 +161,10 @@ class HTMLController {
 
     switch (layoutVariable.type) {
       case surveys_api.LayoutVariableType.TEXT:
-        element.text = pageProperty.value.toString();
+        if (element.localName == "div") {
+          element.children.clear();
+          element.children.addAll(parse(pageProperty.value).body!.children);
+        }
 
         return element;
       case surveys_api.LayoutVariableType.IMAGE_URL:

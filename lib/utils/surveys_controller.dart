@@ -4,6 +4,7 @@ import "package:oss_surveys_customer/database/database.dart" as database;
 import "package:oss_surveys_api/oss_surveys_api.dart" as surveys_api;
 import "package:oss_surveys_customer/main.dart";
 import "package:oss_surveys_customer/utils/pages_controller.dart";
+import "package:simple_logger/simple_logger.dart";
 import "../database/dao/pages_dao.dart";
 import "package:oss_surveys_customer/database/database.dart";
 
@@ -16,7 +17,8 @@ class SurveysController {
         await surveysDao.findSurveyByExternalId(newSurvey.id!);
 
     if (existingSurvey == null) {
-      logger.info("Persisting new survey ${newSurvey.title} ${newSurvey.id}");
+      SimpleLogger()
+          .info("Persisting new survey ${newSurvey.title} ${newSurvey.id}");
       database.Survey createdSurvey = await surveysDao.createSurvey(
         database.SurveysCompanion.insert(
           externalId: newSurvey.id!,
@@ -32,12 +34,13 @@ class SurveysController {
 
       return createdSurvey;
     } else {
-      logger.info(
+      SimpleLogger().info(
         "Survey with id ${newSurvey.id} already exists, checking if updated...",
       );
       database.Survey updatedSurvey = existingSurvey;
       if (_compareSurveys(existingSurvey, newSurvey)) {
-        logger.info("Survey with id ${newSurvey.id} is updated, updating...");
+        SimpleLogger()
+            .info("Survey with id ${newSurvey.id} is updated, updating...");
         updatedSurvey =
             await surveysDao.updateSurvey(existingSurvey, newSurvey);
         await _handlePages(newSurvey.pages?.toList(), updatedSurvey.id);
@@ -60,7 +63,7 @@ class SurveysController {
     if (foundSurvey != null) {
       await pagesController.deletePagesBySurveyId(foundSurvey.id);
       await surveysDao.deleteSurvey(foundSurvey.id);
-      logger.info(
+      SimpleLogger().info(
         "Deleted Survey ${foundSurvey.title} ${foundSurvey.externalId}",
       );
     }

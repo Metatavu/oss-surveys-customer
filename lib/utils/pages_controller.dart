@@ -7,6 +7,7 @@ import "package:oss_surveys_customer/database/database.dart" as database;
 import "package:oss_surveys_customer/main.dart";
 import "package:oss_surveys_customer/utils/html_controller.dart";
 import "package:oss_surveys_customer/utils/offline_file_controller.dart";
+import "package:simple_logger/simple_logger.dart";
 
 /// Pages Controller class
 ///
@@ -30,7 +31,7 @@ class PagesController {
       mediaFilesMap,
     );
     if (existingPage == null) {
-      logger.info("Persisting new page ${page.id}");
+      SimpleLogger().info("Persisting new page ${page.id}");
       await pagesDao.createPage(
         database.PagesCompanion.insert(
           externalId: page.id!,
@@ -43,7 +44,7 @@ class PagesController {
       );
     } else {
       if (_comparePages(existingPage, page)) {
-        logger.info("Page with id ${page.id} is updated, updating...");
+        SimpleLogger().info("Page with id ${page.id} is updated, updating...");
         await pagesDao.updatePage(
           existingPage,
           database.PagesCompanion.insert(
@@ -91,7 +92,7 @@ class PagesController {
           .getOfflineFile(imageBaseUrl + property.value);
 
       if (offlinedFile == null) {
-        logger.shout("Couldn't offline media ${property.value}");
+        SimpleLogger().shout("Couldn't offline media ${property.value}");
         continue;
       }
 

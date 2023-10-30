@@ -22,7 +22,6 @@ import "package:simple_logger/simple_logger.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
 import "database/database.dart";
 
-final logger = SimpleLogger();
 final apiFactory = ApiFactory();
 final StreamController streamController =
     StreamController.broadcast(sync: true);
@@ -113,7 +112,7 @@ void _setupTimers() async {
 
 /// Polls API for checking if device is approved.
 Future<void> _pollDeviceApprovalStatus(Timer timer) async {
-  logger.info("Polling device approval status...");
+  SimpleLogger().info("Polling device approval status...");
   surveys_api.DeviceRequestsApi devicesApi =
       await apiFactory.getDeviceRequestsApi();
   try {
@@ -124,11 +123,13 @@ Future<void> _pollDeviceApprovalStatus(Timer timer) async {
           .then((response) => response.data);
 
       if (deviceRequest != null) {
-        logger.info("Created a new Device Request, waiting for approval...");
+        SimpleLogger()
+            .info("Created a new Device Request, waiting for approval...");
         keysDao.persistDeviceId(deviceRequest.id!);
 
         if (!mqttClient.isConnected) {
-          logger.info("MQTT client is not connected, attempting to connect");
+          SimpleLogger()
+              .info("MQTT client is not connected, attempting to connect");
           await mqttClient.connect(deviceRequest.id!);
         }
       }
@@ -138,15 +139,15 @@ Future<void> _pollDeviceApprovalStatus(Timer timer) async {
           .then((response) => response.data?.key);
 
       if (deviceKey != null) {
-        logger.info("Received device key...");
+        SimpleLogger().info("Received device key...");
         await keysDao.persistDeviceKey(deviceKey);
         isDeviceApproved = true;
-        logger.info("Persisted device key, stopping polling!");
+        SimpleLogger().info("Persisted device key, stopping polling!");
         timer.cancel();
       }
     }
   } catch (exception) {
-    logger.info("Error: $exception");
+    SimpleLogger().info("Error: $exception");
   }
 }
 
@@ -170,17 +171,18 @@ Future<void> _checkActiveSurvey() async {
   Survey? activeSurvey = await surveysDao.findActiveSurvey();
   await _getSurveys();
   Survey? newActiveSurvey = await surveysDao.findActiveSurvey();
-  if (activeSurvey?.id != newActiveSurvey?.id) {
-    logger.info("New active survey is different from the old one!");
+  if (activeSurvey?.id != newActiveSurvey?.id ||
+      activeSurvey?.modifiedAt != newActiveSurvey?.modifiedAt) {
+    SimpleLogger().info("New active survey is different from the old one!");
     if (newActiveSurvey != null) {
-      logger.info("New active survey is not null, pushing to stream!");
+      SimpleLogger().info("New active survey is not null, pushing to stream!");
       streamController.sink.add(newActiveSurvey);
     } else {
-      logger.info("New active survey is null, pushing to stream!");
+      SimpleLogger().info("New active survey is null, pushing to stream!");
       streamController.sink.add(null);
     }
   } else {
-    logger.info("New survey is same won't do anything");
+    SimpleLogger().info("New survey is same won't do anything");
   }
 }
 
@@ -193,7 +195,7 @@ Future<void> _getSurveys() async {
     String? deviceId = await keysDao.getDeviceId();
 
     if (deviceId == null) {
-      logger.warning("Device ID is null, cannot get surveys!");
+      SimpleLogger().warning("Device ID is null, cannot get surveys!");
 
       return;
     }
@@ -208,7 +210,7 @@ Future<void> _getSurveys() async {
             !surveys.any((survey) => survey.id == existingSurvey.externalId));
 
     for (var removedSurvey in removedSurveys) {
-      logger.info(
+      SimpleLogger().info(
         "Removed survey ${removedSurvey.externalId} (${removedSurvey.title}) from the device!",
       );
       await surveysController.deleteSurvey(removedSurvey.externalId);
@@ -218,9 +220,9 @@ Future<void> _getSurveys() async {
       await surveysController.persistSurvey(survey);
     }
 
-    logger.info("Finished persisting surveys!");
+    SimpleLogger().info("Finished persisting surveys!");
   } catch (exception, stackTrace) {
-    logger.shout("Error while getting Surveys: $exception");
+    SimpleLogger().shout("Error while getting Surveys: $exception");
     await reportError(exception, stackTrace);
   }
 }

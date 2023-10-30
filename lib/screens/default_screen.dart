@@ -7,6 +7,7 @@ import "package:oss_surveys_customer/main.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
 import "package:oss_surveys_customer/screens/management_screen.dart";
 import "package:oss_surveys_customer/screens/survey_screen.dart";
+import "package:simple_logger/simple_logger.dart";
 import "../database/database.dart";
 
 /// Default Screen
@@ -38,9 +39,9 @@ class _DefaultScreenState extends State<DefaultScreen> {
     bool isApproved = await keysDao.isDeviceApproved();
     if (!isApproved) {
       Timer.periodic(const Duration(seconds: 10), (timer) async {
-        logger.info("Checking if device is approved...");
+        SimpleLogger().info("Checking if device is approved...");
         if (await keysDao.isDeviceApproved()) {
-          logger.info("Device was approved, canceling timer.");
+          SimpleLogger().info("Device was approved, canceling timer.");
           timer.cancel();
           setState(() => _isApprovedDevice = true);
         }
@@ -59,14 +60,14 @@ class _DefaultScreenState extends State<DefaultScreen> {
         timer.cancel();
         await _navigateToSurveyScreen(context, foundSurvey);
       } else {
-        logger.info("No active survey found.");
+        SimpleLogger().info("No active survey found.");
       }
     });
   }
 
   /// Sets up timers for checking if device is approved and if there is active survey.
   Future _setupTimers() async {
-    logger.info("Initializing default screen timers...");
+    SimpleLogger().info("Initializing default screen timers...");
     await _checkDeviceApproval();
     await _pollActiveSurvey();
   }

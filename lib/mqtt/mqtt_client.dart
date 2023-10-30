@@ -5,6 +5,7 @@ import "package:mqtt_client/mqtt_server_client.dart";
 import "package:oss_surveys_api/oss_surveys_api.dart" as surveys_api;
 import "package:oss_surveys_customer/database/dao/keys_dao.dart";
 import "package:oss_surveys_customer/mqtt/model/status_message.dart";
+import "package:simple_logger/simple_logger.dart";
 import "package:typed_data/typed_buffers.dart";
 import "../main.dart";
 import "listeners/surveys_listener.dart";
@@ -18,7 +19,7 @@ class MqttClient {
     var deviceId = _deviceId;
 
     if (deviceId == null) {
-      logger.warning("Device ID not found, cannot get status topic.");
+      SimpleLogger().warning("Device ID not found, cannot get status topic.");
 
       return "";
     }
@@ -39,13 +40,13 @@ class MqttClient {
     var mqttUsername = configuration.getMqttUsername();
     var mqttPassword = configuration.getMqttPassword();
     if (client.connectionStatus!.state == MqttConnectionState.connected) {
-      logger.info("MQTT Client already connected");
+      SimpleLogger().info("MQTT Client already connected");
 
       return;
     }
 
     if (await keysDao.getDeviceId() == null) {
-      logger.warning("Device ID not found, cannot connect to MQTT.");
+      SimpleLogger().warning("Device ID not found, cannot connect to MQTT.");
 
       return;
     }
@@ -71,7 +72,7 @@ class MqttClient {
         mqttPassword,
       );
     } catch (exception) {
-      logger.shout("Exception: $exception");
+      SimpleLogger().shout("Exception: $exception");
       client.disconnect();
     }
 
@@ -81,14 +82,15 @@ class MqttClient {
       }
 
       if (listeners.containsKey(messages[0].topic)) {
-        logger.info("Handling message to ${messages[0].topic}...");
+        SimpleLogger().info("Handling message to ${messages[0].topic}...");
         final MqttPublishMessage publishMessage =
             messages[0].payload as MqttPublishMessage;
         String message = MqttPublishPayload.bytesToStringAsString(
             publishMessage.payload.message);
         listeners[messages[0].topic]!(message);
       } else {
-        logger.warning("Didn't have listener for topic ${messages[0].topic}");
+        SimpleLogger()
+            .warning("Didn't have listener for topic ${messages[0].topic}");
       }
     });
   }
@@ -98,17 +100,18 @@ class MqttClient {
     StatusMessage? statusMessage = await _buildStatusMessage(true);
 
     if (statusMessage == null) {
-      logger.info("Device not yet registered, not sending status message!");
+      SimpleLogger()
+          .info("Device not yet registered, not sending status message!");
 
       return;
     }
 
-    logger.info("Connected, sending status message...");
+    SimpleLogger().info("Connected, sending status message...");
     publishMessage(
       await _statusTopic,
       createMessagePayload(jsonEncode(statusMessage)),
     );
-    logger.info("Setting up listeners...");
+    SimpleLogger().info("Setting up listeners...");
     _setupMqttListeners();
   }
 
@@ -116,28 +119,28 @@ class MqttClient {
   ///
   /// Attempts to reconnect the client.
   void onDisconnected() {
-    logger.info("Disconnected");
+    SimpleLogger().info("Disconnected");
     _reconnect();
   }
 
   /// Handler for subscribed to topic events.
   void onSubscribed(String topic) {
-    logger.info("Subscribed to topic: $topic");
+    SimpleLogger().info("Subscribed to topic: $topic");
   }
 
   /// Handler for failing to subscribe to topic events.
   void onSubscribeFail(String topic) {
-    logger.info("Failed to subscribe to: $topic");
+    SimpleLogger().info("Failed to subscribe to: $topic");
   }
 
   /// Handler for unsubscribing from topic events.
   void onUnsubscribed(String? topic) {
-    logger.info("Unsubscribed from topic: $topic");
+    SimpleLogger().info("Unsubscribed from topic: $topic");
   }
 
   /// Disconnects MQTT Client
   void disconnect() {
-    logger.info("Disconnecting...");
+    SimpleLogger().info("Disconnecting...");
     _client?.disconnect();
   }
 
@@ -183,7 +186,8 @@ class MqttClient {
     StatusMessage? statusMessage = await _buildStatusMessage(status);
 
     if (statusMessage == null) {
-      logger.warning("Device not yet registered, cannot send status message.");
+      SimpleLogger()
+          .warning("Device not yet registered, cannot send status message.");
 
       return;
     }
@@ -194,7 +198,7 @@ class MqttClient {
       statusTopic,
       createMessagePayload(jsonEncode(statusMessage)),
     );
-    logger.info("Sent status message to topic: $statusTopic");
+    SimpleLogger().info("Sent status message to topic: $statusTopic");
   }
 
   /// Initializes MQTT Client using [deviceId] as client ID.
@@ -219,7 +223,8 @@ class MqttClient {
     String? deviceId = _deviceId;
 
     if (deviceId == null) {
-      logger.warning("Device ID not found, cannot send status message.");
+      SimpleLogger()
+          .warning("Device ID not found, cannot send status message.");
 
       return null;
     }
@@ -236,7 +241,7 @@ class MqttClient {
   ///
   /// Reports Sentry issue every 100th failure.
   Future<void> _reconnect({failureCount = 0}) async {
-    logger.info("Attempting to reconnect MQTT Client...");
+    SimpleLogger().info("Attempting to reconnect MQTT Client...");
     try {
       await _client?.connect();
     } catch (exception, stackTrace) {
@@ -272,7 +277,8 @@ class MqttClient {
     if (mqttClient.isConnected) {
       SurveysListener();
     } else {
-      logger.warning("MQTT Client not connected, cannot setup listeners!");
+      SimpleLogger()
+          .warning("MQTT Client not connected, cannot setup listeners!");
     }
   }
 }
