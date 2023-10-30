@@ -117,27 +117,58 @@ class HTMLController {
     }));
   }
 
-  /// Creates a single select [option]
-  static Element _createSingleSelect(
-    Element element,
+  /// Creates a single select option button from [option]
+  @Deprecated(
+      "Used to support old format of layouts. Use _createSingleSelectDiv with new layouts.")
+  static Element _createSingleSelectButton(
     surveys_api.PageQuestionOption option,
   ) {
     Element optionElement = Element.html('''
       <button class="option">${option.questionOptionValue}</button>
     ''');
-
-    optionElement.attributes["ontouchstart"] = "addActive(this)";
-    optionElement.attributes["ontouchend"] =
-        "selectSingleOption(this, '${option.id}')";
+    _addSingleSelectTouchEvents(optionElement);
 
     return optionElement;
   }
 
+  /// Creates a single select option div from [option]
+  static Element _createSingleSelectDiv(
+    surveys_api.PageQuestionOption option,
+  ) {
+    Element divElement = Element.html("<div class=\"option\"></option>");
+    List<Element> optionElements =
+        parse(option.questionOptionValue).body!.children;
+    optionElements.forEach(_addSingleSelectTouchEvents);
+    divElement.children.addAll(optionElements);
+
+    return divElement;
+  }
+
+  /// Adds touch event listeners to single select option [element]
+  static void _addSingleSelectTouchEvents(Element element) {
+    element.attributes["ontouchstart"] = "addActive(this)";
+    element.attributes["ontouchend"] =
+        "selectSingleOption(this, '${element.id}')";
+  }
+
+  /// Creates a single select [option]
+  static Element _createSingleSelect(
+    Element element,
+    surveys_api.PageQuestionOption option,
+  ) {
+    switch (option.questionOptionValue.startsWith("<")) {
+      case true:
+        return _createSingleSelectDiv(option);
+      default:
+        return _createSingleSelectButton(option);
+    }
+  }
+
   /// Creates a multi select [option]
   static Element _createMultiSelect(surveys_api.PageQuestionOption option) {
-    Element optionElement = Element.html('''
-      <div id="${option.id}" class="multi-option">${option.questionOptionValue}</div>
-    ''');
+    Element optionElement = Element.html("<div class=\"multi-option\"></div>");
+    optionElement.children
+        .addAll(parse(option.questionOptionValue).body!.children);
 
     optionElement.attributes["ontouchend"] =
         "selectMultiOption('${option.id}')";
