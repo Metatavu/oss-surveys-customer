@@ -245,9 +245,6 @@ class MqttClient {
     try {
       await _client?.connect();
     } catch (exception, stackTrace) {
-      if (failureCount % 100 == 0) {
-        await reportError(exception, stackTrace);
-      }
       await _awaitDelay(30);
       await _reconnect(failureCount: failureCount + 1);
     }
