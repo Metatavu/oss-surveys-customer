@@ -23,7 +23,7 @@ class SurveysController {
         database.SurveysCompanion.insert(
           externalId: newSurvey.id!,
           title: newSurvey.title!,
-          publishStart: Value(newSurvey.publishStartTime),
+          publishStart: Value(newSurvey.publishStartTime ?? DateTime.now()),
           publishEnd: Value(newSurvey.publishEndTime),
           timeout: newSurvey.timeout!,
           modifiedAt: newSurvey.metadata!.modifiedAt!,
