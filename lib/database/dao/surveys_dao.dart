@@ -11,8 +11,24 @@ class SurveysDao extends DatabaseAccessor<Database> with _$SurveysDaoMixin {
   SurveysDao(Database database) : super(database);
 
   /// Creates and persists new Survey from REST [newSurvey]
-  Future<Survey> createSurvey(SurveysCompanion newSurvey) async {
-    int createdSurveyId = await into(surveys).insert(newSurvey);
+  Future<Survey> createSurvey({
+    required String externalId,
+    required String title,
+    required int timeout,
+    required DateTime modifiedAt,
+    DateTime? publishStart,
+    DateTime? publishEnd,
+  }) async {
+    int createdSurveyId = await into(surveys).insert(
+      SurveysCompanion.insert(
+        externalId: externalId,
+        title: title,
+        publishStart: Value(publishStart ?? DateTime.now()),
+        publishEnd: Value(publishEnd),
+        timeout: timeout,
+        modifiedAt: modifiedAt,
+      ),
+    );
 
     return await (select(surveys)
           ..where((row) => row.id.equals(createdSurveyId)))
@@ -62,7 +78,7 @@ class SurveysDao extends DatabaseAccessor<Database> with _$SurveysDaoMixin {
       existingSurvey.copyWith(
         title: newSurvey.title,
         timeout: newSurvey.timeout,
-        publishStart: Value(newSurvey.publishStartTime),
+        publishStart: Value(newSurvey.publishStartTime ?? DateTime.now()),
         publishEnd: Value(newSurvey.publishEndTime),
         modifiedAt: newSurvey.metadata!.modifiedAt!,
       ),

@@ -2,7 +2,6 @@ import "package:drift/drift.dart";
 import "package:oss_surveys_customer/database/dao/surveys_dao.dart";
 import "package:oss_surveys_customer/database/database.dart" as database;
 import "package:oss_surveys_api/oss_surveys_api.dart" as surveys_api;
-import "package:oss_surveys_customer/main.dart";
 import "package:oss_surveys_customer/utils/pages_controller.dart";
 import "package:simple_logger/simple_logger.dart";
 import "../database/dao/pages_dao.dart";
@@ -20,14 +19,12 @@ class SurveysController {
       SimpleLogger()
           .info("Persisting new survey ${newSurvey.title} ${newSurvey.id}");
       database.Survey createdSurvey = await surveysDao.createSurvey(
-        database.SurveysCompanion.insert(
-          externalId: newSurvey.id!,
-          title: newSurvey.title!,
-          publishStart: Value(newSurvey.publishStartTime ?? DateTime.now()),
-          publishEnd: Value(newSurvey.publishEndTime),
-          timeout: newSurvey.timeout!,
-          modifiedAt: newSurvey.metadata!.modifiedAt!,
-        ),
+        externalId: newSurvey.id!,
+        title: newSurvey.title!,
+        publishStart: newSurvey.publishStartTime,
+        publishEnd: newSurvey.publishEndTime,
+        timeout: newSurvey.timeout!,
+        modifiedAt: newSurvey.metadata!.modifiedAt!,
       );
 
       await _handlePages(newSurvey.pages?.toList(), createdSurvey.id);

@@ -192,6 +192,7 @@ Future<void> _checkActiveSurvey() async {
 Future<void> _getSurveys() async {
   surveys_api.DeviceDataApi deviceDataApi = await apiFactory.getDeviceDataApi();
   try {
+    SimpleLogger().info("Getting surveys...");
     String? deviceId = await keysDao.getDeviceId();
 
     if (deviceId == null) {
