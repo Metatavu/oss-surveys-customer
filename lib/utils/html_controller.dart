@@ -152,6 +152,9 @@ class HTMLController {
   }
 
   /// Creates a single select [option]
+  ///
+  /// Legacy layouts use plain text as options, new layouts use HTML.
+  /// Therefore this method interprets whether the option is HTML or plain text and creates the option accordingly.
   static Element _createSingleSelect(
     Element element,
     surveys_api.PageQuestionOption option,
@@ -245,6 +248,8 @@ class HTMLController {
               padding: 10% 215px 215px 10%;
               box-sizing: border-box;
               background-size: cover;
+            }
+            .page.text-shadow {
               text-shadow: 0px 0px 15px rgba(0, 0, 0, 0.75);
             }
             .logo-container {
@@ -309,9 +314,11 @@ class HTMLController {
               color: #fff;
               border: 4px solid #fff;
               margin-bottom: 5%;
+            }
+            .page.text-shadow .option {
               text-shadow: 0px 0px 15px rgba(0, 0, 0, 0.75);
               box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.25);
-              background-color: rgba(0,0,0,0.1);
+              background: rgba(0,0,0,0.1);
             }
             .multi-option {
               position: relative;
@@ -325,6 +332,8 @@ class HTMLController {
               background-color: transparent;
               transition: background-color 0.2s ease-in-out;
               margin-bottom: 5%;
+            }
+            .page.text-shadow .multi-option {
               text-shadow: 0px 0px 15px rgba(0, 0, 0, 0.75);
             }
             .multi-option:before {
@@ -340,6 +349,12 @@ class HTMLController {
               background-color: rgba(0, 0, 0, 0.1);
             }
             .multi-option.selected:before {
+              background-color: rgba(0, 0, 0, 0.2);
+            }
+            .page.text-shadow .multi-option:before {
+              background-color: rgba(0, 0, 0, 0.1);
+            }
+            .multi-option.selected:before, .page.text-shadow .multi-option.selected:before {
               background-color: rgba(0, 0, 0, 0.2);
             }
             .multi-option.selected:after {
