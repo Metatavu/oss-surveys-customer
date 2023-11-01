@@ -5,6 +5,7 @@ import "package:crypto/crypto.dart";
 import "package:oss_surveys_customer/main.dart";
 import "package:path_provider/path_provider.dart";
 import "package:path/path.dart" as p;
+import "package:simple_logger/simple_logger.dart";
 import "package:typed_data/typed_data.dart";
 
 /// Offline File Controller class
@@ -28,7 +29,7 @@ class OfflineFileController {
         return null;
       }
     } catch (exception) {
-      logger.shout("Couldn't download file from $url");
+      SimpleLogger().shout("Couldn't download file from $url");
 
       return null;
     }
@@ -39,7 +40,7 @@ class OfflineFileController {
   /// If the same file is already downloaded, applies its ETag to the request headers to not download it again in case it is not modified.
   /// In case of file not modified, returns the already offlined file.
   Future<File?> _download(String url) async {
-    logger.info("Offlining file $url...");
+    SimpleLogger().info("Offlining file $url...");
 
     Uri uri = Uri.parse(url);
     String fileName = _getOfflineFileName(url);
@@ -61,20 +62,20 @@ class OfflineFileController {
     switch (response.statusCode) {
       case 200:
         {
-          logger.info("Downloading file $url...");
+          SimpleLogger().info("Downloading file $url...");
 
           return await _handleNewFile(fileName, response);
         }
       case 304:
         {
-          logger.info("File not changed. Using offlined file $url");
+          SimpleLogger().info("File not changed. Using offlined file $url");
 
           return await _getDirectoryFileByNameAndExt(
               await getImagesDirectoryPath(), fileName, ".jpeg");
         }
       default:
         {
-          logger.shout(
+          SimpleLogger().shout(
             "Failed to download file $url, ${response.statusCode}, ${response.reasonPhrase}",
           );
 
@@ -147,7 +148,7 @@ class OfflineFileController {
 
     File newFile = await filePart.rename(newFileName);
     await _writeMetaFile(existingFile, eTag);
-    logger.info("Downloaded $newFileName!");
+    SimpleLogger().info("Downloaded $newFileName!");
 
     return newFile;
   }
@@ -183,7 +184,8 @@ class OfflineFileController {
                   p.extension(fileSystemEntity.path) == fileExt))
           .path);
     } catch (exception) {
-      logger.warning("Couldn't find File $fileName$fileExt in $directoryPath");
+      SimpleLogger()
+          .warning("Couldn't find File $fileName$fileExt in $directoryPath");
 
       return null;
     }

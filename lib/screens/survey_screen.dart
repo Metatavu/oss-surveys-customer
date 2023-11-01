@@ -9,6 +9,7 @@ import "package:oss_surveys_customer/database/database.dart" as database;
 import "package:oss_surveys_customer/main.dart";
 import "package:oss_surveys_customer/screens/management_screen.dart";
 import "package:oss_surveys_customer/utils/answer_controller.dart";
+import "package:simple_logger/simple_logger.dart";
 import "package:webview_flutter/webview_flutter.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
 import "default_screen.dart";
@@ -51,7 +52,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
               : pageNumber;
       _controller
           .loadHtmlString(_getPage()?.html ?? "No page found")
-          .then((_) => logger.info("Loaded page $_currentPageNumber"));
+          .then((_) => SimpleLogger().info("Loaded page $_currentPageNumber"));
     });
     _timeoutTimer.reset();
   }
@@ -91,12 +92,12 @@ class _SurveyScreenState extends State<SurveyScreen> {
   void _handleMultiSelectOption(String optionId) async {
     if (_selectedOptions.contains(optionId)) {
       _selectedOptions.retainWhere((element) => element != optionId);
-      logger.info("Removed option $optionId from multi select options");
+      SimpleLogger().info("Removed option $optionId from multi select options");
     } else {
       _selectedOptions.add(optionId);
-      logger.info("Added option $optionId to multi select options");
+      SimpleLogger().info("Added option $optionId to multi select options");
     }
-    logger.info("Selected options: $_selectedOptions");
+    SimpleLogger().info("Selected options: $_selectedOptions");
   }
 
   /// Callback function for handling single select option clicking [message] from the WebView
@@ -128,13 +129,14 @@ class _SurveyScreenState extends State<SurveyScreen> {
 
   /// Callback method for handling [event] pushed to the stream
   Future _handleStreamEvent(dynamic event) async {
-    logger.info("Received stream event.");
+    SimpleLogger().info("Received stream event.");
     if (event is database.Survey) {
       if (event.externalId != widget.survey.externalId) {
         setState(() => _loading = true);
         database.Survey? foundSurvey =
             await surveysDao.findSurveyByExternalId(event.externalId);
-        logger.info("Found survey with externalId ${foundSurvey?.externalId}");
+        SimpleLogger()
+            .info("Found survey with externalId ${foundSurvey?.externalId}");
         var foundPages = await pagesDao.listPagesBySurveyId(foundSurvey!.id);
         setState(() {
           _currentPageNumber = 1;
@@ -143,11 +145,11 @@ class _SurveyScreenState extends State<SurveyScreen> {
           _loading = false;
           _controller
               .loadHtmlString(_getPage()?.html ?? "No page found")
-              .then((_) => logger.info("Loaded page 1"));
+              .then((_) => SimpleLogger().info("Loaded page 1"));
         });
       }
     } else if (event == null) {
-      logger.info("Received null event, going to default screen...");
+      SimpleLogger().info("Received null event, going to default screen...");
       _navigateBack();
     }
   }
@@ -160,7 +162,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
       _pages = foundPages;
       _controller
           .loadHtmlString(_getPage()?.html ?? "No page found")
-          .then((_) => logger.info("Loaded page 1"));
+          .then((_) => SimpleLogger().info("Loaded page 1"));
       _loading = false;
     });
   }
@@ -169,12 +171,12 @@ class _SurveyScreenState extends State<SurveyScreen> {
   ///
   /// Navigates back to surveys first page after timeout.
   void _handleTimeout() {
-    logger.info("Timeout ${widget.survey.timeout}");
+    SimpleLogger().info("Timeout ${widget.survey.timeout}");
     if (_currentPageNumber != 1) {
       setState(() => _currentPageNumber = 1);
       _controller
           .loadHtmlString(_getPage()?.html ?? "No page found")
-          .then((_) => logger.info("Loaded page 1"));
+          .then((_) => SimpleLogger().info("Loaded page 1"));
     }
   }
 
@@ -202,7 +204,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
     _subscription = streamController.stream.listen(_handleStreamEvent);
     _setupTimers();
     _loadPages();
-    logger.info("Survey screen init ${widget.survey.title}");
+    SimpleLogger().info("Survey screen init ${widget.survey.title}");
   }
 
   void _handleManagementButton() {

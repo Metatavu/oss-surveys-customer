@@ -5,6 +5,7 @@ import "package:list_ext/list_ext.dart";
 import "package:oss_surveys_customer/updates/model/version_metadata.dart";
 import "package:package_info_plus/package_info_plus.dart";
 import "package:path_provider/path_provider.dart";
+import "package:simple_logger/simple_logger.dart";
 import "package:typed_data/typed_data.dart";
 import "../main.dart";
 import "../utils/offline_file_controller.dart";
@@ -21,7 +22,7 @@ class Updater {
   /// Gets latest version from the server
   static Future<String?> getServerVersion(String platform) async {
     try {
-      logger.info("Checking version...");
+      SimpleLogger().info("Checking version...");
       Int8Buffer fileContent = await _doRequest("output-metadata.json");
       VersionMetadata versionMetadata =
           VersionMetadata.fromJson(jsonDecode(utf8.decode(fileContent)));
@@ -32,36 +33,36 @@ class Updater {
 
       return foundVersion;
     } catch (exception) {
-      logger.warning("Couldn't get version from server: $exception");
+      SimpleLogger().warning("Couldn't get version from server: $exception");
       return null;
     }
   }
 
   /// Updates the app to the latest version by [platform]
   static Future updateVersion(String platform) async {
-    logger.info("Downloading new version...");
+    SimpleLogger().info("Downloading new version...");
     Int8Buffer fileContent = await _doRequest("app-$platform-release.apk");
 
     String? storageDir = (await getExternalStorageDirectory())?.absolute.path;
     File apkFile = File("$storageDir/fi.metatavu.oss_surveys_customer.apk");
 
-    logger.info("Creating new .apk file...");
+    SimpleLogger().info("Creating new .apk file...");
 
     if (await apkFile.exists()) {
       await apkFile.delete();
     }
     await apkFile.create();
 
-    logger.info("Writing content to the .apk file...");
+    SimpleLogger().info("Writing content to the .apk file...");
     await apkFile.writeAsBytes(fileContent);
 
-    logger.info("Installing the new .apk file...");
+    SimpleLogger().info("Installing the new .apk file...");
 
     await FlutterAppInstaller.installApk(
       filePath: apkFile.path,
       silently: false,
     );
-    logger.info("Installed!");
+    SimpleLogger().info("Installed!");
   }
 
   /// Does HTTP request to given [url] and return the response as ByteArray

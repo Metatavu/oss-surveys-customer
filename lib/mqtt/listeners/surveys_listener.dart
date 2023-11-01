@@ -4,6 +4,7 @@ import "package:oss_surveys_customer/main.dart";
 import "package:oss_surveys_customer/mqtt/listeners/abstract_listener.dart";
 import "package:oss_surveys_customer/mqtt/model/device_survey_message.dart";
 import "package:oss_surveys_customer/utils/surveys_controller.dart";
+import "package:simple_logger/simple_logger.dart";
 
 /// MQTT Surveys Messages listener class
 class SurveysListener extends AbstractMqttListener<DeviceSurveyMessage> {
@@ -13,7 +14,7 @@ class SurveysListener extends AbstractMqttListener<DeviceSurveyMessage> {
 
   @override
   void handleCreate(String message) async {
-    logger.info("Handling create survey message");
+    SimpleLogger().info("Handling create survey message");
     try {
       surveys_api.DeviceSurveyData? deviceSurveyData =
           await _findDeviceSurveyData(message);
@@ -23,7 +24,7 @@ class SurveysListener extends AbstractMqttListener<DeviceSurveyMessage> {
             .then((value) => streamController.sink.add(value));
       }
     } catch (exception, stackTrace) {
-      logger.shout(
+      SimpleLogger().shout(
           "Couldn't handle create survey message ${exception.toString()}");
       await reportError(exception, stackTrace);
     }
@@ -31,7 +32,7 @@ class SurveysListener extends AbstractMqttListener<DeviceSurveyMessage> {
 
   @override
   void handleUpdate(String message) async {
-    logger.info("Handling update survey message");
+    SimpleLogger().info("Handling update survey message");
     try {
       surveys_api.DeviceSurveyData? deviceSurveyData =
           await _findDeviceSurveyData(message);
@@ -42,7 +43,7 @@ class SurveysListener extends AbstractMqttListener<DeviceSurveyMessage> {
             .then((value) => streamController.sink.add(value));
       }
     } catch (exception, stackTrace) {
-      logger.shout(
+      SimpleLogger().shout(
           "Couldn't handle update survey message ${exception.toString()}");
       await reportError(exception, stackTrace);
     }
@@ -50,14 +51,14 @@ class SurveysListener extends AbstractMqttListener<DeviceSurveyMessage> {
 
   @override
   void handleDelete(String message) async {
-    logger.info("Handling delete survey message");
+    SimpleLogger().info("Handling delete survey message");
     try {
       DeviceSurveyMessage deserializedMessage = deserializeMessage(message);
       surveysController
           .deleteSurvey(deserializedMessage.deviceSurveyId)
           .then((_) => streamController.sink.add(null));
     } catch (exception, stackTrace) {
-      logger.shout(
+      SimpleLogger().shout(
           "Couldn't handle update survey message ${exception.toString()}");
       await reportError(exception, stackTrace);
     }
