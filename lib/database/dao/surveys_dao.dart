@@ -63,7 +63,7 @@ class SurveysDao extends DatabaseAccessor<Database> with _$SurveysDaoMixin {
                 (row.publishEnd.isBiggerOrEqualValue(now) |
                     row.publishEnd.isNull()),
           )
-          ..orderBy([(row) => OrderingTerm.asc(row.publishStart)]))
+          ..orderBy([(row) => OrderingTerm.desc(row.publishStart)]))
         .get();
 
     return foundSurveys.firstWhereOrNull(
@@ -71,26 +71,6 @@ class SurveysDao extends DatabaseAccessor<Database> with _$SurveysDaoMixin {
         now,
       ),
     );
-    // List<Survey>? foundSurveys = await (select(surveys)
-    //       ..where(
-    //         (row) =>
-    //             row.publishStart.isSmallerOrEqualValue(clock.now()) &
-    //             (row.publishEnd.isBiggerOrEqualValue(clock.now()) |
-    //                 row.publishEnd.isNull()),
-    //       )
-    //       ..orderBy([(row) => OrderingTerm.asc(row.publishStart)]))
-    //     .get();
-
-    // Survey? activeSurvey;
-    // for (var survey in foundSurveys) {
-    //   if (survey.publishStart == null) continue;
-    //   if (activeSurvey == null ||
-    //       survey.publishStart!.isBefore(activeSurvey.publishStart!)) {
-    //     activeSurvey = survey;
-    //   }
-    // }
-
-    // return activeSurvey;
   }
 
   /// Updates [survey]
