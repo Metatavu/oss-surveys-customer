@@ -2,15 +2,15 @@ import 'dart:async';
 
 class TestUtilities {
   static Future<T?> waitFor<T>({
-    Duration timeout = const Duration(minutes: 1),
-    Duration cooldown = const Duration(milliseconds: 1000),
+    int cooldown = 1,
+    int timeout = 1,
     required Future<T> Function() callback,
   }) async {
     DateTime start = DateTime.now();
     Completer<T> completer = Completer<T>();
-    Timer.periodic(cooldown, (timer) async {
+    Timer.periodic(Duration(seconds: cooldown), (timer) async {
       try {
-        if (DateTime.now().difference(start) > timeout) {
+        if (DateTime.now().difference(start) > Duration(minutes: timeout)) {
           timer.cancel();
           throw TimeoutException("Condition not met within $timeout");
         }
