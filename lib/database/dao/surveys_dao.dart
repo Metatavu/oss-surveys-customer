@@ -1,4 +1,5 @@
 import "package:drift/drift.dart";
+import "package:list_ext/list_ext.dart";
 import "package:oss_surveys_customer/database/database.dart";
 import "../model/survey.dart";
 import "package:oss_surveys_api/oss_surveys_api.dart" as surveys_api;
@@ -54,21 +55,42 @@ class SurveysDao extends DatabaseAccessor<Database> with _$SurveysDaoMixin {
 
   /// Finds currently active Survey
   Future<Survey?> findActiveSurvey() async {
-    Survey? foundSurvey = await (select(surveys)
+    final now = DateTime.now();
+    List<Survey> foundSurveys = await (select(surveys)
           ..where(
             (row) =>
-                row.publishStart.isSmallerOrEqualValue(DateTime.now()) &
-                row.publishEnd.isBiggerOrEqualValue(DateTime.now()),
+                row.publishStart.isSmallerOrEqualValue(now) &
+                (row.publishEnd.isBiggerOrEqualValue(now) |
+                    row.publishEnd.isNull()),
           )
-          ..limit(1))
-        .getSingleOrNull();
+          ..orderBy([(row) => OrderingTerm.asc(row.publishStart)]))
+        .get();
 
-    foundSurvey ??= await (select(surveys)
-          ..where((row) => row.publishStart.isNull() & row.publishEnd.isNull())
-          ..limit(1))
-        .getSingleOrNull();
+    return foundSurveys.firstWhereOrNull(
+      (element) => element.publishStart!.isBefore(
+        now,
+      ),
+    );
+    // List<Survey>? foundSurveys = await (select(surveys)
+    //       ..where(
+    //         (row) =>
+    //             row.publishStart.isSmallerOrEqualValue(clock.now()) &
+    //             (row.publishEnd.isBiggerOrEqualValue(clock.now()) |
+    //                 row.publishEnd.isNull()),
+    //       )
+    //       ..orderBy([(row) => OrderingTerm.asc(row.publishStart)]))
+    //     .get();
 
-    return foundSurvey;
+    // Survey? activeSurvey;
+    // for (var survey in foundSurveys) {
+    //   if (survey.publishStart == null) continue;
+    //   if (activeSurvey == null ||
+    //       survey.publishStart!.isBefore(activeSurvey.publishStart!)) {
+    //     activeSurvey = survey;
+    //   }
+    // }
+
+    // return activeSurvey;
   }
 
   /// Updates [survey]

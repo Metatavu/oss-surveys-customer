@@ -131,7 +131,8 @@ class _SurveyScreenState extends State<SurveyScreen> {
   Future _handleStreamEvent(dynamic event) async {
     SimpleLogger().info("Received stream event.");
     if (event is database.Survey) {
-      if (event.externalId != widget.survey.externalId) {
+      database.Survey? activeSurvey = await surveysDao.findActiveSurvey();
+      if (widget.survey.externalId != activeSurvey?.externalId) {
         setState(() => _loading = true);
         database.Survey? foundSurvey =
             await surveysDao.findSurveyByExternalId(event.externalId);

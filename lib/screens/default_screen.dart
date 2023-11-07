@@ -21,6 +21,7 @@ class DefaultScreen extends StatefulWidget {
 class _DefaultScreenState extends State<DefaultScreen> {
   bool _isApprovedDevice = false;
   int _clicks = 0;
+  Timer? _deviceApprovalTimer;
   late Timer _surveyNavigationTimer;
 
   /// Navigates to [SurveyScreen] if device is approved and it has active survey.
@@ -37,7 +38,8 @@ class _DefaultScreenState extends State<DefaultScreen> {
   Future _checkDeviceApproval() async {
     bool isApproved = await keysDao.isDeviceApproved();
     if (!isApproved) {
-      Timer.periodic(const Duration(seconds: 10), (timer) async {
+      _deviceApprovalTimer =
+          Timer.periodic(const Duration(seconds: 10), (timer) async {
         SimpleLogger().info("Checking if device is approved...");
         if (await keysDao.isDeviceApproved()) {
           SimpleLogger().info("Device was approved, canceling timer.");
@@ -54,9 +56,19 @@ class _DefaultScreenState extends State<DefaultScreen> {
   Future _pollActiveSurvey() async {
     _surveyNavigationTimer =
         Timer.periodic(const Duration(seconds: 10), (timer) async {
+      List<Survey> surveys = await surveysDao.listSurveys();
+      if (surveys.isNotEmpty) {
+        SimpleLogger().info("Found Surveys!");
+        for (var survey in surveys) {
+          SimpleLogger().info("Survey: $survey");
+        }
+      } else {
+        SimpleLogger().info("No surveys found.");
+      }
       Survey? foundSurvey = await surveysDao.findActiveSurvey();
       if (foundSurvey != null && context.mounted) {
         timer.cancel();
+        SimpleLogger().info("Active survey ${foundSurvey.title} found!");
         await _navigateToSurveyScreen(context, foundSurvey);
       } else {
         SimpleLogger().info("No active survey found.");
@@ -75,6 +87,13 @@ class _DefaultScreenState extends State<DefaultScreen> {
   void initState() {
     super.initState();
     _setupTimers();
+  }
+
+  @override
+  void dispose() {
+    _surveyNavigationTimer.cancel();
+    _deviceApprovalTimer?.cancel();
+    super.dispose();
   }
 
   void _handleManagementButton() {
