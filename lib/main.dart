@@ -168,22 +168,10 @@ Future<String> _getDeviceSerialNumber() async {
 
 /// Checks if active survey has changed and pushes it to the stream if it has.
 Future<void> _checkActiveSurvey() async {
-  Survey? activeSurvey = await surveysDao.findActiveSurvey();
   await _getSurveys();
   Survey? newActiveSurvey = await surveysDao.findActiveSurvey();
-  if (activeSurvey?.id != newActiveSurvey?.id ||
-      activeSurvey?.modifiedAt != newActiveSurvey?.modifiedAt) {
-    SimpleLogger().info("New active survey is different from the old one!");
-    if (newActiveSurvey != null) {
-      SimpleLogger().info("New active survey is not null, pushing to stream!");
-      streamController.sink.add(newActiveSurvey);
-    } else {
-      SimpleLogger().info("New active survey is null, pushing to stream!");
-      streamController.sink.add(null);
-    }
-  } else {
-    SimpleLogger().info("New survey is same won't do anything");
-  }
+  print("New survey is !!!!!!${newActiveSurvey}");
+  streamController.sink.add(newActiveSurvey);
 }
 
 /// Gets all Surveys assigned to this device

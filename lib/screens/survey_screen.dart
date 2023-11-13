@@ -51,7 +51,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
               ? 1
               : pageNumber;
       _controller
-          .loadHtmlString(_getPage()?.html ?? "No page found")
+          .loadHtmlString(_getPage(_pages)?.html ?? "No page found")
           .then((_) => SimpleLogger().info("Loaded page $_currentPageNumber"));
     });
     _timeoutTimer.reset();
@@ -59,7 +59,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
 
   /// Callback function for handling next page button click [message] from the WebView
   void _handleNextPageButton(JavaScriptMessage message) async {
-    database.Page? page = _getPage();
+    database.Page? page = _getPage(_pages);
     if (page!.questionType == surveys_api.PageQuestionType.MULTI_SELECT.name) {
       _navigateToPage(_currentPageNumber + 1);
       if (_selectedOptions.isNotEmpty) {
@@ -78,7 +78,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
 
   /// Callback function for handling option select [message] from the WebView
   void _handleOptionSelect(JavaScriptMessage message) async {
-    switch (_getPage()?.questionType) {
+    switch (_getPage(_pages)?.questionType) {
       case "SINGLE_SELECT":
         _handleSingleSelectOption(message.message);
         break;
@@ -102,7 +102,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
 
   /// Callback function for handling single select option clicking [message] from the WebView
   void _handleSingleSelectOption(String optionId) async {
-    database.Page page = _getPage()!;
+    database.Page page = _getPage(_pages)!;
     _navigateToPage(_currentPageNumber + 1);
     AnswerController.submitAnswer(
       optionId,
@@ -112,8 +112,8 @@ class _SurveyScreenState extends State<SurveyScreen> {
   }
 
   /// Gets current page from [_pages] list
-  database.Page? _getPage() {
-    return _pages.firstWhereOrNull(
+  database.Page? _getPage(List<database.Page> pages) {
+    return pages.firstWhereOrNull(
         (element) => element.pageNumber == _currentPageNumber);
   }
 
@@ -134,18 +134,16 @@ class _SurveyScreenState extends State<SurveyScreen> {
       database.Survey? activeSurvey = await surveysDao.findActiveSurvey();
       if (widget.survey.externalId != activeSurvey?.externalId) {
         setState(() => _loading = true);
-        database.Survey? foundSurvey =
-            await surveysDao.findSurveyByExternalId(event.externalId);
         SimpleLogger()
-            .info("Found survey with externalId ${foundSurvey?.externalId}");
-        var foundPages = await pagesDao.listPagesBySurveyId(foundSurvey!.id);
+            .info("Found survey with externalId ${activeSurvey?.externalId}");
+        var foundPages = await pagesDao.listPagesBySurveyId(activeSurvey!.id);
         setState(() {
           _currentPageNumber = 1;
-          _survey = foundSurvey;
+          _survey = activeSurvey;
           _pages = foundPages;
           _loading = false;
           _controller
-              .loadHtmlString(_getPage()?.html ?? "No page found")
+              .loadHtmlString(_getPage(foundPages)?.html ?? "No page found")
               .then((_) => SimpleLogger().info("Loaded page 1"));
         });
       }
@@ -162,7 +160,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
       _survey = widget.survey;
       _pages = foundPages;
       _controller
-          .loadHtmlString(_getPage()?.html ?? "No page found")
+          .loadHtmlString(_getPage(foundPages)?.html ?? "No page found")
           .then((_) => SimpleLogger().info("Loaded page 1"));
       _loading = false;
     });
@@ -176,7 +174,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
     if (_currentPageNumber != 1) {
       setState(() => _currentPageNumber = 1);
       _controller
-          .loadHtmlString(_getPage()?.html ?? "No page found")
+          .loadHtmlString(_getPage(_pages)?.html ?? "No page found")
           .then((_) => SimpleLogger().info("Loaded page 1"));
     }
   }
