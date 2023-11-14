@@ -17,9 +17,7 @@ import "package:oss_surveys_api/oss_surveys_api.dart" as surveys_api;
 
 /// Survey screen
 class SurveyScreen extends StatefulWidget {
-  const SurveyScreen({super.key, required this.survey});
-
-  final database.Survey survey;
+  const SurveyScreen({super.key});
 
   static const nextButtonMessageChannel = "NextButton";
   static const selectOptionChannel = "SelectOption";
@@ -32,11 +30,12 @@ class SurveyScreen extends StatefulWidget {
 class _SurveyScreenState extends State<SurveyScreen> {
   _SurveyScreenState();
 
-  late StreamSubscription _subscription;
+  late StreamSubscription<database.Survey?> _subscription;
   bool _loading = true;
   late database.Survey _survey;
   int _currentPageNumber = 1;
   List<database.Page> _pages = [];
+  late database.Survey _activeSurvey;
   final List<String> _selectedOptions = [];
   late WebViewController _controller;
   late RestartableTimer _timeoutTimer;
@@ -121,22 +120,23 @@ class _SurveyScreenState extends State<SurveyScreen> {
   void _navigateBack() {
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(
+      MaterialPageRoute<DefaultScreen>(
         builder: (context) => const DefaultScreen(),
       ),
     );
   }
 
   /// Callback method for handling [event] pushed to the stream
-  Future _handleStreamEvent(dynamic event) async {
+  Future<void> _handleStreamEvent(dynamic event) async {
     SimpleLogger().info("Received stream event.");
     if (event is database.Survey) {
       database.Survey? activeSurvey = await surveysDao.findActiveSurvey();
-      if (widget.survey.externalId != activeSurvey?.externalId) {
+      if (_activeSurvey.externalId != activeSurvey?.externalId) {
         setState(() => _loading = true);
         SimpleLogger()
             .info("Found survey with externalId ${activeSurvey?.externalId}");
         var foundPages = await pagesDao.listPagesBySurveyId(activeSurvey!.id);
+        print("Found pages: $foundPages");
         setState(() {
           _currentPageNumber = 1;
           _survey = activeSurvey;
@@ -146,6 +146,10 @@ class _SurveyScreenState extends State<SurveyScreen> {
               .loadHtmlString(_getPage(foundPages)?.html ?? "No page found")
               .then((_) => SimpleLogger().info("Loaded page 1"));
         });
+      } else if (activeSurvey == null) {
+        _navigateBack();
+      } else {
+        SimpleLogger().info("Testing");
       }
     } else if (event == null) {
       SimpleLogger().info("Received null event, going to default screen...");
@@ -154,10 +158,16 @@ class _SurveyScreenState extends State<SurveyScreen> {
   }
 
   /// Loads pages from database, sets them in state and loads the first page in the WebView
-  Future _loadPages() async {
-    var foundPages = await pagesDao.listPagesBySurveyId(widget.survey.id);
+  Future<void> _loadPages() async {
+    var activeSurvey = await surveysDao.findActiveSurvey();
+    if (activeSurvey == null) {
+      SimpleLogger().info("No active survey found, navigating back...");
+      _navigateBack();
+      return;
+    }
+    var foundPages = await pagesDao.listPagesBySurveyId(activeSurvey.id);
     setState(() {
-      _survey = widget.survey;
+      _survey = activeSurvey;
       _pages = foundPages;
       _controller
           .loadHtmlString(_getPage(foundPages)?.html ?? "No page found")
@@ -170,7 +180,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
   ///
   /// Navigates back to surveys first page after timeout.
   void _handleTimeout() {
-    SimpleLogger().info("Timeout ${widget.survey.timeout}");
+    SimpleLogger().info("Timeout ${_activeSurvey.timeout}");
     if (_currentPageNumber != 1) {
       setState(() => _currentPageNumber = 1);
       _controller
@@ -181,7 +191,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
 
   void _setupTimers() {
     _timeoutTimer = RestartableTimer(
-      Duration(seconds: widget.survey.timeout),
+      Duration(seconds: _activeSurvey.timeout),
       _handleTimeout,
     );
   }
@@ -203,7 +213,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
     _subscription = streamController.stream.listen(_handleStreamEvent);
     _setupTimers();
     _loadPages();
-    SimpleLogger().info("Survey screen init ${widget.survey.title}");
+    SimpleLogger().info("Survey screen init ${_activeSurvey.title}");
   }
 
   void _handleManagementButton() {
@@ -211,7 +221,8 @@ class _SurveyScreenState extends State<SurveyScreen> {
       _surveyNavigationTimer?.cancel();
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => const ManagementScreen()),
+        MaterialPageRoute<ManagementScreen>(
+            builder: (context) => const ManagementScreen()),
       ).then((_) => _setupTimers());
     }
 

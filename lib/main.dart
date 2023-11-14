@@ -23,7 +23,7 @@ import "package:flutter_gen/gen_l10n/app_localizations.dart";
 import "database/database.dart";
 
 final apiFactory = ApiFactory();
-final StreamController streamController =
+final StreamController<Survey?> streamController =
     StreamController.broadcast(sync: true);
 
 late final String environment;
@@ -66,6 +66,12 @@ void main() async {
   SimpleLogger().info("Checking if device is approved...");
   isDeviceApproved = await keysDao.isDeviceApproved();
 
+  // (await surveysDao.listSurveys()).forEach((element) async {
+  //   await pagesController.deletePagesBySurveyId(element.id);
+  //   await surveysDao.deleteSurvey(element.id);
+  //   print("Deleted survey with id ${element.id}");
+  // });
+
   if (isDeviceApproved) {
     SimpleLogger().info("Device is approved!");
   } else {
@@ -80,7 +86,7 @@ void main() async {
 }
 
 /// Configures logger to use [logLevel] and formats log messages to be cleaner than by default.
-void _configureLogger({logLevel = Level.INFO}) {
+void _configureLogger({Level logLevel = Level.INFO}) {
   SimpleLogger().setLevel(logLevel, includeCallerInfo: true);
   SimpleLogger().formatter = ((info) =>
       "[${info.time}] -- ${info.callerFrame ?? "NO CALLER INFO"} - ${info.message}");
@@ -95,7 +101,7 @@ void _setupTimers() async {
         (timer) => _pollDeviceApprovalStatus(timer));
   }
   Timer.periodic(
-    const Duration(minutes: 2),
+    const Duration(minutes: 1),
     (timer) async {
       if (isDeviceApproved) {
         await _checkActiveSurvey();
@@ -170,7 +176,6 @@ Future<String> _getDeviceSerialNumber() async {
 Future<void> _checkActiveSurvey() async {
   await _getSurveys();
   Survey? newActiveSurvey = await surveysDao.findActiveSurvey();
-  print("New survey is !!!!!!${newActiveSurvey}");
   streamController.sink.add(newActiveSurvey);
 }
 
@@ -266,4 +271,4 @@ class MyApp extends StatelessWidget {
     inputSpecFile: "oss-surveys-api-spec/swagger.yaml",
     generatorName: Generator.dio,
     outputDirectory: "oss-surveys-api")
-class OssSurveysApi extends OpenapiGeneratorConfig {}
+class OssSurveysApi {}

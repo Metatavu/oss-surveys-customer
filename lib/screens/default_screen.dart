@@ -25,17 +25,18 @@ class _DefaultScreenState extends State<DefaultScreen> {
   late Timer _surveyNavigationTimer;
 
   /// Navigates to [SurveyScreen] if device is approved and it has active survey.
-  Future _navigateToSurveyScreen(BuildContext context, Survey survey) async {
+  Future<void> _navigateToSurveyScreen(
+      BuildContext context, Survey survey) async {
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(
-        builder: (context) => SurveyScreen(survey: survey),
+      MaterialPageRoute<SurveyScreen>(
+        builder: (context) => const SurveyScreen(),
       ),
     ).then((_) => _setupTimers());
   }
 
   /// Polls database with 10 second interval to check if device is approved.
-  Future _checkDeviceApproval() async {
+  Future<void> _checkDeviceApproval() async {
     bool isApproved = await keysDao.isDeviceApproved();
     if (!isApproved) {
       _deviceApprovalTimer =
@@ -53,7 +54,7 @@ class _DefaultScreenState extends State<DefaultScreen> {
   }
 
   /// Polls database with 10 second interval to check if device has active survey.
-  Future _pollActiveSurvey() async {
+  Future<void> _pollActiveSurvey() async {
     _surveyNavigationTimer =
         Timer.periodic(const Duration(seconds: 10), (timer) async {
       List<Survey> surveys = await surveysDao.listSurveys();
@@ -77,7 +78,7 @@ class _DefaultScreenState extends State<DefaultScreen> {
   }
 
   /// Sets up timers for checking if device is approved and if there is active survey.
-  Future _setupTimers() async {
+  Future<void> _setupTimers() async {
     SimpleLogger().info("Initializing default screen timers...");
     await _checkDeviceApproval();
     await _pollActiveSurvey();
@@ -101,7 +102,8 @@ class _DefaultScreenState extends State<DefaultScreen> {
       _surveyNavigationTimer.cancel();
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => const ManagementScreen()),
+        MaterialPageRoute<ManagementScreen>(
+            builder: (context) => const ManagementScreen()),
       ).then((_) => _setupTimers());
     }
 

@@ -1,4 +1,3 @@
-import "package:drift/drift.dart";
 import "package:oss_surveys_customer/database/dao/surveys_dao.dart";
 import "package:oss_surveys_customer/database/database.dart" as database;
 import "package:oss_surveys_api/oss_surveys_api.dart" as surveys_api;
@@ -53,7 +52,7 @@ class SurveysController {
   }
 
   /// Deletes Survey and associated pages by [externalId]
-  Future deleteSurvey(String externalId) async {
+  Future<void> deleteSurvey(String externalId) async {
     database.Survey? foundSurvey =
         await surveysDao.findSurveyByExternalId(externalId);
 
@@ -67,7 +66,7 @@ class SurveysController {
   }
 
   /// Handles Survey [pages]
-  Future _handlePages(
+  Future<void> _handlePages(
     List<surveys_api.DeviceSurveyPageData>? pages,
     int surveyId,
   ) async {

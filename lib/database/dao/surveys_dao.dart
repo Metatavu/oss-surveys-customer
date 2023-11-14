@@ -24,7 +24,7 @@ class SurveysDao extends DatabaseAccessor<Database> with _$SurveysDaoMixin {
       SurveysCompanion.insert(
         externalId: externalId,
         title: title,
-        publishStart: Value(publishStart ?? DateTime.now()),
+        publishStart: Value(publishStart),
         publishEnd: Value(publishEnd),
         timeout: timeout,
         modifiedAt: modifiedAt,
@@ -49,7 +49,7 @@ class SurveysDao extends DatabaseAccessor<Database> with _$SurveysDaoMixin {
   }
 
   /// Deletes persisted Survey by [id]
-  Future deleteSurvey(int id) async {
+  Future<int> deleteSurvey(int id) async {
     return await (delete(surveys)..where((row) => row.id.equals(id))).go();
   }
 
@@ -59,7 +59,8 @@ class SurveysDao extends DatabaseAccessor<Database> with _$SurveysDaoMixin {
     List<Survey> foundSurveys = await (select(surveys)
           ..where(
             (row) =>
-                row.publishStart.isSmallerOrEqualValue(now) &
+                (row.publishStart.isNull() |
+                    row.publishStart.isSmallerOrEqualValue(now)) &
                 (row.publishEnd.isBiggerOrEqualValue(now) |
                     row.publishEnd.isNull()),
           )
@@ -67,9 +68,11 @@ class SurveysDao extends DatabaseAccessor<Database> with _$SurveysDaoMixin {
         .get();
 
     return foundSurveys.firstWhereOrNull(
-      (element) => element.publishStart!.isBefore(
-        now,
-      ),
+      (element) =>
+          element.publishStart?.isBefore(
+            now,
+          ) ??
+          true,
     );
   }
 
@@ -80,7 +83,7 @@ class SurveysDao extends DatabaseAccessor<Database> with _$SurveysDaoMixin {
       existingSurvey.copyWith(
         title: newSurvey.title,
         timeout: newSurvey.timeout,
-        publishStart: Value(newSurvey.publishStartTime ?? DateTime.now()),
+        publishStart: Value(newSurvey.publishStartTime),
         publishEnd: Value(newSurvey.publishEndTime),
         modifiedAt: newSurvey.metadata!.modifiedAt!,
       ),

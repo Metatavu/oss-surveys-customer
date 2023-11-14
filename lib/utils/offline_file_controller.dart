@@ -15,7 +15,7 @@ class OfflineFileController {
   /// Gets offlined file by [url]
   ///
   /// Downloads file by default, can be changed by setting [download] to false.
-  Future<File?> getOfflineFile(String url, {download = true}) async {
+  Future<File?> getOfflineFile(String url, {bool download = true}) async {
     try {
       if (download) {
         return _download(url);

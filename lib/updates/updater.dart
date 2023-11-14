@@ -39,7 +39,7 @@ class Updater {
   }
 
   /// Updates the app to the latest version by [platform]
-  static Future updateVersion(String platform) async {
+  static Future<void> updateVersion(String platform) async {
     SimpleLogger().info("Downloading new version...");
     Int8Buffer fileContent = await _doRequest("app-$platform-release.apk");
 

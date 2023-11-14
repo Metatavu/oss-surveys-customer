@@ -15,7 +15,7 @@ abstract class AbstractMqttListener<T> {
   }
 
   /// Returns a map of topic:callback entries handled by this listener.
-  Future<Map<String, Function(String)>> getListeners() async => {
+  Future<Map<String, void Function(String)>> getListeners() async => {
         "${await baseTopic}/create": handleCreate,
         "${await baseTopic}/update": handleUpdate,
         "${await baseTopic}/delete": handleDelete
@@ -32,7 +32,7 @@ abstract class AbstractMqttListener<T> {
 
   /// Sets listeners described here to MQTT Client
   @protected
-  Future setListeners() async {
+  Future<void> setListeners() async {
     mqttClient.addListeners(await getListeners());
   }
 

@@ -30,7 +30,7 @@ class MqttClient {
   bool get isConnected =>
       _getClientConnectionStatus() == MqttConnectionState.connected.name;
 
-  Map<String, Function(String)> listeners = {};
+  Map<String, void Function(String)> listeners = {};
 
   /// Connects MQTT server using [deviceId] as client id if not already connected.
   Future<void> connect(String deviceId) async {
@@ -59,7 +59,6 @@ class MqttClient {
     client.onSubscribeFail = onSubscribeFail;
 
     final connMessage = MqttConnectMessage()
-        .keepAliveFor(60)
         .withWillTopic(await _statusTopic)
         .withWillMessage(jsonEncode((await _buildStatusMessage(false))))
         .authenticateAs(mqttUsername, mqttPassword)
@@ -96,7 +95,7 @@ class MqttClient {
   }
 
   /// Handler for successful connections event.
-  Future onConnected() async {
+  Future<void> onConnected() async {
     StatusMessage? statusMessage = await _buildStatusMessage(true);
 
     if (statusMessage == null) {
@@ -168,12 +167,12 @@ class MqttClient {
   /// Subscribes to given MQTT [topic].
   ///
   /// Quality of Service (QoS) defaults to [MqttQos.atLeastOnce] (1)
-  void subscribeToTopic(String topic, {qos = MqttQos.atLeastOnce}) {
+  void subscribeToTopic(String topic, {MqttQos qos = MqttQos.atLeastOnce}) {
     _client?.subscribe(topic, qos);
   }
 
   /// Subscribes to topics listed in [newListeners] and adds topic:callback pairs to [listeners] for further callback invocation.
-  void addListeners(Map<String, Function(String)> newListeners) {
+  void addListeners(Map<String, void Function(String)> newListeners) {
     listeners.removeWhere((key, _) => newListeners.containsKey(key));
     for (var listener in newListeners.entries) {
       subscribeToTopic(listener.key);
@@ -182,7 +181,7 @@ class MqttClient {
   }
 
   /// Sends [StatusMessage]
-  Future sendStatusMessage(bool status) async {
+  Future<void> sendStatusMessage(bool status) async {
     StatusMessage? statusMessage = await _buildStatusMessage(status);
 
     if (statusMessage == null) {
@@ -240,11 +239,11 @@ class MqttClient {
   /// Reconnects MQTT Client.
   ///
   /// Reports Sentry issue every 100th failure.
-  Future<void> _reconnect({failureCount = 0}) async {
+  Future<void> _reconnect({int failureCount = 0}) async {
     SimpleLogger().info("Attempting to reconnect MQTT Client...");
     try {
       await _client?.connect();
-    } catch (exception, stackTrace) {
+    } catch (exception) {
       await _awaitDelay(30);
       await _reconnect(failureCount: failureCount + 1);
     }
