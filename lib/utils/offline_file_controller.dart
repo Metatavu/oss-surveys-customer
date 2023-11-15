@@ -40,7 +40,7 @@ class OfflineFileController {
   /// If the same file is already downloaded, applies its ETag to the request headers to not download it again in case it is not modified.
   /// In case of file not modified, returns the already offlined file.
   Future<File?> _download(String url) async {
-    SimpleLogger().info("Offlining file $url...");
+    SimpleLogger().info("Loading file $url...");
 
     Uri uri = Uri.parse(url);
     String fileName = _getOfflineFileName(url);

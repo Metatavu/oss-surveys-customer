@@ -26,11 +26,13 @@ class _DefaultScreenState extends State<DefaultScreen> {
 
   /// Navigates to [SurveyScreen] if device is approved and it has active survey.
   Future<void> _navigateToSurveyScreen(
-      BuildContext context, Survey survey) async {
+    BuildContext context,
+    Survey survey,
+  ) async {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute<SurveyScreen>(
-        builder: (context) => const SurveyScreen(),
+        builder: (context) => SurveyScreen(survey: survey),
       ),
     ).then((_) => _setupTimers());
   }

@@ -66,12 +66,6 @@ void main() async {
   SimpleLogger().info("Checking if device is approved...");
   isDeviceApproved = await keysDao.isDeviceApproved();
 
-  // (await surveysDao.listSurveys()).forEach((element) async {
-  //   await pagesController.deletePagesBySurveyId(element.id);
-  //   await surveysDao.deleteSurvey(element.id);
-  //   print("Deleted survey with id ${element.id}");
-  // });
-
   if (isDeviceApproved) {
     SimpleLogger().info("Device is approved!");
   } else {
