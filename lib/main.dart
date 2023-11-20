@@ -23,7 +23,7 @@ import "package:flutter_gen/gen_l10n/app_localizations.dart";
 import "database/database.dart";
 
 final apiFactory = ApiFactory();
-final StreamController streamController =
+final StreamController<Survey?> streamController =
     StreamController.broadcast(sync: true);
 
 late final String environment;
@@ -80,7 +80,7 @@ void main() async {
 }
 
 /// Configures logger to use [logLevel] and formats log messages to be cleaner than by default.
-void _configureLogger({logLevel = Level.INFO}) {
+void _configureLogger({Level logLevel = Level.INFO}) {
   SimpleLogger().setLevel(logLevel, includeCallerInfo: true);
   SimpleLogger().formatter = ((info) =>
       "[${info.time}] -- ${info.callerFrame ?? "NO CALLER INFO"} - ${info.message}");
@@ -95,7 +95,7 @@ void _setupTimers() async {
         (timer) => _pollDeviceApprovalStatus(timer));
   }
   Timer.periodic(
-    const Duration(minutes: 2),
+    const Duration(minutes: 1),
     (timer) async {
       if (isDeviceApproved) {
         await _checkActiveSurvey();
@@ -168,22 +168,9 @@ Future<String> _getDeviceSerialNumber() async {
 
 /// Checks if active survey has changed and pushes it to the stream if it has.
 Future<void> _checkActiveSurvey() async {
-  Survey? activeSurvey = await surveysDao.findActiveSurvey();
   await _getSurveys();
   Survey? newActiveSurvey = await surveysDao.findActiveSurvey();
-  if (activeSurvey?.id != newActiveSurvey?.id ||
-      activeSurvey?.modifiedAt != newActiveSurvey?.modifiedAt) {
-    SimpleLogger().info("New active survey is different from the old one!");
-    if (newActiveSurvey != null) {
-      SimpleLogger().info("New active survey is not null, pushing to stream!");
-      streamController.sink.add(newActiveSurvey);
-    } else {
-      SimpleLogger().info("New active survey is null, pushing to stream!");
-      streamController.sink.add(null);
-    }
-  } else {
-    SimpleLogger().info("New survey is same won't do anything");
-  }
+  streamController.sink.add(newActiveSurvey);
 }
 
 /// Gets all Surveys assigned to this device
@@ -192,6 +179,7 @@ Future<void> _checkActiveSurvey() async {
 Future<void> _getSurveys() async {
   surveys_api.DeviceDataApi deviceDataApi = await apiFactory.getDeviceDataApi();
   try {
+    SimpleLogger().info("Getting surveys...");
     String? deviceId = await keysDao.getDeviceId();
 
     if (deviceId == null) {
@@ -277,4 +265,4 @@ class MyApp extends StatelessWidget {
     inputSpecFile: "oss-surveys-api-spec/swagger.yaml",
     generatorName: Generator.dio,
     outputDirectory: "oss-surveys-api")
-class OssSurveysApi extends OpenapiGeneratorConfig {}
+class OssSurveysApi {}

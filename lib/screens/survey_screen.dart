@@ -17,9 +17,8 @@ import "package:oss_surveys_api/oss_surveys_api.dart" as surveys_api;
 
 /// Survey screen
 class SurveyScreen extends StatefulWidget {
-  const SurveyScreen({super.key, required this.survey});
-
   final database.Survey survey;
+  const SurveyScreen({super.key, required this.survey});
 
   static const nextButtonMessageChannel = "NextButton";
   static const selectOptionChannel = "SelectOption";
@@ -32,7 +31,7 @@ class SurveyScreen extends StatefulWidget {
 class _SurveyScreenState extends State<SurveyScreen> {
   _SurveyScreenState();
 
-  late StreamSubscription _subscription;
+  late StreamSubscription<database.Survey?> _subscription;
   bool _loading = true;
   late database.Survey _survey;
   int _currentPageNumber = 1;
@@ -51,7 +50,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
               ? 1
               : pageNumber;
       _controller
-          .loadHtmlString(_getPage()?.html ?? "No page found")
+          .loadHtmlString(_getPage(_pages)?.html ?? "No page found")
           .then((_) => SimpleLogger().info("Loaded page $_currentPageNumber"));
     });
     _timeoutTimer.reset();
@@ -59,7 +58,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
 
   /// Callback function for handling next page button click [message] from the WebView
   void _handleNextPageButton(JavaScriptMessage message) async {
-    database.Page? page = _getPage();
+    database.Page? page = _getPage(_pages);
     if (page!.questionType == surveys_api.PageQuestionType.MULTI_SELECT.name) {
       _navigateToPage(_currentPageNumber + 1);
       if (_selectedOptions.isNotEmpty) {
@@ -78,7 +77,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
 
   /// Callback function for handling option select [message] from the WebView
   void _handleOptionSelect(JavaScriptMessage message) async {
-    switch (_getPage()?.questionType) {
+    switch (_getPage(_pages)?.questionType) {
       case "SINGLE_SELECT":
         _handleSingleSelectOption(message.message);
         break;
@@ -102,7 +101,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
 
   /// Callback function for handling single select option clicking [message] from the WebView
   void _handleSingleSelectOption(String optionId) async {
-    database.Page page = _getPage()!;
+    database.Page page = _getPage(_pages)!;
     _navigateToPage(_currentPageNumber + 1);
     AnswerController.submitAnswer(
       optionId,
@@ -112,56 +111,52 @@ class _SurveyScreenState extends State<SurveyScreen> {
   }
 
   /// Gets current page from [_pages] list
-  database.Page? _getPage() {
-    return _pages.firstWhereOrNull(
+  database.Page? _getPage(List<database.Page> pages) {
+    return pages.firstWhereOrNull(
         (element) => element.pageNumber == _currentPageNumber);
   }
 
-  /// Navigates back to default screen
-  void _navigateBack() {
+  /// Navigates to given [target] screen
+  void _navigateTo<T extends StatefulWidget>(T target) {
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(
-        builder: (context) => const DefaultScreen(),
+      MaterialPageRoute<T>(
+        builder: (context) => target,
       ),
     );
   }
 
   /// Callback method for handling [event] pushed to the stream
-  Future _handleStreamEvent(dynamic event) async {
+  Future<void> _handleStreamEvent(dynamic event) async {
     SimpleLogger().info("Received stream event.");
     if (event is database.Survey) {
-      if (event.externalId != widget.survey.externalId) {
-        setState(() => _loading = true);
-        database.Survey? foundSurvey =
-            await surveysDao.findSurveyByExternalId(event.externalId);
-        SimpleLogger()
-            .info("Found survey with externalId ${foundSurvey?.externalId}");
-        var foundPages = await pagesDao.listPagesBySurveyId(foundSurvey!.id);
-        setState(() {
-          _currentPageNumber = 1;
-          _survey = foundSurvey;
-          _pages = foundPages;
-          _loading = false;
-          _controller
-              .loadHtmlString(_getPage()?.html ?? "No page found")
-              .then((_) => SimpleLogger().info("Loaded page 1"));
-        });
+      database.Survey? activeSurvey = await surveysDao.findActiveSurvey();
+      if (activeSurvey != null &&
+          widget.survey.externalId != activeSurvey.externalId) {
+        _navigateTo(SurveyScreen(survey: activeSurvey));
+      } else if (activeSurvey == null) {
+        _navigateTo(const DefaultScreen());
       }
     } else if (event == null) {
       SimpleLogger().info("Received null event, going to default screen...");
-      _navigateBack();
+      _navigateTo(const DefaultScreen());
     }
   }
 
   /// Loads pages from database, sets them in state and loads the first page in the WebView
-  Future _loadPages() async {
-    var foundPages = await pagesDao.listPagesBySurveyId(widget.survey.id);
+  Future<void> _loadPages() async {
+    var activeSurvey = await surveysDao.findActiveSurvey();
+    if (activeSurvey == null) {
+      SimpleLogger().info("No active survey found, navigating back...");
+      _navigateTo(const DefaultScreen());
+      return;
+    }
+    var foundPages = await pagesDao.listPagesBySurveyId(activeSurvey.id);
     setState(() {
-      _survey = widget.survey;
+      _survey = activeSurvey;
       _pages = foundPages;
       _controller
-          .loadHtmlString(_getPage()?.html ?? "No page found")
+          .loadHtmlString(_getPage(foundPages)?.html ?? "No page found")
           .then((_) => SimpleLogger().info("Loaded page 1"));
       _loading = false;
     });
@@ -175,7 +170,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
     if (_currentPageNumber != 1) {
       setState(() => _currentPageNumber = 1);
       _controller
-          .loadHtmlString(_getPage()?.html ?? "No page found")
+          .loadHtmlString(_getPage(_pages)?.html ?? "No page found")
           .then((_) => SimpleLogger().info("Loaded page 1"));
     }
   }
@@ -212,7 +207,8 @@ class _SurveyScreenState extends State<SurveyScreen> {
       _surveyNavigationTimer?.cancel();
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => const ManagementScreen()),
+        MaterialPageRoute<ManagementScreen>(
+            builder: (context) => const ManagementScreen()),
       ).then((_) => _setupTimers());
     }
 

@@ -2,7 +2,7 @@ import "dart:async";
 import "dart:convert";
 import "dart:io";
 import "package:crypto/crypto.dart";
-import "package:oss_surveys_customer/main.dart";
+import "package:oss_surveys_customer/utils/model/meta_file.dart";
 import "package:path_provider/path_provider.dart";
 import "package:path/path.dart" as p;
 import "package:simple_logger/simple_logger.dart";
@@ -15,7 +15,7 @@ class OfflineFileController {
   /// Gets offlined file by [url]
   ///
   /// Downloads file by default, can be changed by setting [download] to false.
-  Future<File?> getOfflineFile(String url, {download = true}) async {
+  Future<File?> getOfflineFile(String url, {bool download = true}) async {
     try {
       if (download) {
         return _download(url);
@@ -40,12 +40,15 @@ class OfflineFileController {
   /// If the same file is already downloaded, applies its ETag to the request headers to not download it again in case it is not modified.
   /// In case of file not modified, returns the already offlined file.
   Future<File?> _download(String url) async {
-    SimpleLogger().info("Offlining file $url...");
+    SimpleLogger().info("Loading file $url...");
 
     Uri uri = Uri.parse(url);
     String fileName = _getOfflineFileName(url);
     File? metaFile = await _getDirectoryFileByNameAndExt(
-        await getImagesDirectoryPath(), fileName, ".meta");
+      await getImagesDirectoryPath(),
+      p.basenameWithoutExtension(fileName),
+      ".meta",
+    );
 
     HttpClientRequest request = await httpClient.getUrl(uri);
 
@@ -70,8 +73,10 @@ class OfflineFileController {
         {
           SimpleLogger().info("File not changed. Using offlined file $url");
 
-          return await _getDirectoryFileByNameAndExt(
-              await getImagesDirectoryPath(), fileName, ".jpeg");
+          return await _getDirectoryFile(
+            await getImagesDirectoryPath(),
+            fileName,
+          );
         }
       default:
         {
@@ -114,15 +119,17 @@ class OfflineFileController {
     File metaFile = File(await _getMetaFilePath(file));
 
     if (await metaFile.exists()) {
-      metaFile.delete();
+      await metaFile.delete();
     }
 
-    await metaFile.writeAsString('{"eTag":${eTag != null ? "$eTag" : null}}');
+    await metaFile.writeAsString(
+      jsonEncode(MetaFile(eTag).toJson()),
+    );
   }
 
   /// Gets path to given [file]s .meta file
   Future<String> _getMetaFilePath(File file) async =>
-      "${(await getImagesDirectoryPath())}/${p.withoutExtension(p.basename(file.path))}.meta";
+      "${(await getImagesDirectoryPath())}/${p.basenameWithoutExtension(file.path)}.meta";
 
   /// Handles creating of new file with [fileName].
   ///
@@ -131,7 +138,6 @@ class OfflineFileController {
       String fileName, HttpClientResponse response) async {
     String? eTag = response.headers.value("ETag");
     File existingFile = File(fileName);
-    String? fileExtension = _getFileExtFromHeaders(response);
     String filePartName = "${(await getImagesDirectoryPath())}/$fileName.part";
     File filePart = File(filePartName);
     String newFileName = filePart.path.replaceAll(".part", "");
@@ -175,51 +181,30 @@ class OfflineFileController {
   ///
   /// Returns found file or null, if specified file was not found.
   Future<File?> _getDirectoryFileByNameAndExt(
-      String directoryPath, String fileName, String fileExt) async {
+    String directoryPath,
+    String fileName,
+    String fileExt,
+  ) async =>
+      await _getDirectoryFile(directoryPath, fileName + fileExt);
+
+  /// Searches directory at [directoryPath] for file with [fileName].
+  ///
+  /// Returns found file or null, if specified file was not found.
+  Future<File?> _getDirectoryFile(
+    String directoryPath,
+    String fileName,
+  ) async {
     try {
       return File((await Directory(directoryPath).list().firstWhere(
               (fileSystemEntity) =>
-                  p.basenameWithoutExtension(fileSystemEntity.path) ==
-                      fileName &&
-                  p.extension(fileSystemEntity.path) == fileExt))
+                  p.basename(fileSystemEntity.path) == fileName))
           .path);
     } catch (exception) {
-      SimpleLogger()
-          .warning("Couldn't find File $fileName$fileExt in $directoryPath");
+      SimpleLogger().warning("Couldn't find File $fileName in $directoryPath");
 
       return null;
     }
   }
-
-  /// Gets desired file extension from [response] Content-Type header.
-  ///
-  /// Returns null if Content-Type header is not present.
-  String? _getFileExtFromHeaders(HttpClientResponse response) {
-    String? contentTypeHeader = response.headers.value("Content-Type");
-
-    if (contentTypeHeader == null) {
-      return null;
-    }
-
-    return contentTypeHeader.substring(contentTypeHeader.lastIndexOf("/") + 1);
-  }
-}
-
-/// MetaFile class
-///
-/// Describes content of .meta files associated with offlined files.
-/// Contains files ETag to check if online file has changed since last download.
-class MetaFile {
-  MetaFile(this.eTag);
-
-  String? eTag;
-
-  /// Factory method for constructing MetaFile instances from [json].
-  factory MetaFile.fromJson(Map<String, dynamic> json) =>
-      MetaFile(json["eTag"] as String?);
-
-  /// Returns MetaFile as JSON (map).
-  Map<String, dynamic> toJson() => {"eTag": eTag};
 }
 
 final offlineFileController = OfflineFileController();

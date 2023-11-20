@@ -14,7 +14,7 @@ import "package:simple_logger/simple_logger.dart";
 /// This class contains methods for processing Survey Pages
 /// e.g. offloading media, processing HTML, etc.
 class PagesController {
-  /// Persists [page] with reference to persited Survey by [surveyId]
+  /// Persists [page] with reference to persisted Survey by [surveyId]
   ///
   /// Offlines medias and processes HTML into displayable format and persists it
   Future<void> persistPage(
@@ -61,7 +61,7 @@ class PagesController {
   }
 
   /// Deletes Pages by [surveyId]
-  Future deletePagesBySurveyId(int surveyId) async {
+  Future<void> deletePagesBySurveyId(int surveyId) async {
     List<database.Page> pages = await pagesDao.listPagesBySurveyId(surveyId);
 
     for (var page in pages) {

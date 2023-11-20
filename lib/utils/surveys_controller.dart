@@ -1,8 +1,6 @@
-import "package:drift/drift.dart";
 import "package:oss_surveys_customer/database/dao/surveys_dao.dart";
 import "package:oss_surveys_customer/database/database.dart" as database;
 import "package:oss_surveys_api/oss_surveys_api.dart" as surveys_api;
-import "package:oss_surveys_customer/main.dart";
 import "package:oss_surveys_customer/utils/pages_controller.dart";
 import "package:simple_logger/simple_logger.dart";
 import "../database/dao/pages_dao.dart";
@@ -20,14 +18,12 @@ class SurveysController {
       SimpleLogger()
           .info("Persisting new survey ${newSurvey.title} ${newSurvey.id}");
       database.Survey createdSurvey = await surveysDao.createSurvey(
-        database.SurveysCompanion.insert(
-          externalId: newSurvey.id!,
-          title: newSurvey.title!,
-          publishStart: Value(newSurvey.publishStartTime),
-          publishEnd: Value(newSurvey.publishEndTime),
-          timeout: newSurvey.timeout!,
-          modifiedAt: newSurvey.metadata!.modifiedAt!,
-        ),
+        externalId: newSurvey.id!,
+        title: newSurvey.title!,
+        publishStart: newSurvey.publishStartTime,
+        publishEnd: newSurvey.publishEndTime,
+        timeout: newSurvey.timeout!,
+        modifiedAt: newSurvey.metadata!.modifiedAt!,
       );
 
       await _handlePages(newSurvey.pages?.toList(), createdSurvey.id);
@@ -56,7 +52,7 @@ class SurveysController {
   }
 
   /// Deletes Survey and associated pages by [externalId]
-  Future deleteSurvey(String externalId) async {
+  Future<void> deleteSurvey(String externalId) async {
     database.Survey? foundSurvey =
         await surveysDao.findSurveyByExternalId(externalId);
 
@@ -70,7 +66,7 @@ class SurveysController {
   }
 
   /// Handles Survey [pages]
-  Future _handlePages(
+  Future<void> _handlePages(
     List<surveys_api.DeviceSurveyPageData>? pages,
     int surveyId,
   ) async {
