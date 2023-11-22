@@ -1,4 +1,5 @@
 import "package:drift/drift.dart";
+import "package:list_ext/list_ext.dart";
 import "package:oss_surveys_customer/database/database.dart";
 import "../model/survey.dart";
 import "package:oss_surveys_api/oss_surveys_api.dart" as surveys_api;
@@ -11,8 +12,24 @@ class SurveysDao extends DatabaseAccessor<Database> with _$SurveysDaoMixin {
   SurveysDao(Database database) : super(database);
 
   /// Creates and persists new Survey from REST [newSurvey]
-  Future<Survey> createSurvey(SurveysCompanion newSurvey) async {
-    int createdSurveyId = await into(surveys).insert(newSurvey);
+  Future<Survey> createSurvey({
+    required String externalId,
+    required String title,
+    required int timeout,
+    required DateTime modifiedAt,
+    DateTime? publishStart,
+    DateTime? publishEnd,
+  }) async {
+    int createdSurveyId = await into(surveys).insert(
+      SurveysCompanion.insert(
+        externalId: externalId,
+        title: title,
+        publishStart: Value(publishStart),
+        publishEnd: Value(publishEnd),
+        timeout: timeout,
+        modifiedAt: modifiedAt,
+      ),
+    );
 
     return await (select(surveys)
           ..where((row) => row.id.equals(createdSurveyId)))
@@ -32,27 +49,31 @@ class SurveysDao extends DatabaseAccessor<Database> with _$SurveysDaoMixin {
   }
 
   /// Deletes persisted Survey by [id]
-  Future deleteSurvey(int id) async {
+  Future<int> deleteSurvey(int id) async {
     return await (delete(surveys)..where((row) => row.id.equals(id))).go();
   }
 
   /// Finds currently active Survey
   Future<Survey?> findActiveSurvey() async {
-    Survey? foundSurvey = await (select(surveys)
+    final now = DateTime.now();
+    List<Survey> foundSurveys = await (select(surveys)
           ..where(
             (row) =>
-                row.publishStart.isSmallerOrEqualValue(DateTime.now()) &
-                row.publishEnd.isBiggerOrEqualValue(DateTime.now()),
+                (row.publishStart.isNull() |
+                    row.publishStart.isSmallerOrEqualValue(now)) &
+                (row.publishEnd.isBiggerOrEqualValue(now) |
+                    row.publishEnd.isNull()),
           )
-          ..limit(1))
-        .getSingleOrNull();
+          ..orderBy([(row) => OrderingTerm.desc(row.publishStart)]))
+        .get();
 
-    foundSurvey ??= await (select(surveys)
-          ..where((row) => row.publishStart.isNull() & row.publishEnd.isNull())
-          ..limit(1))
-        .getSingleOrNull();
-
-    return foundSurvey;
+    return foundSurveys.firstWhereOrNull(
+      (element) =>
+          element.publishStart?.isBefore(
+            now,
+          ) ??
+          true,
+    );
   }
 
   /// Updates [survey]

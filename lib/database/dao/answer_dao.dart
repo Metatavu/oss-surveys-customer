@@ -24,7 +24,7 @@ class AnswersDao extends DatabaseAccessor<Database> with _$AnswersDaoMixin {
   }
 
   /// Deletes an answer by [id]
-  Future deleteAnswer(int id) async {
+  Future<int> deleteAnswer(int id) async {
     return await (delete(answers)..where((answer) => answer.id.equals(id)))
         .go();
   }

@@ -7,13 +7,14 @@ import "package:oss_surveys_customer/database/database.dart" as database;
 import "package:oss_surveys_customer/main.dart";
 import "package:oss_surveys_customer/utils/html_controller.dart";
 import "package:oss_surveys_customer/utils/offline_file_controller.dart";
+import "package:simple_logger/simple_logger.dart";
 
 /// Pages Controller class
 ///
 /// This class contains methods for processing Survey Pages
 /// e.g. offloading media, processing HTML, etc.
 class PagesController {
-  /// Persists [page] with reference to persited Survey by [surveyId]
+  /// Persists [page] with reference to persisted Survey by [surveyId]
   ///
   /// Offlines medias and processes HTML into displayable format and persists it
   Future<void> persistPage(
@@ -30,7 +31,7 @@ class PagesController {
       mediaFilesMap,
     );
     if (existingPage == null) {
-      logger.info("Persisting new page ${page.id}");
+      SimpleLogger().info("Persisting new page ${page.id}");
       await pagesDao.createPage(
         database.PagesCompanion.insert(
           externalId: page.id!,
@@ -43,7 +44,7 @@ class PagesController {
       );
     } else {
       if (_comparePages(existingPage, page)) {
-        logger.info("Page with id ${page.id} is updated, updating...");
+        SimpleLogger().info("Page with id ${page.id} is updated, updating...");
         await pagesDao.updatePage(
           existingPage,
           database.PagesCompanion.insert(
@@ -60,7 +61,7 @@ class PagesController {
   }
 
   /// Deletes Pages by [surveyId]
-  Future deletePagesBySurveyId(int surveyId) async {
+  Future<void> deletePagesBySurveyId(int surveyId) async {
     List<database.Page> pages = await pagesDao.listPagesBySurveyId(surveyId);
 
     for (var page in pages) {
@@ -91,7 +92,7 @@ class PagesController {
           .getOfflineFile(imageBaseUrl + property.value);
 
       if (offlinedFile == null) {
-        logger.shout("Couldn't offline media ${property.value}");
+        SimpleLogger().shout("Couldn't offline media ${property.value}");
         continue;
       }
 

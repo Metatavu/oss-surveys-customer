@@ -57,8 +57,14 @@ class HTMLController {
       surveys_api.LayoutVariable? layoutVariable = page.layoutVariables
           ?.firstWhereOrNull((variable) => variable.key == child.id);
 
-      child.replaceWith(_insertPageProperty(
-          child, foundProperty, layoutVariable, mediaFilesMap));
+      child.replaceWith(
+        _insertPageProperty(
+          child,
+          foundProperty,
+          layoutVariable,
+          mediaFilesMap,
+        ),
+      );
       child.children.addAll(
         _handleChildren(
           child.children,
@@ -102,7 +108,7 @@ class HTMLController {
     element.children.addAll(page.question!.options.map((e) {
       switch (page.question!.type) {
         case surveys_api.PageQuestionType.SINGLE_SELECT:
-          return _createSingleSelect(e);
+          return _createSingleSelect(element, e);
         case surveys_api.PageQuestionType.MULTI_SELECT:
           return _createMultiSelect(e);
         default:
@@ -111,24 +117,61 @@ class HTMLController {
     }));
   }
 
-  /// Creates a single select [option]
-  static Element _createSingleSelect(surveys_api.PageQuestionOption option) {
+  /// Creates a single select option button from [option]
+  @Deprecated(
+      "Used to support old format of layouts. Use _createSingleSelectDiv with new layouts.")
+  static Element _createSingleSelectButton(
+    surveys_api.PageQuestionOption option,
+  ) {
     Element optionElement = Element.html('''
       <button class="option">${option.questionOptionValue}</button>
     ''');
-
-    optionElement.attributes["ontouchstart"] = "addActive(this)";
-    optionElement.attributes["ontouchend"] =
-        "selectSingleOption(this, '${option.id}')";
+    _addSingleSelectTouchEvents(optionElement);
 
     return optionElement;
   }
 
+  /// Creates a single select option div from [option]
+  static Element _createSingleSelectDiv(
+    surveys_api.PageQuestionOption option,
+  ) {
+    Element divElement = Element.html("<div class=\"option\"></option>");
+    List<Element> optionElements =
+        parse(option.questionOptionValue).body!.children;
+    optionElements.forEach(_addSingleSelectTouchEvents);
+    divElement.children.addAll(optionElements);
+
+    return divElement;
+  }
+
+  /// Adds touch event listeners to single select option [element]
+  static void _addSingleSelectTouchEvents(Element element) {
+    element.attributes["ontouchstart"] = "addActive(this)";
+    element.attributes["ontouchend"] =
+        "selectSingleOption(this, '${element.id}')";
+  }
+
+  /// Creates a single select [option]
+  ///
+  /// Legacy layouts use plain text as options, new layouts use HTML.
+  /// Therefore this method interprets whether the option is HTML or plain text and creates the option accordingly.
+  static Element _createSingleSelect(
+    Element element,
+    surveys_api.PageQuestionOption option,
+  ) {
+    switch (option.questionOptionValue.startsWith("<")) {
+      case true:
+        return _createSingleSelectDiv(option);
+      default:
+        return _createSingleSelectButton(option);
+    }
+  }
+
   /// Creates a multi select [option]
   static Element _createMultiSelect(surveys_api.PageQuestionOption option) {
-    Element optionElement = Element.html('''
-      <div id="${option.id}" class="multi-option">${option.questionOptionValue}</div>
-    ''');
+    Element optionElement = Element.html("<div class=\"multi-option\"></div>");
+    optionElement.children
+        .addAll(parse(option.questionOptionValue).body!.children);
 
     optionElement.attributes["ontouchend"] =
         "selectMultiOption('${option.id}')";
@@ -152,7 +195,10 @@ class HTMLController {
 
     switch (layoutVariable.type) {
       case surveys_api.LayoutVariableType.TEXT:
-        element.text = pageProperty.value.toString();
+        if (element.localName == "div") {
+          element.children.clear();
+          element.children.addAll(parse(pageProperty.value).body!.children);
+        }
 
         return element;
       case surveys_api.LayoutVariableType.IMAGE_URL:
@@ -202,6 +248,8 @@ class HTMLController {
               padding: 10% 215px 215px 10%;
               box-sizing: border-box;
               background-size: cover;
+            }
+            .page.text-shadow {
               text-shadow: 0px 0px 15px rgba(0, 0, 0, 0.75);
             }
             .logo-container {
@@ -266,9 +314,11 @@ class HTMLController {
               color: #fff;
               border: 4px solid #fff;
               margin-bottom: 5%;
+            }
+            .page.text-shadow .option {
               text-shadow: 0px 0px 15px rgba(0, 0, 0, 0.75);
               box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.25);
-              background-color: rgba(0,0,0,0.1);
+              background: rgba(0,0,0,0.1);
             }
             .multi-option {
               position: relative;
@@ -282,6 +332,8 @@ class HTMLController {
               background-color: transparent;
               transition: background-color 0.2s ease-in-out;
               margin-bottom: 5%;
+            }
+            .page.text-shadow .multi-option {
               text-shadow: 0px 0px 15px rgba(0, 0, 0, 0.75);
             }
             .multi-option:before {
@@ -297,6 +349,12 @@ class HTMLController {
               background-color: rgba(0, 0, 0, 0.1);
             }
             .multi-option.selected:before {
+              background-color: rgba(0, 0, 0, 0.2);
+            }
+            .page.text-shadow .multi-option:before {
+              background-color: rgba(0, 0, 0, 0.1);
+            }
+            .multi-option.selected:before, .page.text-shadow .multi-option.selected:before {
               background-color: rgba(0, 0, 0, 0.2);
             }
             .multi-option.selected:after {

@@ -3,15 +3,16 @@ import "package:flutter/services.dart";
 import "package:oss_surveys_customer/utils/offline_file_controller.dart";
 import "package:oss_surveys_customer/main.dart";
 import "package:path_provider/path_provider.dart";
+import "package:simple_logger/simple_logger.dart";
 import "package:typed_data/typed_data.dart";
 
 /// Loads offlined font into Flutter Engine
 Future<void> loadOfflinedFont() async {
-  logger.info("Loading offlined font...");
+  SimpleLogger().info("Loading offlined font...");
   FontLoader fontLoader = FontLoader("S-Bonus-Regular");
   fontLoader.addFont(getOfflinedFont());
   await fontLoader.load();
-  logger.info("Offlined font loaded into engine!");
+  SimpleLogger().info("Offlined font loaded into engine!");
 }
 
 /// Returns offlined font.
@@ -22,14 +23,14 @@ Future<ByteData> getOfflinedFont() async {
       File("${(await getApplicationSupportDirectory()).path}/fonts/font.ttf");
 
   if (await offlinedFont.exists()) {
-    logger.info("Using already downloaded offlined font!");
+    SimpleLogger().info("Using already downloaded offlined font!");
 
     return await offlinedFont
         .readAsBytes()
         .then((value) => ByteData.view(value.buffer));
   }
 
-  logger.info("Didn't find offlined font, downloading...");
+  SimpleLogger().info("Didn't find offlined font, downloading...");
   HttpClient client = HttpClient();
   Uri uri = Uri.parse(configuration.getFontUrl());
   HttpClientResponse response =

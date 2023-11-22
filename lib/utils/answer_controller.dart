@@ -1,5 +1,6 @@
 import "package:oss_surveys_customer/database/database.dart" as database;
 import "package:oss_surveys_api/oss_surveys_api.dart" as surveys_api;
+import "package:simple_logger/simple_logger.dart";
 import "../database/dao/answer_dao.dart";
 import "../database/dao/keys_dao.dart";
 import "../main.dart";
@@ -32,13 +33,13 @@ class AnswerController {
         pageId: page.externalId,
         devicePageSurveyAnswer: builder.build(),
       );
-      logger.info("Answer submitted successfully!");
-      logger.info("Device ID: $deviceId");
-      logger.info("Device Survey ID: $deviceSurveyId");
-      logger.info("Page ID: ${page.externalId}");
-      logger.info("Answer: $answer");
+      SimpleLogger().info("Answer submitted successfully!");
+      SimpleLogger().info("Device ID: $deviceId");
+      SimpleLogger().info("Device Survey ID: $deviceSurveyId");
+      SimpleLogger().info("Page ID: ${page.externalId}");
+      SimpleLogger().info("Answer: $answer");
     } catch (exception, stackTrace) {
-      logger.shout(
+      SimpleLogger().shout(
         "Error while answering single select question, persisting for later...: $exception",
       );
       await reportError(exception, stackTrace);
