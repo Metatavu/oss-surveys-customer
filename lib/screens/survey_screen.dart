@@ -203,7 +203,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
   }
 
   void _handleManagementButton() {
-    if (_clicks >= 10) {
+    if (_clicks >= 9) {
       _surveyNavigationTimer?.cancel();
       Navigator.push(
         context,

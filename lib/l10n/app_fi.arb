@@ -4,5 +4,6 @@
   "currentVersion": "Laitteen versio: {currentVersion}",
   "availableVersion": "Palvelimella oleva versio: {availableVersion}",
   "installVersionButton": "Asenna uusin versio",
-  "mqttClientConnectionStatus": "MQTT yhteyden tila: {status}"
+  "mqttClientConnectionStatus": "MQTT yhteyden tila: {status}",
+  "unsubmittedAnswersCount": "Lähettämättömiä vastauksia: {count}"
 }
