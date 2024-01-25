@@ -100,7 +100,7 @@ class _DefaultScreenState extends State<DefaultScreen> {
   }
 
   void _handleManagementButton() {
-    if (_clicks >= 10) {
+    if (_clicks >= 9) {
       _surveyNavigationTimer.cancel();
       Navigator.push(
         context,

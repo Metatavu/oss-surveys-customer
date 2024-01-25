@@ -40,5 +40,15 @@
         "example": "Online"
       }
     }
+  },
+  "unsubmittedAnswersCount": "Unsubmitted answers: {count}",
+  "@unsubmittedAnswersCount": {
+    "description": "Count of unsubmitted answers.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "5"
+      }
+    }
   }
 }
