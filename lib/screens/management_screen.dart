@@ -1,5 +1,7 @@
 import "dart:async";
 import "package:flutter/material.dart";
+import "package:oss_surveys_customer/database/dao/answer_dao.dart";
+import "package:oss_surveys_customer/database/database.dart";
 import "package:oss_surveys_customer/main.dart";
 import "package:oss_surveys_customer/mqtt/mqtt_client.dart";
 import "dart:core";
@@ -23,6 +25,8 @@ class _ManagementScreenState extends State<ManagementScreen> {
   bool _serverVersionResolvingError = false;
   bool _loading = true;
   bool _isMqttConnected = false;
+  int _unsubmittedAnswersCount = 0;
+  Timer? _mqttTimer;
 
   /// On click handler for button
   Future<void> _handleUpdate() async {
@@ -50,15 +54,30 @@ class _ManagementScreenState extends State<ManagementScreen> {
     });
   }
 
+  /// Counts unsubmitted answers from local database
+  Future<void> _countUnsubmittedAnswers() async {
+    List<Answer> unsubmittedAnswers = await answersDao.listAnswers();
+    setState(() {
+      _unsubmittedAnswersCount = unsubmittedAnswers.length;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
     _checkVersions();
+    _countUnsubmittedAnswers();
     setState(() => _isMqttConnected = mqttClient.isConnected);
-    Timer.periodic(
+    _mqttTimer = Timer.periodic(
       const Duration(seconds: 1),
       (_) => setState(() => _isMqttConnected = mqttClient.isConnected),
     );
+  }
+
+  @override
+  void dispose() {
+    _mqttTimer?.cancel();
+    super.dispose();
   }
 
   @override
@@ -115,6 +134,15 @@ class _ManagementScreenState extends State<ManagementScreen> {
                     child: Text(
                       AppLocalizations.of(context)!.mqttClientConnectionStatus(
                         _isMqttConnected ? "online" : "offline",
+                      ),
+                      style: const TextStyle(fontSize: 50),
+                    ),
+                  ),
+                  Container(
+                    margin: const EdgeInsets.only(top: 10),
+                    child: Text(
+                      AppLocalizations.of(context)!.unsubmittedAnswersCount(
+                        _unsubmittedAnswersCount,
                       ),
                       style: const TextStyle(fontSize: 50),
                     ),

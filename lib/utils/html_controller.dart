@@ -135,7 +135,8 @@ class HTMLController {
   static Element _createSingleSelectDiv(
     surveys_api.PageQuestionOption option,
   ) {
-    Element divElement = Element.html("<div class=\"option\"></option>");
+    Element divElement =
+        Element.html("<div class=\"option\" id=\"${option.id}\"></option>");
     List<Element> optionElements =
         parse(option.questionOptionValue).body!.children;
     optionElements.forEach(_addSingleSelectTouchEvents);
@@ -169,7 +170,8 @@ class HTMLController {
 
   /// Creates a multi select [option]
   static Element _createMultiSelect(surveys_api.PageQuestionOption option) {
-    Element optionElement = Element.html("<div class=\"multi-option\"></div>");
+    Element optionElement =
+        Element.html("<div class=\"multi-option\" id=\"${option.id}\"></div>");
     optionElement.children
         .addAll(parse(option.questionOptionValue).body!.children);
 
