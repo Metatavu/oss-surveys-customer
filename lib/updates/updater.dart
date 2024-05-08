@@ -12,11 +12,56 @@ import "../utils/offline_file_controller.dart";
 
 /// Version updater
 class Updater {
-  /// Gets applications current version number
+  /// Returns whether given value is an integer
+  static bool _isInt(String? s) {
+    if (s == null) {
+      return false;
+    }
+    return int.tryParse(s) != null;
+  }
+
+  /// Gets applications current version
   static Future<String> getCurrentVersion() async {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
 
     return packageInfo.version;
+  }
+
+  /// Parses version code from version string
+  static int _parseVersionCodeFromVersion(String version) {
+    List<String> versionArray = [];
+    int? parsedVersionCode;
+    for (final segment in version.split(".")) {
+      List<String> parsedSegmentChars = [];
+      for (final char in segment.split("")) {
+        if (_isInt(char)) {
+          parsedSegmentChars.add(char);
+        }
+      }
+      String parsedSegment = parsedSegmentChars.join("").padLeft(2, "0");
+      versionArray.add(parsedSegment);
+    }
+    parsedVersionCode = int.tryParse(versionArray.join(""));
+    if (parsedVersionCode == null) {
+      throw Exception("Couldn't parse versionCode from $version");
+    }
+
+    return parsedVersionCode;
+  }
+
+  /// Gets applications current version code
+  static Future<int> getCurrentVersionCode() async {
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+
+    int? versionCode = int.tryParse(packageInfo.buildNumber);
+
+    if (versionCode == null || versionCode == 1) {
+      SimpleLogger().warning("Couldn't parse versionCode");
+      String version = await getCurrentVersion();
+      return _parseVersionCodeFromVersion(version);
+    }
+
+    return versionCode;
   }
 
   /// Gets latest version from the server
