@@ -89,4 +89,9 @@ QueryExecutor _openConnection(NativeDatabase? database) {
   });
 }
 
+/// Opens connection from background isolate
+QueryExecutor openConnectionFromBackground() {
+  return _openConnection(null);
+}
+
 final database = Database();

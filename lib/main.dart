@@ -15,6 +15,7 @@ import "package:oss_surveys_customer/screens/default_screen.dart";
 import "package:oss_surveys_customer/theme/font.dart";
 import "package:oss_surveys_customer/theme/theme.dart";
 import "package:oss_surveys_customer/updates/updater.dart";
+import "package:oss_surveys_customer/utils/background_service.dart";
 import "package:oss_surveys_customer/utils/surveys_controller.dart";
 import "package:responsive_framework/responsive_framework.dart";
 import "package:sentry_flutter/sentry_flutter.dart";
@@ -77,6 +78,7 @@ void main() async {
   }
 
   _setupTimers();
+  BackgroundService.start();
 }
 
 /// Configures logger to use [logLevel] and formats log messages to be cleaner than by default.
