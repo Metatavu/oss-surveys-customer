@@ -20,7 +20,7 @@ publish_to: "none" # Remove this line if you wish to publish to pub.dev
 version: 0.9.22
 
 environment:
-  sdk: ">=3.0.0"
+  sdk: ">=3.0.6 <4.0.0"
 
 scripts:
   # run is a default script. To use it, simply type
@@ -40,8 +40,8 @@ scripts:
 dependencies:
   flutter:
     sdk: flutter
-  build: any
-  openapi_generator_annotations: ^4.0.0
+  build: ^2.3.1
+  openapi_generator_annotations: ^5.0.2
   flutter_dotenv: ^5.0.2
   simple_logger: ^1.9.0+2
   mqtt_client: ^9.8.1
@@ -55,7 +55,7 @@ dependencies:
     path: oss-surveys-api
   flutter_localizations:
     sdk: flutter
-  intl: any
+  intl: ^0.18.1
   cupertino_icons: ^1.0.2
   flutter_svg: ^2.0.4
   meta: ^1.8.0
@@ -68,7 +68,7 @@ dependencies:
   responsive_framework: ^1.0.0
   list_ext: ^1.0.6
   async: ^2.10.0
-  flutter_app_installer: ^0.0.3
+  flutter_app_installer: ^1.0.0
   package_info_plus: ^4.0.1
   sentry_flutter: ^7.8.0
   built_value: ^8.8.0
@@ -76,12 +76,13 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  openapi_generator: ^4.0.0
-  build_runner: ^2.1.8
+  openapi_generator: ^5.0.2
+  build_runner: ^2.3.3
   drift_dev: ^2.18.0
   json_serializable: ^6.8.0
-  test: any
+  test: ^1.24.9
   flutter_lints: ^2.0.0
+  watcher: ^1.1.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

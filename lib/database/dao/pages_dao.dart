@@ -5,7 +5,7 @@ import "../model/page.dart";
 part "pages_dao.g.dart";
 
 /// Pages DAO
-@DriftAccessor(tables: [Pages], include: {"tables.drift"})
+@DriftAccessor(tables: [Pages], include: {"../tables.drift"})
 class PagesDao extends DatabaseAccessor<Database> with _$PagesDaoMixin {
   PagesDao(Database database) : super(database);
 

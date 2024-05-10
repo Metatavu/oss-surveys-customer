@@ -78,7 +78,7 @@ void main() async {
   }
 
   _setupTimers();
-  BackgroundService.start();
+  // BackgroundService.start();
 }
 
 /// Configures logger to use [logLevel] and formats log messages to be cleaner than by default.
@@ -258,7 +258,7 @@ class MyApp extends StatelessWidget {
 /// API Client generator config
 @Openapi(
     additionalProperties: AdditionalProperties(pubName: "oss_surveys_api"),
-    inputSpecFile: "oss-surveys-api-spec/swagger.yaml",
+    inputSpec: InputSpec(path: "oss-surveys-api-spec/swagger.yaml"),
     generatorName: Generator.dio,
     outputDirectory: "oss-surveys-api")
 class OssSurveysApi {}

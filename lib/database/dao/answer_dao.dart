@@ -5,7 +5,7 @@ import "../model/answer.dart";
 part "answer_dao.g.dart";
 
 /// Answers DAO
-@DriftAccessor(tables: [Answers], include: {"tables.drift"})
+@DriftAccessor(tables: [Answers], include: {"../tables.drift"})
 class AnswersDao extends DatabaseAccessor<Database> with _$AnswersDaoMixin {
   AnswersDao(Database database) : super(database);
 
