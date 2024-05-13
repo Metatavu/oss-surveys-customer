@@ -23,7 +23,9 @@ part "database.g.dart";
   "tables.drift"
 })
 class Database extends _$Database {
-  Database({NativeDatabase? database}) : super(_openConnection(database));
+  Database({NativeDatabase? database}) : super(_openConnection());
+  Database.fromQueryExecutor([QueryExecutor? e])
+      : super(e ?? _openConnection());
 
   @override
   int get schemaVersion => 5;
@@ -77,21 +79,13 @@ class Database extends _$Database {
 }
 
 /// Opens connection
-QueryExecutor _openConnection(NativeDatabase? database) {
-  if (database != null) {
-    return database;
-  }
+QueryExecutor _openConnection() {
   return LazyDatabase(() async {
     final dbFolder = await getApplicationDocumentsDirectory();
     final file = File(p.join(dbFolder.path, "db.sqlite"));
 
-    return NativeDatabase(file);
+    return NativeDatabase.createInBackground(file);
   });
-}
-
-/// Opens connection from background isolate
-QueryExecutor openConnectionFromBackground() {
-  return _openConnection(null);
 }
 
 final database = Database();

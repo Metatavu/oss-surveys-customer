@@ -126,7 +126,7 @@ class HTMLController {
     Element optionElement = Element.html('''
       <button class="option">${option.questionOptionValue}</button>
     ''');
-    _addSingleSelectTouchEvents(optionElement);
+    _addSingleSelectTouchEvents(optionElement, option.id!);
 
     return optionElement;
   }
@@ -139,17 +139,18 @@ class HTMLController {
         Element.html("<div class=\"option\" id=\"${option.id}\"></option>");
     List<Element> optionElements =
         parse(option.questionOptionValue).body!.children;
-    optionElements.forEach(_addSingleSelectTouchEvents);
+    for (var element in optionElements) {
+      _addSingleSelectTouchEvents(element, option.id!);
+    }
     divElement.children.addAll(optionElements);
 
     return divElement;
   }
 
   /// Adds touch event listeners to single select option [element]
-  static void _addSingleSelectTouchEvents(Element element) {
+  static void _addSingleSelectTouchEvents(Element element, String optionId) {
     element.attributes["ontouchstart"] = "addActive(this)";
-    element.attributes["ontouchend"] =
-        "selectSingleOption(this, '${element.id}')";
+    element.attributes["ontouchend"] = "selectSingleOption(this, '$optionId')";
   }
 
   /// Creates a single select [option]

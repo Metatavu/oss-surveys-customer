@@ -30,8 +30,9 @@ class AnswersDao extends DatabaseAccessor<Database> with _$AnswersDaoMixin {
   }
 
   /// Lists all answers
-  Future<List<Answer>> listAnswers() async {
-    return await select(answers).get();
+  Future<List<Answer>> listAnswers({int? limit}) async {
+    if (limit == null) return await select(answers).get();
+    return await (select(answers)..limit(limit)).get();
   }
 }
 

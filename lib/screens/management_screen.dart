@@ -2,11 +2,11 @@ import "dart:async";
 import "package:flutter/material.dart";
 import "package:oss_surveys_customer/database/dao/answer_dao.dart";
 import "package:oss_surveys_customer/database/database.dart";
+import "package:oss_surveys_customer/l10n/gen_l10n/app_localizations.dart";
 import "package:oss_surveys_customer/main.dart";
 import "package:oss_surveys_customer/mqtt/mqtt_client.dart";
 import "dart:core";
 import "package:oss_surveys_customer/updates/updater.dart";
-import "package:flutter_gen/gen_l10n/app_localizations.dart";
 
 /// Management Screen
 ///

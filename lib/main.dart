@@ -1,3 +1,4 @@
+// Openapi Generator last run: : 2024-05-13T12:25:07.088836
 import "dart:async";
 import "dart:io";
 import "package:device_info_plus/device_info_plus.dart";
@@ -10,6 +11,7 @@ import "package:oss_surveys_customer/api/api_factory.dart";
 import "package:oss_surveys_customer/config/configuration.dart";
 import "package:oss_surveys_customer/database/dao/keys_dao.dart";
 import "package:oss_surveys_customer/database/dao/surveys_dao.dart";
+import "package:oss_surveys_customer/l10n/gen_l10n/app_localizations.dart";
 import "package:oss_surveys_customer/mqtt/mqtt_client.dart";
 import "package:oss_surveys_customer/screens/default_screen.dart";
 import "package:oss_surveys_customer/theme/font.dart";
@@ -20,7 +22,6 @@ import "package:oss_surveys_customer/utils/surveys_controller.dart";
 import "package:responsive_framework/responsive_framework.dart";
 import "package:sentry_flutter/sentry_flutter.dart";
 import "package:simple_logger/simple_logger.dart";
-import "package:flutter_gen/gen_l10n/app_localizations.dart";
 import "database/database.dart";
 
 final apiFactory = ApiFactory();
@@ -78,7 +79,7 @@ void main() async {
   }
 
   _setupTimers();
-  // BackgroundService.start();
+  BackgroundService.start(configuration.getSurveysApiBasePath());
 }
 
 /// Configures logger to use [logLevel] and formats log messages to be cleaner than by default.
@@ -257,8 +258,10 @@ class MyApp extends StatelessWidget {
 
 /// API Client generator config
 @Openapi(
-    additionalProperties: AdditionalProperties(pubName: "oss_surveys_api"),
-    inputSpec: InputSpec(path: "oss-surveys-api-spec/swagger.yaml"),
-    generatorName: Generator.dio,
-    outputDirectory: "oss-surveys-api")
+  additionalProperties: AdditionalProperties(pubName: "oss_surveys_api"),
+  inputSpec: InputSpec(path: "oss-surveys-api-spec/swagger.yaml"),
+  generatorName: Generator.dio,
+  outputDirectory: "oss-surveys-api",
+  runSourceGenOnOutput: true,
+)
 class OssSurveysApi {}
