@@ -101,3 +101,8 @@ CREATE TABLE answers (
   
   PRIMARY KEY (id)
 );
+
+--- Schema version 6
+ALTER TABLE answers (
+  ADD column timestamp TEXT
+)

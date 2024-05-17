@@ -3,7 +3,7 @@ import "package:flutter/material.dart";
 import "package:flutter_svg/svg.dart";
 import "package:oss_surveys_customer/database/dao/keys_dao.dart";
 import "package:oss_surveys_customer/database/dao/surveys_dao.dart";
-import "package:flutter_gen/gen_l10n/app_localizations.dart";
+import "package:oss_surveys_customer/l10n/gen_l10n/app_localizations.dart";
 import "package:oss_surveys_customer/screens/management_screen.dart";
 import "package:oss_surveys_customer/screens/survey_screen.dart";
 import "package:simple_logger/simple_logger.dart";
