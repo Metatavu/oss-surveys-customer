@@ -1,4 +1,4 @@
-// Openapi Generator last run: : 2024-05-13T12:25:07.088836
+// Openapi Generator last run: : 2024-05-17T13:30:36.866503
 import "dart:async";
 import "dart:io";
 import "package:device_info_plus/device_info_plus.dart";

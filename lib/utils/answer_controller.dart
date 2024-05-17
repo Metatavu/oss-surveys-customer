@@ -1,3 +1,4 @@
+import "package:drift/drift.dart";
 import "package:oss_surveys_customer/database/database.dart" as database;
 import "package:oss_surveys_api/oss_surveys_api.dart" as surveys_api;
 import "package:oss_surveys_customer/utils/exception/survey_answer_exception.dart";
@@ -57,6 +58,7 @@ class AnswerController {
           pageExternalId: page.externalId,
           questionType: page.questionType!,
           answer: answer,
+          timestamp: Value(DateTime.now()),
         ),
       );
     }

@@ -28,7 +28,7 @@ class Database extends _$Database {
       : super(e ?? _openConnection());
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration {
@@ -70,6 +70,10 @@ class Database extends _$Database {
               await migrator.create(pages);
               await migrator.alterTable(TableMigration(pages));
               await migrator.create(answers);
+              await migrator.alterTable(TableMigration(answers));
+            }
+          case 6:
+            {
               await migrator.alterTable(TableMigration(answers));
             }
         }
