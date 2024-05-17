@@ -51,8 +51,6 @@ class AnswerController {
       SimpleLogger().shout(
         "Error while answering single select question, persisting for later...: $exception",
       );
-      await reportError(
-          SurveyAnswerException(exception, answer: builtAnswer), stackTrace);
       await answersDao.createAnswer(
         database.AnswersCompanion.insert(
           pageExternalId: page.externalId,
@@ -60,6 +58,10 @@ class AnswerController {
           answer: answer,
           timestamp: Value(DateTime.now()),
         ),
+      );
+      await reportError(
+        SurveyAnswerException(exception, answer: builtAnswer),
+        stackTrace,
       );
     }
   }
