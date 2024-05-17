@@ -71,6 +71,7 @@ dependencies:
   flutter_app_installer: ^0.0.3
   package_info_plus: ^4.0.1
   sentry_flutter: ^7.8.0
+  built_value: ^8.8.0
 
 dev_dependencies:
   flutter_test:

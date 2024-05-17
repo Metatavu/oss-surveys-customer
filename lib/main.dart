@@ -102,12 +102,6 @@ void _setupTimers() async {
       }
     },
   );
-
-  Timer.periodic(const Duration(minutes: 1), (_) {
-    if (mqttClient.isConnected) {
-      mqttClient.sendStatusMessage(true);
-    }
-  });
 }
 
 /// Polls API for checking if device is approved.

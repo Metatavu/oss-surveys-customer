@@ -1,13 +1,16 @@
-import "dart:convert";
+import "dart:async";
 import "dart:typed_data";
 import "package:mqtt_client/mqtt_client.dart";
 import "package:mqtt_client/mqtt_server_client.dart";
 import "package:oss_surveys_api/oss_surveys_api.dart" as surveys_api;
+import "package:oss_surveys_customer/database/dao/answer_dao.dart";
 import "package:oss_surveys_customer/database/dao/keys_dao.dart";
 import "package:oss_surveys_customer/mqtt/model/status_message.dart";
 import "package:simple_logger/simple_logger.dart";
 import "package:typed_data/typed_buffers.dart";
 import "../main.dart";
+import "../updates/updater.dart";
+import "../utils/serialization_utils.dart";
 import "listeners/surveys_listener.dart";
 
 /// MQTT Client
@@ -60,7 +63,12 @@ class MqttClient {
 
     final connMessage = MqttConnectMessage()
         .withWillTopic(await _statusTopic)
-        .withWillMessage(jsonEncode((await _buildStatusMessage(false))))
+        .withWillMessage(
+          SerializationUtils.serializeObject(
+            await _buildStatusMessage(status: false),
+            surveys_api.DeviceStatusMessage,
+          ),
+        )
         .authenticateAs(mqttUsername, mqttPassword)
         .startClean()
         .withWillQos(MqttQos.atLeastOnce);
@@ -96,7 +104,8 @@ class MqttClient {
 
   /// Handler for successful connections event.
   Future<void> onConnected() async {
-    StatusMessage? statusMessage = await _buildStatusMessage(true);
+    surveys_api.DeviceStatusMessage? statusMessage =
+        await _buildStatusMessage();
 
     if (statusMessage == null) {
       SimpleLogger()
@@ -108,10 +117,16 @@ class MqttClient {
     SimpleLogger().info("Connected, sending status message...");
     publishMessage(
       await _statusTopic,
-      createMessagePayload(jsonEncode(statusMessage)),
+      createMessagePayload(
+        SerializationUtils.serializeObject(
+          statusMessage,
+          surveys_api.DeviceStatusMessage,
+        ),
+      ),
     );
     SimpleLogger().info("Setting up listeners...");
     _setupMqttListeners();
+    _initPeriodicStatusMessage();
   }
 
   /// Handler for disconnection event.
@@ -182,7 +197,8 @@ class MqttClient {
 
   /// Sends [StatusMessage]
   Future<void> sendStatusMessage(bool status) async {
-    StatusMessage? statusMessage = await _buildStatusMessage(status);
+    surveys_api.DeviceStatusMessage? statusMessage =
+        await _buildStatusMessage();
 
     if (statusMessage == null) {
       SimpleLogger()
@@ -195,7 +211,12 @@ class MqttClient {
 
     publishMessage(
       statusTopic,
-      createMessagePayload(jsonEncode(statusMessage)),
+      createMessagePayload(
+        SerializationUtils.serializeObject(
+          statusMessage,
+          surveys_api.DeviceStatusMessage,
+        ),
+      ),
     );
     SimpleLogger().info("Sent status message to topic: $statusTopic");
   }
@@ -215,10 +236,11 @@ class MqttClient {
     return _client!;
   }
 
-  /// Builds [StatusMessage]
-  Future<StatusMessage?> _buildStatusMessage(
-    bool status,
-  ) async {
+  /// Builds [surveys_api.DeviceStatusMessage]
+  Future<surveys_api.DeviceStatusMessage?> _buildStatusMessage(
+      {bool status = true}) async {
+    final unsentAnswersCount = (await answersDao.listAnswers()).length;
+    final versionCode = await Updater.getCurrentVersionCode();
     String? deviceId = _deviceId;
 
     if (deviceId == null) {
@@ -228,12 +250,15 @@ class MqttClient {
       return null;
     }
 
-    return StatusMessage(
-      status
-          ? surveys_api.DeviceStatus.ONLINE.name
-          : surveys_api.DeviceStatus.OFFLINE.name,
-      deviceId,
-    );
+    return surveys_api.DeviceStatusMessage((builder) async {
+      builder
+        ..deviceId = deviceId
+        ..status = mqttClient.isConnected
+            ? surveys_api.DeviceStatus.ONLINE
+            : surveys_api.DeviceStatus.OFFLINE
+        ..versionCode = versionCode
+        ..unsentAnswersCount = unsentAnswersCount;
+    });
   }
 
   /// Reconnects MQTT Client.
@@ -276,6 +301,17 @@ class MqttClient {
       SimpleLogger()
           .warning("MQTT Client not connected, cannot setup listeners!");
     }
+  }
+
+  /// Initializes periodic status message.
+  void _initPeriodicStatusMessage() {
+    Timer.periodic(const Duration(minutes: 1), (timer) {
+      if (mqttClient.isConnected) {
+        mqttClient.sendStatusMessage(true);
+      } else {
+        timer.cancel();
+      }
+    });
   }
 }
 
