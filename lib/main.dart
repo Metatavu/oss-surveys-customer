@@ -1,4 +1,4 @@
-// Openapi Generator last run: : 2024-05-20T11:36:55.413992
+// Openapi Generator last run: : 2024-05-20T13:01:47.764651
 import "dart:async";
 import "dart:io";
 import "package:device_info_plus/device_info_plus.dart";
@@ -259,6 +259,9 @@ class MyApp extends StatelessWidget {
 /// API Client generator config
 @Openapi(
   additionalProperties: AdditionalProperties(pubName: "oss_surveys_api"),
+  typeMappings: {
+    "DateTime": "String",
+  },
   inputSpec: InputSpec(path: "oss-surveys-api-spec/swagger.yaml"),
   generatorName: Generator.dio,
   outputDirectory: "oss-surveys-api",
