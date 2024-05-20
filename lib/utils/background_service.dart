@@ -110,11 +110,11 @@ class BackgroundService {
             builder.pageId = answer.pageExternalId;
             builder.answer = answer.answer;
             builder.deviceAnswerId = answer.id;
-            builder.timestamp = answerTimestampIso;
           });
           await api.submitSurveyAnswerV2(
             deviceId: deviceId,
             devicePageSurveyAnswer: builtAnswer,
+            overrideCreatedAt: answerTimestampIso,
           );
           SimpleLogger().info("Successfully sent unsent answer!");
           await answerDao.deleteAnswer(answer.id);
