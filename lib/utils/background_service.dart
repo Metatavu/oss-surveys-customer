@@ -100,16 +100,21 @@ class BackgroundService {
       SimpleLogger().info("Unsent answers: ${unsentAnswers.length}");
       for (final answer in unsentAnswers) {
         try {
+          String? answerTimestampIso;
+          DateTime? answerTimestamp = answer.timestamp;
+          if (answerTimestamp != null) {
+            answerTimestampIso = "${answer.timestamp?.toIso8601String()}Z";
+          }
           SimpleLogger().info("Attempting to send unsent answer: $answer");
           final builtAnswer = DevicePageSurveyAnswer((builder) {
             builder.pageId = answer.pageExternalId;
             builder.answer = answer.answer;
             builder.deviceAnswerId = answer.id;
           });
-
           await api.submitSurveyAnswerV2(
             deviceId: deviceId,
             devicePageSurveyAnswer: builtAnswer,
+            overrideCreatedAt: answerTimestampIso,
           );
           SimpleLogger().info("Successfully sent unsent answer!");
           await answerDao.deleteAnswer(answer.id);
