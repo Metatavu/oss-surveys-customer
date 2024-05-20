@@ -100,13 +100,18 @@ class BackgroundService {
       SimpleLogger().info("Unsent answers: ${unsentAnswers.length}");
       for (final answer in unsentAnswers) {
         try {
+          int? answerTimeStamp;
+          if (answer.timestamp != null) {
+            answerTimeStamp =
+                (answer.timestamp!.millisecondsSinceEpoch / 1000).floor();
+          }
           SimpleLogger().info("Attempting to send unsent answer: $answer");
           final builtAnswer = DevicePageSurveyAnswer((builder) {
             builder.pageId = answer.pageExternalId;
             builder.answer = answer.answer;
             builder.deviceAnswerId = answer.id;
+            builder.timestamp = answerTimeStamp;
           });
-
           await api.submitSurveyAnswerV2(
             deviceId: deviceId,
             devicePageSurveyAnswer: builtAnswer,
