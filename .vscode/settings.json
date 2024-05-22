@@ -2,5 +2,6 @@
   "editor": {
     "formatOnSave": true,
     "formatOnType": true
-  }
+  },
+  "dart.flutterSdkPath": ".fvm/versions/3.19.6"
 }

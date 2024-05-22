@@ -7,4 +7,5 @@ class Answers extends Table {
   TextColumn get pageExternalId => text()();
   TextColumn get answer => text()();
   TextColumn get questionType => text()();
+  DateTimeColumn get timestamp => dateTime().nullable()();
 }

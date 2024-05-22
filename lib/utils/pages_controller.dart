@@ -39,7 +39,7 @@ class PagesController {
           pageNumber: page.pageNumber!,
           surveyId: surveyId,
           questionType: Value(page.question?.type.name),
-          modifiedAt: page.metadata!.modifiedAt!,
+          modifiedAt: DateTime.parse(page.metadata!.modifiedAt!),
         ),
       );
     } else {
@@ -53,7 +53,7 @@ class PagesController {
             pageNumber: page.pageNumber!,
             surveyId: surveyId,
             questionType: Value(page.question?.type.name),
-            modifiedAt: page.metadata!.modifiedAt!,
+            modifiedAt: DateTime.parse(page.metadata!.modifiedAt!),
           ),
         );
       }
@@ -105,7 +105,7 @@ class PagesController {
   /// Compares if [page] is different from persisted Page
   bool _comparePages(
           database.Page page, surveys_api.DeviceSurveyPageData newPage) =>
-      page.modifiedAt.isBefore(newPage.metadata!.modifiedAt!);
+      page.modifiedAt.isBefore(DateTime.parse(newPage.metadata!.modifiedAt!));
 }
 
 final pagesController = PagesController();

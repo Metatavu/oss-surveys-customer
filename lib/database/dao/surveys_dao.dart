@@ -7,7 +7,7 @@ import "package:oss_surveys_api/oss_surveys_api.dart" as surveys_api;
 part "surveys_dao.g.dart";
 
 /// Surveys DAO
-@DriftAccessor(tables: [Surveys], include: {"tables.drift"})
+@DriftAccessor(tables: [Surveys])
 class SurveysDao extends DatabaseAccessor<Database> with _$SurveysDaoMixin {
   SurveysDao(Database database) : super(database);
 
@@ -79,13 +79,21 @@ class SurveysDao extends DatabaseAccessor<Database> with _$SurveysDaoMixin {
   /// Updates [survey]
   Future<Survey> updateSurvey(
       Survey existingSurvey, surveys_api.DeviceSurveyData newSurvey) async {
+    final publishStartTime = newSurvey.publishStartTime;
+    final publishEndTime = newSurvey.publishEndTime;
+    final modifiedAt = newSurvey.metadata!.modifiedAt!;
+
     await update(surveys).replace(
       existingSurvey.copyWith(
         title: newSurvey.title,
         timeout: newSurvey.timeout,
-        publishStart: Value(newSurvey.publishStartTime),
-        publishEnd: Value(newSurvey.publishEndTime),
-        modifiedAt: newSurvey.metadata!.modifiedAt!,
+        publishStart: publishStartTime != null
+            ? Value(DateTime.parse(publishStartTime))
+            : const Value.absent(),
+        publishEnd: publishEndTime != null
+            ? Value(DateTime.parse(publishEndTime))
+            : const Value.absent(),
+        modifiedAt: DateTime.parse(modifiedAt),
       ),
     );
 

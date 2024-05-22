@@ -6,12 +6,12 @@ import "package:list_ext/list_ext.dart";
 import "package:oss_surveys_customer/database/dao/pages_dao.dart";
 import "package:oss_surveys_customer/database/dao/surveys_dao.dart";
 import "package:oss_surveys_customer/database/database.dart" as database;
+import "package:oss_surveys_customer/l10n/gen_l10n/app_localizations.dart";
 import "package:oss_surveys_customer/main.dart";
 import "package:oss_surveys_customer/screens/management_screen.dart";
 import "package:oss_surveys_customer/utils/answer_controller.dart";
 import "package:simple_logger/simple_logger.dart";
 import "package:webview_flutter/webview_flutter.dart";
-import "package:flutter_gen/gen_l10n/app_localizations.dart";
 import "default_screen.dart";
 import "package:oss_surveys_api/oss_surveys_api.dart" as surveys_api;
 

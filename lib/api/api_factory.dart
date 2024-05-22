@@ -11,10 +11,23 @@ class ApiFactory {
   static final ApiFactory _instance = ApiFactory._();
 
   /// Initializes API Client
-  Future<surveys_api.OssSurveysApi> _getApi() async {
-    var apiBasePath = configuration.getSurveysApiBasePath();
+  Future<surveys_api.OssSurveysApi> _getApi({
+    String? overrideApiBasePath,
+    String? overrideDeviceKey,
+  }) async {
+    late String apiBasePath;
+    late String? deviceKey;
 
-    String? deviceKey = await keysDao.getDeviceKey();
+    if (overrideApiBasePath != null) {
+      apiBasePath = overrideApiBasePath;
+    } else {
+      apiBasePath = configuration.getSurveysApiBasePath();
+    }
+    if (overrideDeviceKey != null) {
+      deviceKey = overrideDeviceKey;
+    } else {
+      deviceKey = await keysDao.getDeviceKey();
+    }
     var api = surveys_api.OssSurveysApi(basePathOverride: apiBasePath);
 
     if (deviceKey != null) {
@@ -45,7 +58,13 @@ class ApiFactory {
   }
 
   /// Gets DeviceData API
-  Future<surveys_api.DeviceDataApi> getDeviceDataApi() {
-    return _getApi().then((api) => api.getDeviceDataApi());
+  Future<surveys_api.DeviceDataApi> getDeviceDataApi({
+    String? overrideApiBasePath,
+    String? overrideDeviceKey,
+  }) {
+    return _getApi(
+            overrideApiBasePath: overrideApiBasePath,
+            overrideDeviceKey: overrideDeviceKey)
+        .then((api) => api.getDeviceDataApi());
   }
 }

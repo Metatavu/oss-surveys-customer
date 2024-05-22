@@ -19,14 +19,14 @@ part "database.g.dart";
   Keys,
   Pages,
   Answers,
-], include: {
-  "tables.drift"
-})
+])
 class Database extends _$Database {
-  Database({NativeDatabase? database}) : super(_openConnection(database));
+  Database({NativeDatabase? database}) : super(_openConnection());
+  Database.fromQueryExecutor([QueryExecutor? e])
+      : super(e ?? _openConnection());
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration {
@@ -70,6 +70,14 @@ class Database extends _$Database {
               await migrator.create(answers);
               await migrator.alterTable(TableMigration(answers));
             }
+          case 6:
+            {
+              // Ignore this migration
+            }
+          case 7:
+            {
+              await migrator.addColumn(answers, answers.timestamp);
+            }
         }
       }
     });
@@ -77,15 +85,12 @@ class Database extends _$Database {
 }
 
 /// Opens connection
-QueryExecutor _openConnection(NativeDatabase? database) {
-  if (database != null) {
-    return database;
-  }
+QueryExecutor _openConnection() {
   return LazyDatabase(() async {
     final dbFolder = await getApplicationDocumentsDirectory();
     final file = File(p.join(dbFolder.path, "db.sqlite"));
 
-    return NativeDatabase(file);
+    return NativeDatabase.createInBackground(file);
   });
 }
 

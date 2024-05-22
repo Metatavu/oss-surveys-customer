@@ -17,13 +17,19 @@ class SurveysController {
     if (existingSurvey == null) {
       SimpleLogger()
           .info("Persisting new survey ${newSurvey.title} ${newSurvey.id}");
+      final publishStartTime = newSurvey.publishStartTime;
+      final publishEndTime = newSurvey.publishEndTime;
+      final modifiedAt = newSurvey.metadata!.modifiedAt!;
+
       database.Survey createdSurvey = await surveysDao.createSurvey(
         externalId: newSurvey.id!,
         title: newSurvey.title!,
-        publishStart: newSurvey.publishStartTime,
-        publishEnd: newSurvey.publishEndTime,
+        publishStart:
+            publishStartTime != null ? DateTime.parse(publishStartTime) : null,
+        publishEnd:
+            publishEndTime != null ? DateTime.parse(publishEndTime) : null,
         timeout: newSurvey.timeout!,
-        modifiedAt: newSurvey.metadata!.modifiedAt!,
+        modifiedAt: DateTime.parse(modifiedAt),
       );
 
       await _handlePages(newSurvey.pages?.toList(), createdSurvey.id);
@@ -91,7 +97,8 @@ class SurveysController {
   /// Compares if [survey] is different from persisted Survey
   bool _compareSurveys(
           database.Survey survey, surveys_api.DeviceSurveyData newSurvey) =>
-      survey.modifiedAt.isBefore(newSurvey.metadata!.modifiedAt!);
+      survey.modifiedAt
+          .isBefore(DateTime.parse(newSurvey.metadata!.modifiedAt!));
 }
 
 final surveysController = SurveysController();

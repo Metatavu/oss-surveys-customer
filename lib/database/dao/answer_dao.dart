@@ -5,7 +5,7 @@ import "../model/answer.dart";
 part "answer_dao.g.dart";
 
 /// Answers DAO
-@DriftAccessor(tables: [Answers], include: {"tables.drift"})
+@DriftAccessor(tables: [Answers])
 class AnswersDao extends DatabaseAccessor<Database> with _$AnswersDaoMixin {
   AnswersDao(Database database) : super(database);
 
@@ -30,8 +30,9 @@ class AnswersDao extends DatabaseAccessor<Database> with _$AnswersDaoMixin {
   }
 
   /// Lists all answers
-  Future<List<Answer>> listAnswers() async {
-    return await select(answers).get();
+  Future<List<Answer>> listAnswers({int? limit}) async {
+    if (limit == null) return await select(answers).get();
+    return await (select(answers)..limit(limit)).get();
   }
 }
 

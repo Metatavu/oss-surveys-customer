@@ -5,7 +5,7 @@ import "../model/key.dart";
 part "keys_dao.g.dart";
 
 /// Keys DAO
-@DriftAccessor(tables: [Keys], include: {"tables.drift"})
+@DriftAccessor(tables: [Keys])
 class KeysDao extends DatabaseAccessor<Database> with _$KeysDaoMixin {
   KeysDao(Database database) : super(database);
 
