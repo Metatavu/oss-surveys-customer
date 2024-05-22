@@ -44,16 +44,31 @@ class AnswerController {
       SimpleLogger().info("Answer submitted successfully!");
     } catch (exception, stackTrace) {
       SimpleLogger().shout(
-        "Error while answering single select question, persisting for later...: $exception",
+        "Error while answering ${page.questionType} question, persisting for later...: $exception",
       );
-      await answersDao.createAnswer(
-        database.AnswersCompanion.insert(
-          pageExternalId: page.externalId,
-          questionType: page.questionType!,
-          answer: answer,
-          timestamp: Value(DateTime.now()),
-        ),
+      await _persistFailedAnswer(
+          builtAnswer,
+          database.AnswersCompanion.insert(
+            pageExternalId: page.externalId,
+            questionType: page.questionType!,
+            answer: answer,
+            timestamp: Value(DateTime.now()),
+          ));
+      await reportError(
+        SurveyAnswerException(exception, answer: builtAnswer),
+        stackTrace,
       );
+    }
+  }
+
+  static Future<void> _persistFailedAnswer(
+    surveys_api.DevicePageSurveyAnswer builtAnswer,
+    database.AnswersCompanion answer,
+  ) async {
+    try {
+      await answersDao.createAnswer(answer);
+    } catch (exception, stackTrace) {
+      SimpleLogger().shout("Error while persisting failed answer: $exception");
       await reportError(
         SurveyAnswerException(exception, answer: builtAnswer),
         stackTrace,

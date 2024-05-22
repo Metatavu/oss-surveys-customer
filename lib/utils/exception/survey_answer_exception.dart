@@ -8,4 +8,9 @@ class SurveyAnswerException implements Exception {
   final DevicePageSurveyAnswer answer;
 
   const SurveyAnswerException(this.exception, {required this.answer});
+
+  @override
+  String toString() {
+    return "SurveyAnswerException: $exception, Answer: $answer";
+  }
 }

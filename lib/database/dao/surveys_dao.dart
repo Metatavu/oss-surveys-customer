@@ -7,7 +7,7 @@ import "package:oss_surveys_api/oss_surveys_api.dart" as surveys_api;
 part "surveys_dao.g.dart";
 
 /// Surveys DAO
-@DriftAccessor(tables: [Surveys], include: {"../tables.drift"})
+@DriftAccessor(tables: [Surveys])
 class SurveysDao extends DatabaseAccessor<Database> with _$SurveysDaoMixin {
   SurveysDao(Database database) : super(database);
 
