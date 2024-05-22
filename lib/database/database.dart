@@ -19,16 +19,14 @@ part "database.g.dart";
   Keys,
   Pages,
   Answers,
-], include: {
-  "tables.drift"
-})
+])
 class Database extends _$Database {
   Database({NativeDatabase? database}) : super(_openConnection());
   Database.fromQueryExecutor([QueryExecutor? e])
       : super(e ?? _openConnection());
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration {
@@ -74,7 +72,11 @@ class Database extends _$Database {
             }
           case 6:
             {
-              await migrator.alterTable(TableMigration(answers));
+              // Ignore this migration
+            }
+          case 7:
+            {
+              await migrator.addColumn(answers, answers.timestamp);
             }
         }
       }

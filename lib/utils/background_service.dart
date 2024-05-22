@@ -85,7 +85,7 @@ class BackgroundService {
     final db = Database.fromQueryExecutor(conn);
     final answerDao = AnswersDao(db);
     final keysDao = KeysDao(db);
-    Timer.periodic(const Duration(minutes: 30), (_) async {
+    Timer.periodic(const Duration(minutes: 19), (_) async {
       SimpleLogger().info("Checking for unsent answers");
       final unsentAnswers = await answerDao.listAnswers(limit: 10);
       final deviceKey = await keysDao.getDeviceKey();

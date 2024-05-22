@@ -28,13 +28,12 @@ class AnswerController {
           await apiFactory.getDeviceDataApi();
       String? deviceId = await keysDao.getDeviceId();
       if (deviceId == null) throw Exception("Device ID not found!");
-      await answersDao.createAnswer(
-        database.AnswersCompanion.insert(
-          pageExternalId: page.externalId,
-          questionType: page.questionType!,
-          answer: answer,
-        ),
-      );
+
+      SimpleLogger().info("Created answer:");
+      SimpleLogger().info("Device ID: $deviceId");
+      SimpleLogger().info("Device Survey ID: $deviceSurveyId");
+      SimpleLogger().info("Page ID: ${page.externalId}");
+      SimpleLogger().info("Answer: $answer");
 
       await deviceDataApi.submitSurveyAnswer(
         deviceId: deviceId,
@@ -43,22 +42,33 @@ class AnswerController {
         devicePageSurveyAnswer: builtAnswer,
       );
       SimpleLogger().info("Answer submitted successfully!");
-      SimpleLogger().info("Device ID: $deviceId");
-      SimpleLogger().info("Device Survey ID: $deviceSurveyId");
-      SimpleLogger().info("Page ID: ${page.externalId}");
-      SimpleLogger().info("Answer: $answer");
     } catch (exception, stackTrace) {
       SimpleLogger().shout(
-        "Error while answering single select question, persisting for later...: $exception",
+        "Error while answering ${page.questionType} question, persisting for later...: $exception",
       );
-      await answersDao.createAnswer(
-        database.AnswersCompanion.insert(
-          pageExternalId: page.externalId,
-          questionType: page.questionType!,
-          answer: answer,
-          timestamp: Value(DateTime.now()),
-        ),
+      await _persistFailedAnswer(
+          builtAnswer,
+          database.AnswersCompanion.insert(
+            pageExternalId: page.externalId,
+            questionType: page.questionType!,
+            answer: answer,
+            timestamp: Value(DateTime.now()),
+          ));
+      await reportError(
+        SurveyAnswerException(exception, answer: builtAnswer),
+        stackTrace,
       );
+    }
+  }
+
+  static Future<void> _persistFailedAnswer(
+    surveys_api.DevicePageSurveyAnswer builtAnswer,
+    database.AnswersCompanion answer,
+  ) async {
+    try {
+      await answersDao.createAnswer(answer);
+    } catch (exception, stackTrace) {
+      SimpleLogger().shout("Error while persisting failed answer: $exception");
       await reportError(
         SurveyAnswerException(exception, answer: builtAnswer),
         stackTrace,

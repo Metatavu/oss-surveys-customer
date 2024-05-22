@@ -173,8 +173,9 @@ class HTMLController {
   static Element _createMultiSelect(surveys_api.PageQuestionOption option) {
     Element optionElement =
         Element.html("<div class=\"multi-option\" id=\"${option.id}\"></div>");
-    optionElement.children
-        .addAll(parse(option.questionOptionValue).body!.children);
+    final childElement = Element.tag("div");
+    childElement.innerHtml = option.questionOptionValue;
+    optionElement.children.add(childElement);
 
     optionElement.attributes["ontouchend"] =
         "selectMultiOption('${option.id}')";
