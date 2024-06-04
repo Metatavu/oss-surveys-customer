@@ -162,12 +162,18 @@ class MqttClient {
   ///
   /// If client is not connected, attempts to reconnect.
   void publishMessage(String topic, Uint8Buffer message) async {
-    if (_client?.connectionStatus == null) return;
-    if (_getClientConnectionStatus() != MqttConnectionState.connected.name) {
-      await _reconnect();
-    }
+    try {
+      if (_client?.connectionStatus == null) return;
+      if (_getClientConnectionStatus() != MqttConnectionState.connected.name) {
+        await _reconnect();
+      }
 
-    _client?.publishMessage(topic, MqttQos.atLeastOnce, message);
+      _client?.publishMessage(topic, MqttQos.atLeastOnce, message);
+    } catch (exception) {
+      SimpleLogger().shout(
+        "Exception while publishing MQTT message: $exception",
+      );
+    }
   }
 
   /// Creates MQTT Message payload from [payload]

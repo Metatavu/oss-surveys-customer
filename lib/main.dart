@@ -206,9 +206,8 @@ Future<void> _getSurveys() async {
     }
 
     SimpleLogger().info("Finished persisting surveys!");
-  } catch (exception, stackTrace) {
+  } catch (exception) {
     SimpleLogger().shout("Error while getting Surveys: $exception");
-    await reportError(exception, stackTrace);
   }
 }
 
