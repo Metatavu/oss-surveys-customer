@@ -1,0 +1,43 @@
+name: Env transfer (develop)
+on:
+  push:
+    branches:
+      - envs
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: develop
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+          fetch-depth: 0
+      - name: Build ENVS
+        run: |
+          echo SIGN_KEYSTORE=${{ secrets.SIGN_KEYSTORE }} > ENV
+          echo SIGN_STORE_PASSWORD=${{ secrets.SIGN_STORE_PASSWORD }} >> ENV
+          echo SIGN_KEY_PASSWORD=${{ secrets.SIGN_KEY_PASSWORD }} >> ENV
+          echo APP_UPDATES_BASE_URL=${{ secrets.APP_UPDATES_BASE_URL }} >> ENV
+          echo MQTT_PASSWORD=${{ secrets.MQTT_PASSWORD }} >> ENV
+          echo MQTT_PORT=${{ secrets.MQTT_PORT }} >> ENV
+          echo MQTT_URL=${{ secrets.MQTT_URL }} >> ENV
+          echo MQTT_USERNAME=${{ secrets.MQTT_USERNAME }} >> ENV
+          echo SURVEYS_API_BASE_PATH=${{ secrets.SURVEYS_API_BASE_PATH }} >> ENV
+          echo ENVIRONMENT=${{ secrets.ENVIRONMENT }} >> ENV
+          echo FONT_URL=${{ secrets.FONT_URL }} >> ENV
+          echo PLATFORM=${{ secrets.PLATFORM }} >> ENV
+          echo IMAGE_BASE_URL=${{ secrets.IMAGE_BASE_URL }} >> ENV
+          echo SENTRY_DSN=${{ secrets.SENTRY_DSN }} >> ENV
+          echo AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} >> ENV
+          echo AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} >> ENV
+          echo UPDATES_BUCKET=${{ secrets.UPDATES_BUCKET }} >> ENV
+          echo AWS_REGION=${{ secrets.AWS_REGION }} >> ENV
+          echo MQTT_CLIENT_ID=${{ secrets.MQTT_CLIENT_ID }} >> ENV
+      - name: Upload ENV
+        uses: shallwefootball/s3-upload-action@master
+        with:
+          aws_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_bucket: ${{ secrets.UPDATES_BUCKET }}
+          source_dir: ENV
+          destination_dir: ""
