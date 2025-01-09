@@ -14,25 +14,26 @@ jobs:
           fetch-depth: 0
       - name: Build ENVS
         run: |
-          echo SIGN_KEYSTORE=${{ secrets.SIGN_KEYSTORE }} > ENV
-          echo SIGN_STORE_PASSWORD=${{ secrets.SIGN_STORE_PASSWORD }} >> ENV
-          echo SIGN_KEY_PASSWORD=${{ secrets.SIGN_KEY_PASSWORD }} >> ENV
-          echo APP_UPDATES_BASE_URL=${{ secrets.APP_UPDATES_BASE_URL }} >> ENV
-          echo MQTT_PASSWORD=${{ secrets.MQTT_PASSWORD }} >> ENV
-          echo MQTT_PORT=${{ secrets.MQTT_PORT }} >> ENV
-          echo MQTT_URL=${{ secrets.MQTT_URL }} >> ENV
-          echo MQTT_USERNAME=${{ secrets.MQTT_USERNAME }} >> ENV
-          echo SURVEYS_API_BASE_PATH=${{ secrets.SURVEYS_API_BASE_PATH }} >> ENV
-          echo ENVIRONMENT=${{ secrets.ENVIRONMENT }} >> ENV
-          echo FONT_URL=${{ secrets.FONT_URL }} >> ENV
-          echo PLATFORM=${{ secrets.PLATFORM }} >> ENV
-          echo IMAGE_BASE_URL=${{ secrets.IMAGE_BASE_URL }} >> ENV
-          echo SENTRY_DSN=${{ secrets.SENTRY_DSN }} >> ENV
-          echo AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} >> ENV
-          echo AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} >> ENV
-          echo UPDATES_BUCKET=${{ secrets.UPDATES_BUCKET }} >> ENV
-          echo AWS_REGION=${{ secrets.AWS_REGION }} >> ENV
-          echo MQTT_CLIENT_ID=${{ secrets.MQTT_CLIENT_ID }} >> ENV
+          mkdir ENV &&
+          echo SIGN_KEYSTORE=${{ secrets.SIGN_KEYSTORE }} > ENV/envs
+          echo SIGN_STORE_PASSWORD=${{ secrets.SIGN_STORE_PASSWORD }} >> ENV/envs
+          echo SIGN_KEY_PASSWORD=${{ secrets.SIGN_KEY_PASSWORD }} >> ENV/envs
+          echo APP_UPDATES_BASE_URL=${{ secrets.APP_UPDATES_BASE_URL }} >> ENV/envs
+          echo MQTT_PASSWORD=${{ secrets.MQTT_PASSWORD }} >> ENV/envs
+          echo MQTT_PORT=${{ secrets.MQTT_PORT }} >> ENV/envs
+          echo MQTT_URL=${{ secrets.MQTT_URL }} >> ENV/envs
+          echo MQTT_USERNAME=${{ secrets.MQTT_USERNAME }} >> ENV/envs
+          echo SURVEYS_API_BASE_PATH=${{ secrets.SURVEYS_API_BASE_PATH }} >> ENV/envs
+          echo ENVIRONMENT=${{ secrets.ENVIRONMENT }} >> ENV/envs
+          echo FONT_URL=${{ secrets.FONT_URL }} >> ENV/envs
+          echo PLATFORM=${{ secrets.PLATFORM }} >> ENV/envs
+          echo IMAGE_BASE_URL=${{ secrets.IMAGE_BASE_URL }} >> ENV/envs
+          echo SENTRY_DSN=${{ secrets.SENTRY_DSN }} >> ENV/envs
+          echo AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} >> ENV/envs
+          echo AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} >> ENV/envs
+          echo UPDATES_BUCKET=${{ secrets.UPDATES_BUCKET }} >> ENV/envs
+          echo AWS_REGION=${{ secrets.AWS_REGION }} >> ENV/envs
+          echo MQTT_CLIENT_ID=${{ secrets.MQTT_CLIENT_ID }} >> ENV/envs
       - name: Upload ENV
         uses: shallwefootball/s3-upload-action@master
         with:
