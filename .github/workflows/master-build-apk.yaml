@@ -32,36 +32,60 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: develop
+      - name: Import Secrets
+        id: import-secrets
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ secrets.VAULT_ADDR }}
+          token: ${{ secrets.VAULT_TOKEN }}
+          secrets: |
+            ${{ secrets.VAULT_PATH }} APP_UPDATES_BASE_URL | APP_UPDATES_BASE_URL ;
+            ${{ secrets.VAULT_PATH }} AWS_ACCESS_KEY_ID | AWS_ACCESS_KEY_ID ;
+            ${{ secrets.VAULT_PATH }} AWS_REGION | AWS_REGION ;
+            ${{ secrets.VAULT_PATH }} AWS_SECRET_ACCESS_KEY | AWS_SECRET_ACCESS_KEY ;
+            ${{ secrets.VAULT_PATH }} ENVIRONMENT | ENVIRONMENT ;
+            ${{ secrets.VAULT_PATH }} FONT_URL | FONT_URL ;
+            ${{ secrets.VAULT_PATH }} IMAGE_BASE_URL | IMAGE_BASE_URL ;
+            ${{ secrets.VAULT_PATH }} MQTT_CLIENT_ID | MQTT_CLIENT_ID ;
+            ${{ secrets.VAULT_PATH }} MQTT_PASSWORD | MQTT_PASSWORD ;
+            ${{ secrets.VAULT_PATH }} MQTT_URLS | MQTT_URLS ;
+            ${{ secrets.VAULT_PATH }} MQTT_USERNAME | MQTT_USERNAME ;
+            ${{ secrets.VAULT_PATH }} PLATFORM | PLATFORM ;
+            ${{ secrets.VAULT_PATH }} SENTRY_DSN | SENTRY_DSN ;
+            ${{ secrets.VAULT_PATH }} SIGN_KEYSTORE | SIGN_KEYSTORE ;
+            ${{ secrets.VAULT_PATH }} SIGN_KEY_PASSWORD | SIGN_KEY_PASSWORD ;
+            ${{ secrets.VAULT_PATH }} SIGN_STORE_PASSWORD | SIGN_STORE_PASSWORD ;
+            ${{ secrets.VAULT_PATH }} SURVEYS_API_BASE_PATH | SURVEYS_API_BASE_PATH ;
+            ${{ secrets.VAULT_PATH }} UPDATES_BUCKET | UPDATES_BUCKET ;
       - name: Build APK
         uses: subosito/flutter-action@v2
         with:
           flutter-version: "3.19.6"
           channel: "stable"
       - run: |
-          echo ${{ secrets.SIGN_KEYSTORE }} > /tmp/upload-keystore.b64 && base64 -d -i /tmp/upload-keystore.b64 > /tmp/upload-keystore.jks
-          echo storePassword=${{ secrets.SIGN_STORE_PASSWORD }} >> android/key.properties
-          echo keyPassword=${{ secrets.SIGN_KEY_PASSWORD }} >> android/key.properties
+          echo ${{ env.SIGN_KEYSTORE }} > /tmp/upload-keystore.b64 && base64 -d -i /tmp/upload-keystore.b64 > /tmp/upload-keystore.jks
+          echo storePassword=${{ env.SIGN_STORE_PASSWORD }} >> android/key.properties
+          echo keyPassword=${{ env.SIGN_KEY_PASSWORD }} >> android/key.properties
           echo keyAlias=upload >> android/key.properties
           echo storeFile=/tmp/upload-keystore.jks >> android/key.properties
-          echo APP_UPDATES_BASE_URL=${{ secrets.APP_UPDATES_BASE_URL }} >> .env
-          echo MQTT_PASSWORD=${{ secrets.MQTT_PASSWORD }} >> .env
-          echo MQTT_PORT=${{ secrets.MQTT_PORT }} >> .env
-          echo MQTT_URL=${{ secrets.MQTT_URL }} >> .env
-          echo MQTT_USERNAME=${{ secrets.MQTT_USERNAME }} >> .env
-          echo SURVEYS_API_BASE_PATH=${{ secrets.SURVEYS_API_BASE_PATH }} >> .env
-          echo ENVIRONMENT=${{ secrets.ENVIRONMENT }} >> .env
-          echo FONT_URL=${{ secrets.FONT_URL }} >> .env
-          echo PLATFORM=${{ secrets.PLATFORM }} >> .env
-          echo IMAGE_BASE_URL=${{ secrets.IMAGE_BASE_URL }} >> .env
-          echo SENTRY_DSN=${{ secrets.SENTRY_DSN }} >> .env
+          echo APP_UPDATES_BASE_URL=${{ env.APP_UPDATES_BASE_URL }} >> .env
+          echo MQTT_PASSWORD=${{ env.MQTT_PASSWORD }} >> .env
+          echo MQTT_URLS=${{ env.MQTT_URLS }} >> .env
+          echo MQTT_USERNAME=${{ env.MQTT_USERNAME }} >> .env
+          echo SURVEYS_API_BASE_PATH=${{ env.SURVEYS_API_BASE_PATH }} >> .env
+          echo ENVIRONMENT=${{ env.ENVIRONMENT }} >> .env
+          echo FONT_URL=${{ env.FONT_URL }} >> .env
+          echo PLATFORM=${{ env.PLATFORM }} >> .env
+          echo IMAGE_BASE_URL=${{ env.IMAGE_BASE_URL }} >> .env
+          echo SENTRY_DSN=${{ env.SENTRY_DSN }} >> .env
           flutter pub get
           flutter pub run build_runner build --delete-conflicting-outputs
           flutter build apk --split-per-abi
       - name: Upload APK
         uses: shallwefootball/s3-upload-action@master
         with:
-          aws_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_bucket: ${{ secrets.UPDATES_BUCKET }}
+          aws_key_id: ${{ env.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          aws_bucket: ${{ env.UPDATES_BUCKET }}
           source_dir: build/app/outputs/apk/release/
           destination_dir: ""

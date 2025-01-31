@@ -7,8 +7,7 @@ import "package:flutter_dotenv/flutter_dotenv.dart";
 /// Validates that all environment variables are in place and provides API for accessing them
 class Configuration {
   static const String SURVEYS_API_BASE_PATH = "SURVEYS_API_BASE_PATH";
-  static const String MQTT_URL = "MQTT_URL";
-  static const String MQTT_PORT = "MQTT_PORT";
+  static const String MQTT_URLS = "MQTT_URLS";
   static const String MQTT_USERNAME = "MQTT_USERNAME";
   static const String MQTT_PASSWORD = "MQTT_PASSWORD";
   static const String ENVIRONMENT = "ENVIRONMENT";
@@ -30,8 +29,7 @@ class Configuration {
     List<String> missingKeys = [];
     List<String> keys = [
       SURVEYS_API_BASE_PATH,
-      MQTT_URL,
-      MQTT_PORT,
+      MQTT_URLS,
       MQTT_USERNAME,
       MQTT_PASSWORD,
       ENVIRONMENT,
@@ -58,8 +56,7 @@ class Configuration {
   String get(String key) => dotenv.env[key]!;
 
   String getSurveysApiBasePath() => dotenv.env[SURVEYS_API_BASE_PATH]!;
-  String getMqttUrl() => dotenv.env[MQTT_URL]!;
-  String getMqttPort() => dotenv.env[MQTT_PORT]!;
+  List<String> getMqttUrls() => dotenv.env[MQTT_URLS]!.split(",");
   String getMqttUsername() => dotenv.env[MQTT_USERNAME]!;
   String getMqttPassword() => dotenv.env[MQTT_PASSWORD]!;
   String getEnvironment() => dotenv.env[ENVIRONMENT]!;

@@ -38,4 +38,10 @@ For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
  
- 
+## Synchronize environment variables
+
+Proceed with the following steps to get started:
+
+1. Install Hashicorp vault CLI by referencing the official documentation here: [Hashicorp Vault CLI Install](https://developer.hashicorp.com/vault/install)
+2. Install withhcv helper script (https://github.com/Metatavu/development-scripts/blob/master/hcv/withhcv.sh)
+3. Run `withhcv vault kv get -format json -mount="oss/surveys/local/kv" "build-oss-surveys-customer"|jq -r '.data.data | to_entries[] | "\(.key)=\(.value)"' > .env` 

@@ -1,4 +1,5 @@
-import "dart:async";
+import 'dart:io';
+import 'dart:async';
 import "dart:typed_data";
 import "package:mqtt_client/mqtt_client.dart";
 import "package:mqtt_client/mqtt_server_client.dart";
@@ -38,7 +39,7 @@ class MqttClient {
   /// Connects MQTT server using [deviceId] as client id if not already connected.
   Future<void> connect(String deviceId) async {
     _deviceId = deviceId;
-    var client = _initializeClient(deviceId);
+    var client = await _initializeClient(deviceId);
 
     var mqttUsername = configuration.getMqttUsername();
     var mqttPassword = configuration.getMqttPassword();
@@ -133,7 +134,7 @@ class MqttClient {
   ///
   /// Attempts to reconnect the client.
   void onDisconnected() {
-    SimpleLogger().info("Disconnected");
+    SimpleLogger().info("MQTT Client disconnected");
     _reconnect();
   }
 
@@ -154,7 +155,7 @@ class MqttClient {
 
   /// Disconnects MQTT Client
   void disconnect() {
-    SimpleLogger().info("Disconnecting...");
+    SimpleLogger().info("Disconnecting MQTT Client...");
     _client?.disconnect();
   }
 
@@ -162,12 +163,18 @@ class MqttClient {
   ///
   /// If client is not connected, attempts to reconnect.
   void publishMessage(String topic, Uint8Buffer message) async {
-    if (_client?.connectionStatus == null) return;
-    if (_getClientConnectionStatus() != MqttConnectionState.connected.name) {
-      await _reconnect();
-    }
+    try {
+      if (_client?.connectionStatus == null) return;
+      if (_getClientConnectionStatus() != MqttConnectionState.connected.name) {
+        await _reconnect();
+      }
 
-    _client?.publishMessage(topic, MqttQos.atLeastOnce, message);
+      _client?.publishMessage(topic, MqttQos.atLeastOnce, message);
+    } catch (exception) {
+      SimpleLogger().shout(
+        "Exception while publishing MQTT message: $exception",
+      );
+    }
   }
 
   /// Creates MQTT Message payload from [payload]
@@ -224,14 +231,42 @@ class MqttClient {
   /// Initializes MQTT Client using [deviceId] as client ID.
   ///
   /// Returns initialized MQTT Client.
-  MqttServerClient _initializeClient(String deviceId) {
-    if (_client != null) {
-      return _client!;
+  Future<MqttServerClient> _initializeClient(String deviceId) async {
+    var uri = await _getActiveUrl();
+    bool secure = uri.scheme.contains("ssl");
+
+    SimpleLogger().info("Initializing MQTT Client...");
+
+    var client = _client;
+
+    if (client != null) {
+      if (client.server == uri.host &&
+          client.port == uri.port &&
+          client.secure == secure) {
+        SimpleLogger().info("Reusing existing MQTT client...");
+        return client;
+      } else {
+        SimpleLogger().info("Disconnecting existing MQTT client...");
+
+        if (client.connectionStatus?.state == MqttConnectionState.connected) {
+          try {
+            client.disconnect();
+          } catch (exception) {
+            SimpleLogger().shout(
+              "Exception while disconnecting MQTT client: $exception",
+            );
+          }
+        }
+
+        _client = null;
+      }
     }
 
-    var mqttBasePath = configuration.getMqttUrl();
-    var mqttPort = int.tryParse(configuration.getMqttPort());
-    _client = MqttServerClient.withPort(mqttBasePath, deviceId, mqttPort!);
+    SimpleLogger().info(
+        "Connecting to MQTT server at ${uri.host}:${uri.port} with protocol ${secure ? "mqtts" : "mqtt"}... ");
+
+    _client = MqttServerClient.withPort(uri.host, deviceId, uri.port);
+    _client?.secure = secure;
 
     return _client!;
   }
@@ -267,6 +302,7 @@ class MqttClient {
   Future<void> _reconnect({int failureCount = 0}) async {
     SimpleLogger().info("Attempting to reconnect MQTT Client...");
     try {
+      _client = await _initializeClient(_deviceId!);
       await _client?.connect();
     } catch (exception) {
       await _awaitDelay(30);
@@ -312,6 +348,45 @@ class MqttClient {
         timer.cancel();
       }
     });
+  }
+
+  /// Gets active MQTT server URL
+  ///
+  /// @return Future<Uri> active MQTT server URL
+  Future<Uri> _getActiveUrl() async {
+    List<String> mqttUrls = configuration.getMqttUrls();
+    for (var url in mqttUrls) {
+      SimpleLogger().info("Checking MQTT server at $url...");
+      var uri = Uri.parse(url);
+      if (await _isMqttServerAlive(uri)) {
+        SimpleLogger().info("Active MQTT server found at $url");
+        return uri;
+      } else {
+        SimpleLogger().info("MQTT server at $url is not reachable");
+      }
+    }
+
+    throw Exception("No active MQTT server found!");
+  }
+
+  /// Tests if MQTT server is reachable
+  ///
+  /// @param url MQTT server URL
+  /// @return Future<bool> true if the server is reachable; false otherwise
+  Future<bool> _isMqttServerAlive(Uri url) async {
+    final int port = url.hasPort ? url.port : 1883;
+    final String host = url.host;
+
+    try {
+      final socket =
+          await Socket.connect(host, port, timeout: const Duration(seconds: 5));
+      socket.destroy();
+      return true;
+    } catch (e) {
+      SimpleLogger().warning(
+          'Failed to connect to MQTT server at $host:$port - ${e.toString()}');
+      return false;
+    }
   }
 }
 
