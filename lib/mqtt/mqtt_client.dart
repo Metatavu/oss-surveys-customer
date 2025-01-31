@@ -134,7 +134,7 @@ class MqttClient {
   ///
   /// Attempts to reconnect the client.
   void onDisconnected() {
-    SimpleLogger().info("Disconnected");
+    SimpleLogger().info("MQTT Client disconnected");
     _reconnect();
   }
 
@@ -155,7 +155,7 @@ class MqttClient {
 
   /// Disconnects MQTT Client
   void disconnect() {
-    SimpleLogger().info("Disconnecting...");
+    SimpleLogger().info("Disconnecting MQTT Client...");
     _client?.disconnect();
   }
 
@@ -233,12 +233,21 @@ class MqttClient {
   /// Returns initialized MQTT Client.
   Future<MqttServerClient> _initializeClient(String deviceId) async {
     var uri = await _getActiveUrl();
+    bool secure = uri.scheme.contains("ssl");
+
+    SimpleLogger().info("Initializing MQTT Client...");
+
     var client = _client;
 
     if (client != null) {
-      if (client.server == uri.host && client.port == uri.port) {
+      if (client.server == uri.host &&
+          client.port == uri.port &&
+          client.secure == secure) {
+        SimpleLogger().info("Reusing existing MQTT client...");
         return client;
       } else {
+        SimpleLogger().info("Disconnecting existing MQTT client...");
+
         if (client.connectionStatus?.state == MqttConnectionState.connected) {
           try {
             client.disconnect();
@@ -253,7 +262,11 @@ class MqttClient {
       }
     }
 
+    SimpleLogger().info(
+        "Connecting to MQTT server at ${uri.host}:${uri.port} with protocol ${secure ? "mqtts" : "mqtt"}... ");
+
     _client = MqttServerClient.withPort(uri.host, deviceId, uri.port);
+    _client?.secure = secure;
 
     return _client!;
   }
@@ -343,9 +356,13 @@ class MqttClient {
   Future<Uri> _getActiveUrl() async {
     List<String> mqttUrls = configuration.getMqttUrls();
     for (var url in mqttUrls) {
+      SimpleLogger().info("Checking MQTT server at $url...");
       var uri = Uri.parse(url);
       if (await _isMqttServerAlive(uri)) {
+        SimpleLogger().info("Active MQTT server found at $url");
         return uri;
+      } else {
+        SimpleLogger().info("MQTT server at $url is not reachable");
       }
     }
 
